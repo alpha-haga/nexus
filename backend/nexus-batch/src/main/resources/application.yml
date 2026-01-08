@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: nexus-batch
+
+  # データソース設定（開発用H2）
+  datasource:
+    url: jdbc:h2:mem:nexusdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # JPA設定
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+  # Batch設定
+  batch:
+    job:
+      enabled: false  # 起動時に自動実行しない
+    jdbc:
+      initialize-schema: always
+
+# サーバー設定
+server:
+  port: 8081
+
+# ロギング
+logging:
+  level:
+    nexus: DEBUG
+    org.springframework.batch: INFO
