@@ -74,7 +74,7 @@ export function Sidebar({ isOpen }: SidebarProps) {
   return (
     <aside
       className={`bg-white border-r border-gray-200 flex flex-col transition-all duration-300 overflow-hidden shrink-0 ${
-        isOpen ? 'w-56' : 'w-0 border-r-0'
+        isOpen ? 'w-56' : 'w-20'
       }`}
     >
       <nav className="flex-1 p-3 space-y-1">
@@ -82,17 +82,20 @@ export function Sidebar({ isOpen }: SidebarProps) {
           <Link
             key={item.href}
             href={item.href}
-            className={`nav-item ${isActive(item.href) ? 'nav-item-active' : ''}`}
+            className={`nav-item ${isActive(item.href) ? 'nav-item-active' : ''} ${!isOpen ? 'justify-center' : ''}`}
+            title={!isOpen ? item.label : undefined}
           >
-            {item.icon}
-            <span>{item.label}</span>
+            <span className="shrink-0">{item.icon}</span>
+            <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isOpen ? 'opacity-100 ml-3 w-auto' : 'opacity-0 w-0 ml-0'}`}>
+              {item.label}
+            </span>
           </Link>
         ))}
       </nav>
 
       <div className="p-3 border-t border-gray-200">
-        <p className="text-xs text-gray-400 text-center">
-          NEXUS v0.1.0
+        <p className="text-xs text-gray-400 text-center whitespace-nowrap overflow-hidden">
+          {isOpen ? 'NEXUS v0.1.0' : 'v0.1'}
         </p>
       </div>
     </aside>

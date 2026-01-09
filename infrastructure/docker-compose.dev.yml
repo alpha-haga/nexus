@@ -1,0 +1,15 @@
+# Development環境用 Keycloak (H2)
+# 起動: docker compose -f docker-compose.dev.yml up -d
+
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.0
+    container_name: nexus-keycloak-dev
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8180:8080"
+    volumes:
+      - ./keycloak/realm-nexus.json:/opt/keycloak/data/import/realm-nexus.json:ro
