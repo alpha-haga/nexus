@@ -9,9 +9,10 @@
  */
 
 // 共通コンポーネントをエクスポート
-// export { Button } from './components/Button';
-// export { Input } from './components/Input';
-// export { Modal } from './components/Modal';
+export { AppLayout } from './components/AppLayout';
+export { Header } from './components/Header';
+export { Sidebar } from './components/Sidebar';
+export { Providers } from './components/Providers';
 
 // 共通ユーティリティをエクスポート
 // export { formatDate } from './utils/date';
