@@ -3,11 +3,11 @@ package nexus.api.controller
 import nexus.core.id.CorporationId
 import nexus.core.id.HouseholdId
 import nexus.core.id.PersonId
-import nexus.household.domain.Household
-import nexus.household.domain.HouseholdMember
-import nexus.household.domain.Relationship
-import nexus.household.service.CreateHouseholdCommand
-import nexus.household.service.HouseholdService
+import nexus.household.member.dto.CreateHouseholdCommand
+import nexus.household.member.entity.Household
+import nexus.household.member.entity.HouseholdMember
+import nexus.household.member.entity.Relationship
+import nexus.household.member.service.HouseholdService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*

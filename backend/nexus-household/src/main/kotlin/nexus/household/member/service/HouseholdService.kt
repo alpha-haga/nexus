@@ -51,8 +51,8 @@ class HouseholdService(
      */
     @Transactional(readOnly = true)
     fun findById(householdId: HouseholdId): Household {
-        return householdRepository.findById(householdId.value)
-            .orElseThrow { ResourceNotFoundException("Household", householdId.value) }
+        return householdRepository.findById(householdId)
+            ?: throw ResourceNotFoundException("Household", householdId.value)
     }
 
     /**
@@ -60,7 +60,7 @@ class HouseholdService(
      */
     @Transactional(readOnly = true)
     fun findByPerson(personId: PersonId): List<Household> {
-        return householdRepository.findByMemberPersonId(personId.value)
+        return householdRepository.findByMemberPersonId(personId)
     }
 
     /**

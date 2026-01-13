@@ -1,25 +1,31 @@
 /*
  * nexus-infrastructure
  *
- * DB接続基盤モジュール
+ * インフラストラクチャ層
  * - DataSource管理（地区DB × 3 + 統合DB × 1）
  * - DbConnectionProvider による接続提供
- * - ドメイン層からの直接JDBC依存を遮断
+ * - Repository 実装（JPA）
+ * - ドメイン層からの直接JDBC/JPA依存を遮断
  *
- * 依存: nexus-core
- * 依存先: nexus-api, nexus-batch, 各業務モジュール
+ * 依存: nexus-core, nexus-identity, nexus-household（interface のみ）
+ * 依存先: nexus-api, nexus-batch
  */
 
 dependencies {
     implementation(project(":nexus-core"))
+    implementation(project(":nexus-identity"))
+    implementation(project(":nexus-household"))
 
-    // Spring JDBC (JPA ではなく素の JDBC)
+    // Spring Data JPA（Repository 実装用）
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
+    // Spring JDBC（素の JDBC 接続用）
     implementation("org.springframework.boot:spring-boot-starter-jdbc")
 
     // Oracle JDBC Driver
     implementation("com.oracle.database.jdbc:ojdbc11:23.3.0.23.09")
 
-    // HikariCP (Spring Boot JDBC starter に含まれるが明示)
+    // HikariCP (Spring Boot starter に含まれるが明示)
     implementation("com.zaxxer:HikariCP")
 
     // 開発用: H2 Database (テスト・ローカル開発用)

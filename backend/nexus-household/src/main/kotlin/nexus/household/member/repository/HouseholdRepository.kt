@@ -1,29 +1,38 @@
 package nexus.household.member.repository
 
+import nexus.core.id.CorporationId
+import nexus.core.id.HouseholdId
+import nexus.core.id.PersonId
 import nexus.household.member.entity.Household
 import nexus.household.member.entity.HouseholdMember
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Query
-import org.springframework.stereotype.Repository
 
-@Repository
-interface HouseholdRepository : JpaRepository<Household, String> {
+/**
+ * 世帯リポジトリ（interface のみ）
+ *
+ * 実装は infrastructure 層に配置（HouseholdRepositoryImpl）
+ * domain 層は JPA / JDBC を知らない
+ */
+interface HouseholdRepository {
 
-    fun findByCorporationId(corporationId: String): List<Household>
+    fun save(household: Household): Household
 
-    fun findByHeadPersonId(headPersonId: String): Household?
+    fun findById(householdId: HouseholdId): Household?
 
-    @Query("""
-        SELECT h FROM Household h
-        JOIN h.members m
-        WHERE m.personId = :personId
-        AND m.leftAt IS NULL
-    """)
-    fun findByMemberPersonId(personId: String): List<Household>
+    fun findByCorporationId(corporationId: CorporationId): List<Household>
+
+    fun findByHeadPersonId(personId: PersonId): Household?
+
+    fun findByMemberPersonId(personId: PersonId): List<Household>
 }
 
-@Repository
-interface HouseholdMemberRepository : JpaRepository<HouseholdMember, Long> {
+/**
+ * 世帯構成員リポジトリ（interface のみ）
+ *
+ * 実装は infrastructure 層に配置（HouseholdMemberRepositoryImpl）
+ */
+interface HouseholdMemberRepository {
 
-    fun findByPersonIdAndLeftAtIsNull(personId: String): List<HouseholdMember>
+    fun save(member: HouseholdMember): HouseholdMember
+
+    fun findActiveByPersonId(personId: PersonId): List<HouseholdMember>
 }

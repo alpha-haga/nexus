@@ -16,6 +16,9 @@ import java.time.LocalDateTime
  *
  * 人物の登録・更新・検索を提供
  * 業務モジュールからは直接呼び出さず、API層経由でのみアクセス
+ *
+ * 注意: PersonRepository は interface のみ定義
+ *       実装は infrastructure 層で提供される
  */
 @Service
 @Transactional
@@ -80,8 +83,8 @@ class PersonService(
      */
     @Transactional(readOnly = true)
     fun findById(personId: PersonId): Person {
-        return personRepository.findById(personId.value)
-            .orElseThrow { ResourceNotFoundException("Person", personId.value) }
+        return personRepository.findById(personId)
+            ?: throw ResourceNotFoundException("Person", personId.value)
     }
 
     /**
@@ -89,7 +92,7 @@ class PersonService(
      */
     @Transactional(readOnly = true)
     fun findByCorporation(corporationId: CorporationId): List<Person> {
-        return personRepository.findByCorporationId(corporationId.value)
+        return personRepository.findByCorporationId(corporationId)
     }
 
     /**

@@ -2,11 +2,11 @@ package nexus.api.controller
 
 import nexus.core.id.CorporationId
 import nexus.core.id.PersonId
-import nexus.identity.domain.Gender
-import nexus.identity.domain.Person
-import nexus.identity.service.PersonService
-import nexus.identity.service.RegisterPersonCommand
-import nexus.identity.service.UpdatePersonCommand
+import nexus.identity.person.dto.RegisterPersonCommand
+import nexus.identity.person.dto.UpdatePersonCommand
+import nexus.identity.person.entity.Gender
+import nexus.identity.person.entity.Person
+import nexus.identity.person.service.PersonService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*

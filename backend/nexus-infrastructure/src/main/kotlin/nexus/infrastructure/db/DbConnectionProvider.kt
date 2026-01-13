@@ -65,7 +65,7 @@ interface DbConnectionProvider {
  *
  * DB 接続に失敗した場合にスローされる
  */
-class DbConnectionException(
+open class DbConnectionException(
     message: String,
     cause: Throwable? = null
 ) : RuntimeException(message, cause)

@@ -28,6 +28,9 @@ dependencies {
     // Web
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
+    // JPA (for @EnableJpaRepositories, @EntityScan)
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+
     // Security (スタブ状態)
     // implementation("org.springframework.boot:spring-boot-starter-security")
     // implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")

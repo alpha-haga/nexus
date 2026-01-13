@@ -1,8 +1,8 @@
 package nexus.batch.job
 
 import nexus.core.id.CorporationId
-import nexus.identity.service.PersonService
-import nexus.identity.service.RegisterPersonCommand
+import nexus.identity.person.dto.RegisterPersonCommand
+import nexus.identity.person.service.PersonService
 import org.springframework.batch.core.Job
 import org.springframework.batch.core.Step
 import org.springframework.batch.core.job.builder.JobBuilder
