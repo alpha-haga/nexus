@@ -1,0 +1,7 @@
+Follow docs/architecture/ai-rules.md strictly.
+
+- Domain and Application MUST NOT depend on infrastructure
+- Database connections MUST exist only in infrastructure
+- Repository interfaces belong to domain
+- Implementations belong to infrastructure
+- If architectural intent is unclear, ASK before applying changes
