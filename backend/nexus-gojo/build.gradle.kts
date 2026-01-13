@@ -18,6 +18,7 @@
 
 dependencies {
     implementation(project(":nexus-core"))
+    implementation(project(":nexus-infrastructure"))
 
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     runtimeOnly("com.h2database:h2") // 開発用

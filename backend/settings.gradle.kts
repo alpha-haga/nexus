@@ -17,6 +17,13 @@ rootProject.name = "nexus"
 include("nexus-core")
 
 // ====================
+// Infrastructure Layer
+// ====================
+// DB接続基盤（DataSource管理、接続ルーティング）
+// 依存: nexus-core
+include("nexus-infrastructure")
+
+// ====================
 // Domain Layer
 // ====================
 // 全法人横断検索（Read Only）

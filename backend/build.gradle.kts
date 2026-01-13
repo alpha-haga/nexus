@@ -27,14 +27,14 @@ subprojects {
 
     // Java/Kotlin バージョン設定
     configure<JavaPluginExtension> {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     tasks.withType<KotlinCompile> {
         kotlinOptions {
             freeCompilerArgs = listOf("-Xjsr305=strict")
-            jvmTarget = "21"
+            jvmTarget = "17"
         }
     }
 
@@ -58,6 +58,7 @@ val pureKotlinModules = listOf("nexus-core")
 // Spring Boot 依存モジュール
 // ====================
 val springModules = listOf(
+    "nexus-infrastructure",
     "nexus-group",
     "nexus-identity",
     "nexus-household",

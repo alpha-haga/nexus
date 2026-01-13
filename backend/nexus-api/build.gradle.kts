@@ -20,6 +20,7 @@
 
 dependencies {
     implementation(project(":nexus-core"))
+    implementation(project(":nexus-infrastructure"))
     implementation(project(":nexus-group"))
     implementation(project(":nexus-identity"))
     implementation(project(":nexus-household"))

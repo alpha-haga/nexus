@@ -17,6 +17,7 @@
 
 dependencies {
     implementation(project(":nexus-core"))
+    implementation(project(":nexus-infrastructure"))
 
     // Read用のDB接続
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
