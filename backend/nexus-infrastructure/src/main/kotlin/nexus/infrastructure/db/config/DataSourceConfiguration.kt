@@ -64,27 +64,27 @@ class DataSourceConfiguration(
     /**
      * HikariDataSource を構築
      */
-    private fun createDataSource(config: DataSourceConfig, poolName: String): DataSource {
+    private fun createDataSource(config: DataSourceProps, poolName: String): DataSource {
         val hikariConfig = HikariConfig().apply {
             jdbcUrl = config.url
             username = config.username
-            password = config.password
+            password = config.password ?: ""
 
-            // ドライバークラス名（省略時は URL から自動判定）
-            config.driverClassName?.let { driverClassName = it }
+            // ドライバークラス名
+            driverClassName = config.driverClassName
 
-            // HikariCP 設定
-            maximumPoolSize = config.hikari.maximumPoolSize
-            minimumIdle = config.hikari.minimumIdle
-            connectionTimeout = config.hikari.connectionTimeout
-            idleTimeout = config.hikari.idleTimeout
-            maxLifetime = config.hikari.maxLifetime
-            this.poolName = config.hikari.poolName ?: poolName
+            this.poolName = poolName
 
-            // 接続検証
-            // Oracle: "SELECT 1 FROM DUAL", H2/PostgreSQL: "SELECT 1"
-            // H2 は DUAL テーブルもサポートしているが、よりポータブルな形式を使用
-            connectionTestQuery = "SELECT 1"
+            // HikariCP 設定（nullable プロパティの扱い）
+            config.hikari?.let { hikari ->
+                hikari.maximumPoolSize?.let { maximumPoolSize = it }
+                hikari.minimumIdle?.let { minimumIdle = it }
+                hikari.connectionTimeout?.let { connectionTimeout = it }
+                hikari.poolName?.let { this.poolName = it }
+            }
+
+            // 接続検証（Oracle Base Database 前提）
+            connectionTestQuery = "SELECT 1 FROM DUAL"
         }
 
         return HikariDataSource(hikariConfig)

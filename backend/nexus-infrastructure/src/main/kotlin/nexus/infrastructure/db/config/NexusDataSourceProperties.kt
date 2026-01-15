@@ -32,53 +32,47 @@ data class NexusDataSourceProperties(
      * 統合DB（integration）設定
      * nexus-group 専用
      */
-    val integration: DataSourceConfig = DataSourceConfig(),
+    val integration: DataSourceProps,
 
     /**
-     * 地区DB設定（Map<regionId, DataSourceConfig>）
+     * 地区DB設定（Map<regionId, DataSourceProps>）
      * 例: tokyo, osaka, fukuoka
      */
-    val regions: Map<String, DataSourceConfig> = emptyMap()
+    val regions: Map<String, DataSourceProps> = emptyMap()
 )
 
 /**
- * 個別 DataSource 設定
+ * 個別 DataSource 設定プロパティ
  */
-data class DataSourceConfig(
+data class DataSourceProps(
     /** JDBC URL */
     val url: String = "",
+
+    /** JDBC ドライバークラス名 */
+    val driverClassName: String,
 
     /** データベースユーザー名 */
     val username: String = "",
 
-    /** データベースパスワード */
-    val password: String = "",
-
-    /** JDBC ドライバークラス名（省略時は URL から自動判定） */
-    val driverClassName: String? = null,
-
-    /** HikariCP 設定 */
-    val hikari: HikariConfig = HikariConfig()
+    /** データベースパスワード（空/未指定許容） */
+    val password: String? = null,
+     
+    /** HikariCP 設定（任意） */
+    val hikari: HikariProps? = null
 )
 
 /**
- * HikariCP 接続プール設定
+ * HikariCP 接続プール設定プロパティ
  */
-data class HikariConfig(
+data class HikariProps(
     /** 最大プールサイズ */
-    val maximumPoolSize: Int = 10,
+    val maximumPoolSize: Int? = null,
 
     /** 最小アイドル接続数 */
-    val minimumIdle: Int = 2,
+    val minimumIdle: Int? = null,
 
     /** 接続タイムアウト（ミリ秒） */
-    val connectionTimeout: Long = 30000,
-
-    /** アイドルタイムアウト（ミリ秒） */
-    val idleTimeout: Long = 600000,
-
-    /** 最大ライフタイム（ミリ秒） */
-    val maxLifetime: Long = 1800000,
+    val connectionTimeout: Long? = null,
 
     /** プール名（デバッグ用） */
     val poolName: String? = null

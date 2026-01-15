@@ -97,6 +97,22 @@ Each layer has clear responsibilities and forbidden knowledge.
 - Repository **implementations** belong to the infrastructure layer
 - JPA repositories are implementation details, not domain contracts
 
+### JPA vs JDBC Selection
+
+Infrastructure layer MAY use either JPA or JDBC for repository implementations.
+
+**Selection criteria**
+- CRUD, state transitions, aggregate persistence → JPA preferred
+- List queries, search, reports, cross-domain queries  
+  (large JOINs, aggregations, DTO-oriented results) → JDBC preferred
+- Performance-critical or SQL-driven operations → JDBC preferred
+- N+1 or mapping cost concerns → Consider switching to JDBC
+
+**Important**
+- Domain / Application / API layers remain technology-agnostic
+- Explicit DTO mapping is recommended for JDBC-based list/report queries
+- Layer dependency rules must be strictly followed
+
 ---
 
 ## 4. Dependency Rules

@@ -13,7 +13,7 @@ import javax.sql.DataSource
  * DbContext に基づいて適切な DataSource を選択し、Connection を提供
  *
  * DataSource 構成:
- * - 地区DB: Map<regionId, DataSource> で管理（例: tokyo, osaka, fukuoka）
+ * - 地区DB: Map<regionId, DataSource> で管理（例: saitama, fukushima, tochigi）
  * - 統合DB: 単一の DataSource（nexus-group 専用）
  *
  * 重要な設計制約:

@@ -1,122 +1,138 @@
-# Gojo Contract List – Specification
+# GOJO 契約一覧 API 仕様（Local / All）
 
-## Purpose
+本ドキュメントは、互助会（GOJO）における  
+**契約一覧機能（Local / All）**の仕様を定義するものである。
 
-Provide a **read-only contract list** for Mutual Aid (Gojo) with two scopes:
+本仕様は **読み取り専用（Read Only）** であり、  
+**振る舞い（Behavior）のみ**を定義する。
 
-- **Local (Region-based)**: Operational view for regional offices
-- **All (Cross-corporation)**: Group-wide analytical / administrative view
-
-This specification defines **behavioral rules only**.
-Persistence, DB, and framework details are intentionally excluded.
+DB 構成、永続化方式、フレームワーク詳細は **意図的に含めない**。
 
 ---
 
-## Scopes
+## 目的（Purpose）
 
-### 1. Local Contracts List
+以下 2 つのスコープで契約一覧を提供する。
 
-**Intent**  
-View contracts within a single region (業務現場向け).
+- **Local（地区単位）**  
+  業務現場向けのオペレーションビュー
+- **All（法人横断）**  
+  グループ全体での参照・分析・管理用途
 
-**Scope characteristics**
-- Region-scoped
-- Corporation is implicitly determined by region
-- Operational use
+---
 
-**UI Route**
+## スコープ定義
+
+### 1. Local 契約一覧（地区単位）
+
+#### 意図（Intent）
+単一地区（region）に属する契約を一覧表示する。  
+主に **現場業務向け** の画面。
+
+#### スコープ特性
+- 地区単位
+- 法人は地区により暗黙的に決定される
+- オペレーション用途
+
+#### UI ルート
 /gojo/contracts/local
 
-**API**
+#### API
 GET /api/v1/gojo/contracts/local
 
-**Request Parameters**
 
-| Name | Type | Required | Notes |
+#### リクエストパラメータ
+
+| 名称 | 型 | 必須 | 備考 |
 |----|----|----|----|
-| regionId | string | yes | Region identifier |
-| page | int | yes | 0-based |
-| size | int | yes | Allowed: 20 / 50 / 100 |
+| regionId | string | 必須 | 地区ID |
+| page | int | 必須 | 0始まり |
+| size | int | 必須 | 許可値: 20 / 50 / 100 |
 
-**Rules**
-- `page` must be `>= 0`
-- `size` must be one of `20, 50, 100`
-- Region is mandatory
-- Read-only
+#### ルール
+- `page` は `0以上` であること
+- `size` は `20 / 50 / 100` のいずれか
+- regionId は必須
+- **Read Only**
 
 ---
 
-### 2. All Contracts List (Cross-Corporation)
+### 2. All 契約一覧（法人横断）
 
-**Intent**  
-View contracts across corporations for group-level use.
+#### 意図（Intent）
+複数法人にまたがる契約を一覧表示する。  
+**管理・分析用途** を想定。
 
-**Scope characteristics**
-- Cross-corporation
-- Optional corporation filter
-- Administrative / analytical use
+#### スコープ特性
+- 法人横断
+- 法人指定は任意
+- 管理・分析用途
 
-**UI Route**
+#### UI ルート
 /gojo/contracts/all
 
-**API**
+#### API
 GET /api/v1/gojo/contracts/all
 
-**Request Parameters**
 
-| Name | Type | Required | Notes |
+#### リクエストパラメータ
+
+| 名称 | 型 | 必須 | 備考 |
 |----|----|----|----|
-| corporationId | string | no | When omitted, ALL corporations |
-| page | int | yes | 0-based |
-| size | int | yes | Allowed: 20 / 50 / 100 |
+| corporationId | string | 任意 | 未指定時は全法人 |
+| page | int | 必須 | 0始まり |
+| size | int | 必須 | 許可値: 20 / 50 / 100 |
 
-**Rules**
-- `page` must be `>= 0`
-- `size` must be one of `20, 50, 100`
-- `corporationId` is optional
-- **No additional guards** (ALL is explicitly allowed)
-- Read-only
-
----
-
-## Common Pagination Rules
-
-- Pagination is **mandatory**
-- Allowed page sizes are fixed: `20 / 50 / 100`
-- Maximum size is `100`
-- Sorting is implementation-defined (out of scope)
+#### ルール
+- `page` は `0以上` であること
+- `size` は `20 / 50 / 100` のいずれか
+- `corporationId` は **任意**
+- **追加のガード条件は禁止（ALL は明示的に許可）**
+- **Read Only**
 
 ---
 
-## Architectural Constraints
+## 共通ページネーションルール
 
-The following rules are **mandatory**:
+- ページネーションは **必須**
+- ページサイズは固定値のみ許可  
+- 20 / 50 / 100
+- 最大 size は `100`
+- ソート順は実装依存（本仕様では定義しない）
 
-- Domain layer MUST NOT depend on Spring, JPA, JDBC
-- Repository interfaces live in domain layer
-- Repository implementations live in infrastructure layer
-- API / Application layers MUST NOT use Spring Data JPA directly
-- nexus-api MUST NOT own DataSource or JPA configuration
-- This use case is **read-only**
+---
 
-Refer to:
+## アーキテクチャ制約（必須）
+
+以下のルールは **必ず遵守すること**。
+
+- Domain 層は Spring / JPA / JDBC に依存してはならない
+- Repository インターフェースは Domain 層に配置する
+- Repository 実装は Infrastructure 層に配置する
+- API / Application 層で Spring Data JPA を直接使用しない
+- nexus-api は DataSource / JPA 設定を所有しない
+- 本ユースケースは **Read Only** とする
+
+関連ドキュメント：
 - `docs/architecture/design-principles.md`
 - `docs/architecture/ai-rules.md`
 
 ---
 
-## Non-Goals (Out of Scope)
+## 非対象（Out of Scope）
 
-- Contract detail view
-- Update / cancel / hold operations
-- Authorization / permission rules
-- Sorting / filtering beyond corporation scope
-- DB schema definitions
+以下は本仕様の対象外とする。
+
+- 契約詳細画面
+- 更新 / 解約 / 保留 等の操作
+- 認可・権限制御
+- 法人以外の検索条件
+- DB スキーマ定義
 
 ---
 
-## Status
+## ステータス
 
-- Local list: Implemented
-- All list: Implemented
-- Ready for delegation to feature developers
+- Local 契約一覧: 実装済み
+- All 契約一覧: 実装済み
+- **開発者への委譲可能状態**

@@ -226,6 +226,89 @@ if (contract.isMatured()) { ... }
 
 詳細は [ai-rules.md](./ai-rules.md) の「Transitional Policy: JPA Annotations in Domain Entities」を参照。
 
+### 永続化戦略：JPA と JDBC の併用
+
+**目的**  
+性能と保守性を両立し、一覧・検索・帳票などにおける SQL の表現力と実行性能を確保する。
+
+過去の PoC において、SQL*Plus では数秒で完了する SQL が、
+JPA を介した実装では数十秒を要する事例が確認された。
+特に、集計・横断検索・画面表示用 DTO に直結する SQL においては、
+JPA のマッピングコストやライフサイクル管理がボトルネックとなる場合がある。
+
+本システムではこれを踏まえ、**JPA と JDBC を用途に応じて意図的に使い分ける**。
+
+**基本方針**
+- Domain / Application / API 層は JPA / JDBC を知らない（技術非依存）
+- Repository インターフェースは Domain 層に配置する
+- Repository 実装（JPA 版 / JDBC 版）は Infrastructure 層に配置する
+- 永続化方式の選択は Infrastructure 層の責務とする
+
+**選択基準**
+
+| 用途 | 推奨技術 | 理由 |
+|------|----------|------|
+| CRUD・状態遷移・集約の永続化 | **JPA** | エンティティのライフサイクル管理が容易、トランザクション境界が明確 |
+| 一覧・検索・帳票・横断参照 | **JDBC（推奨）** | 大きな JOIN / 集計 / DTO 直結 SQL の表現力と性能を確保 |
+| 性能要件が厳しい／SQL 主導 | **JDBC 優先** | SQL 最適化の自由度が高い |
+| N+1 やマッピングコストが疑われる場合 | **JDBC へ切替可能** | 性能事故を回避 |
+
+**実装パターン（例）**
+
+```kotlin
+// Domain 層: 技術非依存な契約（interface のみ）
+interface GojoContractRepository {
+    fun save(contract: Contract): Contract
+    fun findByRegion(
+        regionId: String,
+        page: Int,
+        size: Int
+    ): PaginatedResult<Contract>
+}
+
+// Infrastructure 層: 実装例（方式は用途に応じて選択）
+@Repository
+class GojoContractRepositoryImpl(
+    private val jpaContractRepository: JpaContractRepository, // JPA 実装
+    private val dbConnectionProvider: DbConnectionProvider     // JDBC 実装
+) : GojoContractRepository {
+
+    override fun save(contract: Contract): Contract =
+        jpaContractRepository.save(contract)
+
+    override fun findByRegion(
+        regionId: String,
+        page: Int,
+        size: Int
+    ): PaginatedResult<Contract> {
+        // JDBC による一覧取得（詳細は Infrastructure に閉じる）
+        TODO("Implement JDBC query")
+    }
+}
+```
+
+※ 上記は一例であり、JPA 実装 / JDBC 実装をクラス分離する構成も許容する。
+
+**やってはいけないこと**
+- Domain / Application / API 層に `JdbcTemplate` や `EntityManager` を持ち込まない
+- API（nexus-api）が DataSource / JPA 設定を所有しない
+- JPA を理由に巨大 SQL を Entity に無理にマッピングしない（一覧系は DTO を使用）
+- 一覧・帳票処理で JPA の N+1 問題を放置しない（JDBC への切替を検討）
+
+**モジュール別推奨**
+
+| モジュール | 推奨 | 理由 |
+|------------|------|------|
+| group（integration） | **JDBC ファースト** | 法人横断検索・集計が主用途で、大きな JOIN が多い |
+| gojo | **用途により併用** | CRUD は JPA、一覧（local / all）は JDBC も可 |
+| funeral / bridal | **用途により併用** | 案件管理は JPA、帳票・集計は JDBC |
+
+**判断に迷った場合**
+1. 性能要件が不明確 → JPA から開始（後で JDBC に切替可能）
+2. JOIN が多い／集計関数が多い → JDBC を検討
+3. 画面 DTO と 1:1 で返却したい → JDBC
+4. 状態遷移・整合性管理が主目的 → JPA
+
  ---
 
 ## 5. 本文書の位置付け

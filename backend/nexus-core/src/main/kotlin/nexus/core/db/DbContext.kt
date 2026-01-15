@@ -30,7 +30,7 @@ enum class DatabaseType {
 /**
  * DB接続コンテキスト
  *
- * ドメイン層から DB 接続を要求する際に使用
+ * Domain/Application/API 層から DB 接続を直接扱わずに接続種別を指定するために使用
  * - REGION の場合: regionId 必須
  * - INTEGRATION の場合: regionId は null
  *
@@ -41,6 +41,9 @@ data class DbContext(
     val databaseType: DatabaseType,
     val regionId: String? = null
 ) {
+    /**
+     * バリデーション: databaseType と regionId の整合性をチェック
+     */
     init {
         when (databaseType) {
             DatabaseType.REGION -> {
@@ -76,18 +79,5 @@ data class DbContext(
          */
         fun forIntegration(): DbContext =
             DbContext(DatabaseType.INTEGRATION)
-    }
-}
-
-/**
- * 地区ID
- *
- * 地区DBへの接続時に使用する識別子
- * 将来的に Keycloak の region_ids から取得予定
- */
-@JvmInline
-value class RegionId(val value: String) {
-    init {
-        require(value.isNotBlank()) { "RegionId must not be blank" }
     }
 }

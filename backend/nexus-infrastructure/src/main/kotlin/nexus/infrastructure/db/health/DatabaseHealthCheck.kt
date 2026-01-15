@@ -20,18 +20,19 @@ class DatabaseHealthCheck(
      * @param regionId 地区ID
      * @return 接続成功なら true
      */
-    fun testRegionConnection(regionId: String): Boolean {
+    fun testRegion(regionId: String): Boolean {
         val context = DbContext.forRegion(regionId)
 
         return try {
             dbConnectionProvider.getConnection(context).use { conn ->
-                conn.prepareStatement("SELECT 1").use { ps ->
+                conn.prepareStatement("SELECT 1 FROM DUAL").use { ps ->
                     ps.executeQuery().use { rs ->
                         rs.next()
                     }
                 }
             }
         } catch (e: Exception) {
+            logger.warn("DB health check failed: regionId={}", regionId, e)
             false
         }
     }
@@ -39,18 +40,19 @@ class DatabaseHealthCheck(
     /**
      * 統合DB への接続テスト
      */
-    fun testIntegrationConnection(): Boolean {
+    fun testIntegration(): Boolean {
         val context = DbContext.forIntegration()
 
         return try {
             dbConnectionProvider.getConnection(context).use { conn ->
-                conn.prepareStatement("SELECT 1").use { ps ->
+                conn.prepareStatement("SELECT 1 FROM DUAL").use { ps ->
                     ps.executeQuery().use { rs ->
                         rs.next()
                     }
                 }
             }
         } catch (e: Exception) {
+            logger.warn("DB health check failed: regionId={}", regionId, e)
             false
         }
     }
