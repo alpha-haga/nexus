@@ -52,10 +52,10 @@ class ContractService(
      */
     @Transactional(readOnly = true)
     fun findById(contractId: GojoContractId): Contract {
-        return contractRepository.findById(contractId.value)
-            .orElseThrow { ResourceNotFoundException("Contract", contractId.value) }
+        return contractRepository.findById(contractId)
+            ?: throw ResourceNotFoundException("Contract", contractId)
     }
-
+    
     /**
      * 契約者の契約一覧を取得
      */

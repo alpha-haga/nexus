@@ -19,4 +19,14 @@ interface GojoContractRepository {
     fun save(contract: Contract, regionId: String): Contract
 
     fun updateStatus(contractId: GojoContractId, newStatus: String, regionId: String): Int
+
+    /**
+     * 地区内の契約をページネーションで取得
+     *
+     * @param regionId 地区ID（必須）
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ（20, 50, 100のみ）
+     * @return ページネーション結果
+     */
+    fun findByRegion(regionId: String, page: Int, size: Int): PaginatedResult<Contract>
 }

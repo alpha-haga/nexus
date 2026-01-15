@@ -17,3 +17,4 @@
 // export { ContractForm } from './components/ContractForm';
 // export { ContractList } from './components/ContractList';
 // export { PaymentHistory } from './components/PaymentHistory';
+export { GojoContractsList } from './components/GojoContractsList';

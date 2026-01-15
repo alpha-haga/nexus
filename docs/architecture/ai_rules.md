@@ -143,8 +143,59 @@ When conflicts arise, the priority order is:
 
 ---
 
-## 8. Guiding Principle
+## 8. Transitional Policy: JPA Annotations in Domain Entities
 
-> AI is a coding assistant, not an architect.
-> Architectural authority always belongs to humans and documented design.
+### Current State (Migration Debt)
 
+Some existing domain entities currently contain JPA annotations (`@Entity`, `@Table`, `@Column`, etc.).
+This is **acknowledged migration debt** that will be addressed incrementally.
+
+### Mandatory Rules for New Code
+
+**MUST**
+- New domain entities MUST be persistence-agnostic (no Spring/JPA/JDBC annotations)
+- Persistence entities MUST be defined in the infrastructure layer
+- Mapping between domain models and persistence models MUST be done in infrastructure layer
+- Domain repository interfaces MUST remain framework-agnostic (already achieved)
+
+**MUST NOT**
+- Add new JPA annotations to existing domain entities
+- Create new domain entities with JPA annotations
+- Reference database concepts (tables, columns, schemas) in domain layer
+- Depend on Spring Data JPA or JPA in domain/application layers
+
+### Do / Don't
+
+| Action | Status | Rationale |
+|--------|--------|-----------|
+ Create new domain entity with `@Entity` | ❌ **FORBIDDEN** | Domain must not know persistence |
+| Create persistence entity in infrastructure | ✅ **REQUIRED** | Persistence is infrastructure concern |
+| Add JPA annotations to existing domain entity | ❌ **FORBIDDEN** | Prevents migration progress |
+| Map domain ↔ persistence in infrastructure | ✅ **REQUIRED** | Separation of concerns |
+| Use domain repository interface in domain/application | ✅ **REQUIRED** | Framework-agnostic contract |
+
+### Incremental Migration Guidelines
+
+When modifying code that touches existing domain entities with JPA annotations:
+
+1. **If adding new fields**: Add to domain entity without JPA annotations. Create/update corresponding ersistence entity in infrastructure layer.
+2. **If refactoring entity**: Consider splitting domain model from persistence model as part of the refactor.
+3. **If creating new domain entity**: MUST create it without JPA annotations. Create separate persistence entity in infrastructure.
+4. **Migration priority**: Migrate entities when they are being actively modified (opportunistic refactoring).
++
+### Rationale
+
+Domain entities should represent business concepts, not database schemas.
+Separating domain models from persistence models:
+- Enables testing domain logic without database
+- Allows multiple persistence strategies (JPA, JDBC, NoSQL)
+- Prevents infrastructure changes from affecting domain logic
+- Maintains clear architectural boundaries
+
+---
+
+ ## 9. Guiding Principle
+ 
+ > AI is a coding assistant, not an architect.
+ > Architectural authority always belongs to humans and documented design.
+ 
