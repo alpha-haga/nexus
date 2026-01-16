@@ -13,6 +13,7 @@ export { AppLayout } from './components/AppLayout';
 export { Header } from './components/Header';
 export { Sidebar } from './components/Sidebar';
 export { Providers } from './components/Providers';
+export { ComingSoon } from './components/ComingSoon';
 
 // 共通ユーティリティをエクスポート
 // export { formatDate } from './utils/date';

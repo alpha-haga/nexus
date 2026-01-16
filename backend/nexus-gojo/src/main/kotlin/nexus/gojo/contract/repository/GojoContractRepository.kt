@@ -30,4 +30,15 @@ interface GojoContractRepository {
      * @return ページネーション結果
      */
     fun findByRegion(regionId: String, page: Int, size: Int): PaginatedResult<Contract>
+
+    /**
+     * 地区内の複数法人スキーマ横断で契約をページネーションで取得
+     *
+     * @param regionId 地区ID（必須）
+     * @param corporationId 法人ID（任意、null の場合は全法人）
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ（20, 50, 100のみ）
+     * @return ページネーション結果
+     */
+    fun findAll(regionId: String, corporationId: String?, page: Int, size: Int): PaginatedResult<Contract>
 }

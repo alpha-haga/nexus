@@ -27,6 +27,17 @@ class GojoContractController(
         val result = contractQueryService.listLocalContracts(regionId, page, size)
         return ResponseEntity.ok(result.toResponse())
     }
+
+    @GetMapping("/all")
+    fun listAll(
+        @RequestParam(required = true) regionId: String,
+        @RequestParam(required = false) corporationId: String?,
+        @RequestParam(required = true) page: Int,
+        @RequestParam(required = true) size: Int
+    ): ResponseEntity<PaginatedContractResponse> {
+        val result = contractQueryService.listAllContracts(regionId, corporationId, page, size)
+        return ResponseEntity.ok(result.toResponse())
+    }
 }
 
 // Response DTOs
