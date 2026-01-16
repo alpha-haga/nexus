@@ -1,9 +1,10 @@
-package nexus.gojo.contract.repository
+package nexus.core.pagination
 
 /**
  * ページネーション結果
  *
  * Domain層のフレームワーク非依存な表現
+ * 全モジュールで共通利用
  */
 data class PaginatedResult<T>(
     val content: List<T>,

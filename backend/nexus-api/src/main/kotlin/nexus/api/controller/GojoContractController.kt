@@ -1,8 +1,8 @@
 package nexus.api.controller
 
+import nexus.core.pagination.PaginatedResult
 import nexus.gojo.contract.entity.Contract
 import nexus.gojo.contract.entity.ContractStatus
-import nexus.gojo.contract.repository.PaginatedResult
 import nexus.gojo.contract.service.ContractQueryService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*

@@ -1,9 +1,9 @@
 package nexus.infrastructure.persistence.gojo
 
 import nexus.core.db.DbContext
+import nexus.core.pagination.PaginatedResult
 import nexus.core.id.GojoContractId
 import nexus.core.id.PersonId
-import nexus.gojo.contract.repository.PaginatedResult
 import nexus.gojo.contract.entity.Contract
 import nexus.gojo.contract.repository.GojoContractRepository
 import nexus.infrastructure.db.DbConnectionProvider

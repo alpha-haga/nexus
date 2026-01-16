@@ -1,6 +1,7 @@
 package nexus.gojo.contract.repository
 
 import nexus.core.id.GojoContractId
+import nexus.core.pagination.PaginatedResult
 import nexus.core.id.PersonId
 import nexus.gojo.contract.entity.Contract
 

@@ -1,7 +1,9 @@
 package nexus.group.repository
 
+import nexus.core.pagination.PaginatedResult
 import nexus.core.id.PersonId
 import nexus.group.query.GroupSearchCriteria
+import nexus.group.query.GroupContractDto
 import nexus.group.query.GroupSearchResult
 
 /**
@@ -25,4 +27,14 @@ interface GroupRepository {
      * 名寄せ候補の検索
      */
     fun findMergeCandidates(personId: PersonId): List<GroupSearchResult>
+
+    /**
+     * 法人横断契約一覧を取得（統合DB）
+     *
+     * @param corporationId 法人ID（null の場合は全法人）
+     * @param page ページ番号（0始まり）
+     * @param size ページサイズ（20, 50, 100のみ）
+     * @return ページネーション結果
+     */
+    fun findContracts(corporationId: String?, page: Int, size: Int): PaginatedResult<GroupContractDto>
 }

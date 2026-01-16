@@ -1,8 +1,8 @@
 package nexus.gojo.contract.service
 
 import nexus.core.exception.ValidationException
+import nexus.core.pagination.PaginatedResult
 import nexus.gojo.contract.repository.GojoContractRepository
-import nexus.gojo.contract.repository.PaginatedResult
 import nexus.gojo.contract.entity.Contract
 import org.springframework.stereotype.Service
 
