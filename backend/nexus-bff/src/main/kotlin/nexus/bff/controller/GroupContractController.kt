@@ -1,4 +1,4 @@
-package nexus.api.controller
+package nexus.bff.controller
 
 import nexus.core.pagination.PaginatedResult
 import nexus.group.query.GroupContractDto

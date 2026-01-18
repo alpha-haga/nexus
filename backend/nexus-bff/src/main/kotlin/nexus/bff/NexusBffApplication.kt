@@ -17,10 +17,10 @@ import org.springframework.boot.runApplication
     scanBasePackages = [
         "nexus.bff",
         "nexus.infrastructure",
+        "nexus.gojo",
         "nexus.group",
         "nexus.identity",
         "nexus.household"
-        // 業務ドメイン（nexus.gojo 等）は Controller 移動段階で追加する
     ]
 )
 class NexusBffApplication

@@ -53,7 +53,7 @@ class ContractService(
     @Transactional(readOnly = true)
     fun findById(contractId: GojoContractId): Contract {
         return contractRepository.findById(contractId)
-            ?: throw ResourceNotFoundException("Contract", contractId)
+            ?: throw ResourceNotFoundException("Contract", contractId.value)
     }
     
     /**
@@ -61,7 +61,7 @@ class ContractService(
      */
     @Transactional(readOnly = true)
     fun findByContractor(personId: PersonId): List<Contract> {
-        return contractRepository.findByContractorPersonId(personId.value)
+        return contractRepository.findByContractorPersonId(personId)
     }
 
     /**

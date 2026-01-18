@@ -17,8 +17,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 @EntityScan(
     basePackages = [
         "nexus.identity.person.entity",
-        "nexus.household.member.entity"
-    ]
+        "nexus.household.member.entity",
+        "nexus.gojo.contract.entity"
+        ]
 )
 @EnableJpaRepositories(
     basePackages = [

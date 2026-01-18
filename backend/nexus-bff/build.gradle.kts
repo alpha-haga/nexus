@@ -10,6 +10,7 @@ dependencies {
     implementation(project(":nexus-infrastructure"))
 
     // 基盤ドメイン（社内UIでも参照し得る）
+    implementation(project(":nexus-gojo"))
     implementation(project(":nexus-group"))
     implementation(project(":nexus-identity"))
     implementation(project(":nexus-household"))
