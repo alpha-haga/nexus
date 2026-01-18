@@ -1,4 +1,9 @@
-package nexus.infrastructure.persistence.identity
+/*
+ * TEMP DISABLED:
+ * nexus-infrastructure は DB接続基盤に限定する方針のため、業務/横断の永続化実装を退避。
+ * 後で各ドメイン側（例: nexus-identity-infrastructure 等）へ移設する。
+ */
+package nexus.infrastructure._disabled.persistence.identity
 
 import nexus.core.id.CorporationId
 import nexus.core.id.PersonId

@@ -90,6 +90,10 @@ include("nexus-reporting")
 // 依存: nexus-group, nexus-identity, nexus-household
 include("nexus-api")
 
+// 社内UI向けBFF（Web / Tablet）
+// 依存: nexus-core, nexus-infrastructure, 各ドメイン（段階的に追加）
+include("nexus-bff")
+
 // データ取込・名寄せ補助バッチ
 // 依存: nexus-core, nexus-identity
 include("nexus-batch")

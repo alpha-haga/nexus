@@ -311,7 +311,73 @@ class GojoContractRepositoryImpl(
 
  ---
 
-## 5. 本文書の位置付け
+
+## 5. API構成ポリシー（nexus-api / nexus-bff）
+
+### 基本方針
+
+NEXUS では、API 提供を **nexus-api** と **nexus-bff** の2つに分離する。
+それぞれの役割と依存関係を明確にすることで、外部公開APIと社内UI向けAPIの境界を保護する。
+
+### nexus-api（External / Platform API）
+
+**役割**
+- 外部公開・基盤用途の API を提供
+- 顧客管理系（group / identity / household）の機能を公開
+- 認証・認可・エラーハンドリングの統一
+
+**依存可能モジュール**
+- nexus-core
+- nexus-infrastructure（DB接続基盤のみ、DataSource設定は所有しない）
+- nexus-group（法人横断検索）
+- nexus-identity（人物管理）
+- nexus-household（世帯管理）
+
+**禁止事項**
+- 業務ドメイン（gojo / funeral / bridal / point / agent / payment / accounting / reporting）への依存は禁止
+- 業務ドメインの Controller を追加することは禁止
+- DataSource / JPA 設定を所有することは禁止（infrastructure 層の責務）
+
+**理由**
+- 外部公開APIは安定性とセキュリティが最優先
+- 業務ロジックの変更が外部APIに波及しないように分離
+- 将来的な外部連携（他システム・パートナー）への拡張性を確保
+
+### nexus-bff（Internal UI Backend）
+
+**役割**
+- 社内UI（Web / Tablet）向けの BFF（Backend For Frontend）として機能
+- 業務ドメイン（gojo / funeral / bridal / point / agent / payment / accounting / reporting）の API を束ねる
+- UI 向けのデータ集約・変換を提供
+
+**依存可能モジュール**
+- nexus-core
+- nexus-infrastructure（DB接続基盤のみ、DataSource設定は所有しない）
+- すべての業務ドメインモジュール（gojo / funeral / bridal / point / agent / payment / accounting / reporting）
+- 基盤モジュール（group / identity / household）も参照可能
+
+**UI向けControllerの配置**
+- 社内UI向けの Controller は **必ず nexus-bff に配置する**
+- nexus-api に業務ドメインの Controller を追加することは禁止
+- 将来 Tablet アプリでも nexus-bff を利用する（内部クライアント向け）
+
+**理由**
+- 社内UIは業務要件の変更に柔軟に対応する必要がある
+- 複数ドメインのデータを集約して返すことが多い（BFF パターンに適している）
+- UI 専用の最適化（ページネーション・フィルタリング・集計）を実装しやすい
+
+### 現状の移行状態
+
+現時点では、nexus-api は group / identity / household のみに依存している。
+業務ドメイン（gojo / funeral / bridal / point 等）への依存は存在しない。
+
+**移行方針**
+- 新規の業務系 API は nexus-bff に実装する
+
+**チェックリスト**: [API作成時チェックリスト](./api-checklist.md)
+ ---
+
+## 6. 本文書の位置付け
 
 ### 使い方
 

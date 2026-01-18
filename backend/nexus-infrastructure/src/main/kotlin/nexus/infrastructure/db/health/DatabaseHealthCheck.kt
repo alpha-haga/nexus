@@ -2,6 +2,7 @@ package nexus.infrastructure.db.health
 
 import nexus.core.db.DbContext
 import nexus.infrastructure.db.DbConnectionProvider
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
 /**
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component
 class DatabaseHealthCheck(
     private val dbConnectionProvider: DbConnectionProvider
 ) {
+    private val logger = LoggerFactory.getLogger(DatabaseHealthCheck::class.java)
 
     /**
      * 地区DB への接続テスト
@@ -52,7 +54,7 @@ class DatabaseHealthCheck(
                 }
             }
         } catch (e: Exception) {
-            logger.warn("DB health check failed: regionId={}", regionId, e)
+            logger.warn("DB health check failed: integration", e)
             false
         }
     }

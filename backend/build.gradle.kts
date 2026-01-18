@@ -67,13 +67,14 @@ val springModules = listOf(
     "nexus-bridal",
     "nexus-point",
     "nexus-api",
+    "nexus-bff",
     "nexus-batch"
 )
 
 // ====================
 // Spring Boot アプリケーションモジュール
 // ====================
-val bootApplicationModules = listOf("nexus-api", "nexus-batch")
+val bootApplicationModules = listOf("nexus-api", "nexus-bff", "nexus-batch")
 
 configure(subprojects.filter { it.name in pureKotlinModules }) {
     // Pure Kotlin: Spring依存なし

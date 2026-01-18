@@ -1,4 +1,4 @@
-# nexus-api
+# nexus-api（External / Platform API）
 
 ## 役割
 
@@ -128,20 +128,26 @@ fun Person.toResponse() = PersonResponse(
 )
 ```
 
-### 将来の BFF 分離
+### nexus-bff との役割分担
+nexus-api は外部公開・基盤用途の API のみを提供する。
+nexus-bff が社内UI（Web / Tablet）向けの BFF として、業務ドメインの API を束ねる。
 
 現在 nexus-api は group/identity/household のみに依存。
-業務モジュール（gojo/funeral/bridal/point）へのアクセスは将来 BFF として分離予定。
+業務モジュール（gojo / funeral / bridal / point 等）は nexus-bff へ配置する方針とする。
 
 ```
 現在:
   nexus-api → group, identity, household
 
 将来:
-  nexus-api-core      → group, identity, household  (顧客管理系)
-  nexus-api-gojo      → gojo                             (互助会系)
-  nexus-api-ceremony  → funeral, bridal                  (式典系)
-  nexus-api-point     → point                            (ポイント系)
+  nexus-api    → group, identity, household  (外部公開・基盤用途)
+  nexus-bff    → gojo, funeral, bridal, point, agent, payment, accounting, reporting  (社内UI向け)  
+
+重要:
+- 業務ドメイン（gojo / funeral / bridal / point 等）の Controller は nexus-bff にのみ実装する
+- nexus-api に業務ドメインの Controller を追加することは禁止
+- 将来 Tablet アプリでも nexus-bff を利用する（内部クライアント向け）
+
 ```
 
 ## 依存関係

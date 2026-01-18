@@ -210,7 +210,48 @@ Separating domain models from persistence models:
 
 ---
 
- ## 9. Guiding Principle
+## 9. API Placement Rules
+
+### Mandatory Rules
+
+**MUST**
+- UI向けAPI（社内Web / Tablet向け）は **nexus-bff にのみ実装する**
+- 外部公開・基盤用途のAPIは **nexus-api にのみ実装する**
+- Controller 作成時は必ず「外部向けか社内UI向けか」を判断する
+
+**MUST NOT**
+- nexus-api に業務ドメイン（gojo / funeral / bridal / point / agent / payment / accounting / reporting）の Controller を追加することは禁止
+- nexus-bff に外部公開用途の API を追加することは禁止
+
+### Decision Criteria
+
+| API の性質 | 配置先 | 判断基準 |
+|-----------|--------|---------|
+| 外部公開・基盤用途 | **nexus-api** | 顧客管理系（group / identity / household）、外部連携向け |
+| 社内UI向け | **nexus-bff** | 業務ドメイン（gojo / funeral / bridal / point 等）、UI専用の集約・変換 |
+
+### AI Behavior
+
+AI tools MUST check the API purpose before creating a Controller:
+1. If the API is for internal UI (Web / Tablet) → Place in **nexus-bff**
+2. If the API is for external / platform use → Place in **nexus-api**
+3. If unclear → Ask the user for clarification
+
+ ---
+
+## 10. Controller 生成前チェック（必須 / 10行ガード）
+
+1. これは「社内UI(Web/Tablet)向け」か？ → Yes なら **nexus-bff**
+2. これは「外部公開/基盤用途」か？ → Yes なら **nexus-api**
+3. 業務ドメイン(gojo/funeral/bridal/point/agent/payment/accounting/reporting)のAPIか？ → **必ず nexus-bff**
+4. group/identity/household でも「UI専用の集約API」か？ → **nexus-bff**
+5. nexus-api に業務Controllerを追加していないか？ → 追加しない（禁止）
+6. nexus-bff に外部公開APIを追加していないか？ → 追加しない（禁止）
+7. 迷ったら: 目的（外部/内部）を質問してから作る
+
+ --- 
+ 
+## 11. Guiding Principle
  
  > AI is a coding assistant, not an architect.
  > Architectural authority always belongs to humans and documented design.

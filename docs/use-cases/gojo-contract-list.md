@@ -40,6 +40,7 @@ DB 構成、永続化方式、フレームワーク詳細は **意図的に含�
 #### API
 GET /api/v1/gojo/contracts/local
 
+**API提供元（方針/移行先）**: nexus-bff（社内UI向けBFF）
 
 #### リクエストパラメータ
 
@@ -74,6 +75,7 @@ GET /api/v1/gojo/contracts/local
 #### API
 GET /api/v1/gojo/contracts/all
 
+**API提供元（方針/移行先）**: nexus-bff（社内UI向けBFF）
 
 #### リクエストパラメータ
 

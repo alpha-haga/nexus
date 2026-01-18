@@ -8,6 +8,7 @@
 
 - **UI**: `/group/contracts`
 - **API**: `GET /api/v1/group/contracts`
+- **API提供元（方針/移行先）**: nexus-bff（社内UI向けBFF）
 
 ## 接続先とスコープ
 
