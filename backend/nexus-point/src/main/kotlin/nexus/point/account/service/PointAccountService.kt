@@ -53,9 +53,9 @@ class PointAccountService(
     @Transactional(readOnly = true)
     fun findById(accountId: PointAccountId): PointAccount {
         return pointAccountRepository.findById(accountId.value)
-            .orElseThrow { ResourceNotFoundException("PointAccount", accountId.value) }
+            ?: throw ResourceNotFoundException("PointAccount", accountId.value)
     }
-
+    
     /**
      * 人物のアカウントを取得
      */

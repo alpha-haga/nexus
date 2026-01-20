@@ -44,8 +44,7 @@ dependencies {
     // Database
     // H2 はローカル検証用（暫定）。業務DBは OCI Oracle
     runtimeOnly("com.h2database:h2")
-}
 
-tasks.bootJar {
-    archiveBaseName.set("nexus-api")
+    // ArchUnit
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
 }

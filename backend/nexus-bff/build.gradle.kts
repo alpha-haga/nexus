@@ -1,10 +1,3 @@
-plugins {
-    id("org.springframework.boot")
-    id("io.spring.dependency-management")
-    kotlin("jvm")
-    kotlin("plugin.spring")
-}
-
 dependencies {
     implementation(project(":nexus-core"))
     implementation(project(":nexus-infrastructure"))
@@ -24,8 +17,7 @@ dependencies {
 
     // DB Driver（ローカル検証用の暫定。業務DBは OCI Oracle）
     runtimeOnly("com.h2database:h2")
-}
 
-tasks.bootJar {
-    archiveBaseName.set("nexus-bff")
+    // ArchUnit
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.3.0")
 }

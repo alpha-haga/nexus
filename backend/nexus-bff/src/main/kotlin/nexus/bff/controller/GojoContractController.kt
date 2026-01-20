@@ -1,9 +1,9 @@
 package nexus.bff.controller
 
+import nexus.bff.dto.gojo.ContractStatusDto
+import nexus.bff.query.gojo.GojoContractQueryFacade
+import nexus.bff.query.gojo.GojoContractReadModel
 import nexus.core.pagination.PaginatedResult
-import nexus.gojo.contract.entity.Contract
-import nexus.gojo.contract.entity.ContractStatus
-import nexus.gojo.contract.service.ContractQueryService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.time.LocalDate
@@ -15,7 +15,7 @@ import java.time.LocalDateTime
 @RestController
 @RequestMapping("/api/v1/gojo/contracts")
 class GojoContractController(
-    private val contractQueryService: ContractQueryService
+    private val gojoContractQueryFacade: GojoContractQueryFacade
 ) {
 
     @GetMapping("/local")
@@ -24,7 +24,7 @@ class GojoContractController(
         @RequestParam(required = true) page: Int,
         @RequestParam(required = true) size: Int
     ): ResponseEntity<PaginatedContractResponse> {
-        val result = contractQueryService.listLocalContracts(regionId, page, size)
+        val result = gojoContractQueryFacade.listLocal(regionId, page, size)
         return ResponseEntity.ok(result.toResponse())
     }
 
@@ -35,7 +35,7 @@ class GojoContractController(
         @RequestParam(required = true) page: Int,
         @RequestParam(required = true) size: Int
     ): ResponseEntity<PaginatedContractResponse> {
-        val result = contractQueryService.listAllContracts(regionId, corporationId, page, size)
+        val result = gojoContractQueryFacade.listAll(regionId, corporationId, page, size)
         return ResponseEntity.ok(result.toResponse())
     }
 }
@@ -61,14 +61,14 @@ data class ContractResponse(
     val maturityAmount: Long,
     val contractDate: LocalDate,
     val maturityDate: LocalDate?,
-    val status: ContractStatus,
+    val status: ContractStatusDto,
     val totalPaidAmount: Long,
     val progressRate: Double,
     val createdAt: LocalDateTime,
     val updatedAt: LocalDateTime
 )
 
-private fun PaginatedResult<Contract>.toResponse(): PaginatedContractResponse {
+private fun PaginatedResult<GojoContractReadModel>.toResponse(): PaginatedContractResponse {
     return PaginatedContractResponse(
         content = content.map { it.toResponse() },
         totalElements = totalElements,
@@ -78,7 +78,7 @@ private fun PaginatedResult<Contract>.toResponse(): PaginatedContractResponse {
     )
 }
 
-private fun Contract.toResponse(): ContractResponse {
+private fun GojoContractReadModel.toResponse(): ContractResponse {
     return ContractResponse(
         id = id,
         corporationId = corporationId,
