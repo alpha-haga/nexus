@@ -84,7 +84,9 @@ class DataSourceConfiguration(
             }
 
             // 接続検証（Oracle Base Database 前提）
-            connectionTestQuery = "SELECT 1 FROM DUAL"
+            connectionTestQuery =
+                if (config.driverClassName.contains("h2", ignoreCase = true)) "SELECT 1"
+                else "SELECT 1 FROM DUAL"
         }
 
         return HikariDataSource(hikariConfig)

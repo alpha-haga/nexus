@@ -16,6 +16,7 @@ dependencies {
     implementation(project(":nexus-identity"))
     implementation(project(":nexus-household"))
     implementation(project(":nexus-gojo"))
+    implementation(project(":nexus-group"))
 
     // Spring Data JPA（Repository 実装用）
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
