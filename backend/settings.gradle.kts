@@ -97,3 +97,10 @@ include("nexus-bff")
 // データ取込・名寄せ補助バッチ
 // 依存: nexus-core, nexus-identity
 include("nexus-batch")
+
+// ====================
+// Architecture Tests Layer
+// ====================
+// ArchUnit による境界ルールの機械強制（P0-3a）
+// CI では :nexus-architecture-tests:test を必ず実行する想定
+include("nexus-architecture-tests")
