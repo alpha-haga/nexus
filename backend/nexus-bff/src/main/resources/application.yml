@@ -1,6 +1,8 @@
 spring:
   application:
     name: nexus-bff
+  profiles:
+    active: local
 
 # サーバー設定
 server:
