@@ -1,10 +1,12 @@
 spring:
   application:
     name: nexus-api
+  profiles:
+    active: local
 
 # サーバー設定
 server:
-  port: 8080
+  port: 8081
 
 # Actuator設定
 management:

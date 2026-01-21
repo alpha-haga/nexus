@@ -1,0 +1,35 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+nexus:
+  datasource:
+    integration:
+      url: ${NEXUS_DB_INTEGRATION_URL}
+      driver-class-name: ${NEXUS_DB_DRIVER:oracle.jdbc.OracleDriver}
+      username: ${NEXUS_DB_INTEGRATION_USER}
+      password: ${NEXUS_DB_INTEGRATION_PASS}
+      hikari:
+        maximum-pool-size: ${NEXUS_DB_POOL_MAX:10}
+        minimum-idle: ${NEXUS_DB_POOL_MIN:2}
+    regions:
+      saitama:
+        url: ${NEXUS_DB_SAITAMA_URL}
+        driver-class-name: ${NEXUS_DB_DRIVER:oracle.jdbc.OracleDriver}
+        username: ${NEXUS_DB_SAITAMA_USER}
+        password: ${NEXUS_DB_SAITAMA_PASS}
+      fukushima:
+        url: ${NEXUS_DB_FUKUSHIMA_URL}
+        driver-class-name: ${NEXUS_DB_DRIVER:oracle.jdbc.OracleDriver}
+        username: ${NEXUS_DB_FUKUSHIMA_USER}
+        password: ${NEXUS_DB_FUKUSHIMA_PASS}
+      tochigi:
+        url: ${NEXUS_DB_TOCHIGI_URL}
+        driver-class-name: ${NEXUS_DB_DRIVER:oracle.jdbc.OracleDriver}
+        username: ${NEXUS_DB_TOCHIGI_USER}
+        password: ${NEXUS_DB_TOCHIGI_PASS}
+
+  security:
+    oauth2:
+      issuer-uri: ${NEXUS_OIDC_ISSUER_URI}

@@ -1,0 +1,44 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  jpa:
+    # P0-3b: RoutingDataSource は RegionContext 未設定を FAIL させる方針のため、
+    # 起動時に Hibernate が JDBC メタデータ取得で DataSource#getConnection() を呼ぶと
+    # RegionContext 未設定で落ちる。local では起動時アクセスを抑制する。
+    database-platform: org.hibernate.dialect.H2Dialect
+    properties:
+      hibernate:
+        boot:
+          allow_jdbc_metadata_access: false
+nexus:
+  datasource:
+    integration:
+      url: ${NEXUS_DB_INTEGRATION_URL:jdbc:h2:mem:nexus_integration;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+      driver-class-name: ${NEXUS_DB_DRIVER:org.h2.Driver}
+      username: ${NEXUS_DB_INTEGRATION_USER:sa}
+      password: ${NEXUS_DB_INTEGRATION_PASS:}
+      hikari:
+        maximum-pool-size: ${NEXUS_DB_POOL_MAX:5}
+        minimum-idle: ${NEXUS_DB_POOL_MIN:1}
+    regions:
+      saitama:
+        url: ${NEXUS_DB_SAITAMA_URL:jdbc:h2:mem:nexus_saitama;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+        driver-class-name: ${NEXUS_DB_DRIVER:org.h2.Driver}
+        username: ${NEXUS_DB_SAITAMA_USER:sa}
+        password: ${NEXUS_DB_SAITAMA_PASS:}
+      fukushima:
+        url: ${NEXUS_DB_FUKUSHIMA_URL:jdbc:h2:mem:nexus_fukushima;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+        driver-class-name: ${NEXUS_DB_DRIVER:org.h2.Driver}
+        username: ${NEXUS_DB_FUKUSHIMA_USER:sa}
+        password: ${NEXUS_DB_FUKUSHIMA_PASS:}
+      tochigi:
+        url: ${NEXUS_DB_TOCHIGI_URL:jdbc:h2:mem:nexus_tochigi;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+        driver-class-name: ${NEXUS_DB_DRIVER:org.h2.Driver}
+        username: ${NEXUS_DB_TOCHIGI_USER:sa}
+        password: ${NEXUS_DB_TOCHIGI_PASS:}
+
+  security:
+    oauth2:
+      issuer-uri: ${NEXUS_OIDC_ISSUER_URI:http://localhost:18080/realms/nexus}
