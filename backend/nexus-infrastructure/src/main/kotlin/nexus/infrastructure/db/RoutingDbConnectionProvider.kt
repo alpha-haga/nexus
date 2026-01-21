@@ -41,17 +41,21 @@ class RoutingDbConnectionProvider(
             ?: throw UnknownRegionException(regionId)
 
         return try {
-            logger.debug("Getting connection for region: {}", regionId)
+            if (logger.isDebugEnabled) {
+                logger.debug("Getting connection for region: $regionId")
+            }
             dataSource.connection
         } catch (e: Exception) {
-            logger.error("Failed to get connection for region: {}", regionId, e)
+            logger.error("Failed to get connection for region: $regionId", e)
             throw DbConnectionException("Failed to connect to region database: $regionId", e)
         }
     }
 
     private fun getIntegrationConnectionInternal(): Connection {
         return try {
-            logger.debug("Getting connection for integration database")
+            if (logger.isDebugEnabled) {
+                logger.debug("Getting connection for integration database")
+            }
             integrationDataSource.connection
         } catch (e: Exception) {
             logger.error("Failed to get connection for integration database", e)

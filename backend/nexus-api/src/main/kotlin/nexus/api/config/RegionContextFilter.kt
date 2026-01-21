@@ -49,11 +49,15 @@ class RegionContextFilter : OncePerRequestFilter() {
 
             val region = Region.fromStringOrThrow(regionHeader)
             RegionContext.set(region)
-            logger.debug("RegionContext set to: {} from header: {}", region, regionHeader)
+            if (logger.isDebugEnabled) {
+                logger.debug("RegionContext set to: $region from header: $regionHeader")
+            }
             filterChain.doFilter(request, response)
         } finally {
             RegionContext.clear()
-            logger.debug("RegionContext cleared")
+            if (logger.isDebugEnabled) {
+                logger.debug("RegionContext cleared")
+            }
         }
     }
 }

@@ -6,6 +6,8 @@ import nexus.core.region.Region
 import nexus.infrastructure.db.RoutingDataSource
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.core.env.Environment
+import org.springframework.core.env.Profiles
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -103,13 +105,19 @@ class DataSourceConfiguration(
     @Bean
     @Primary
     fun routingDataSource(
+        environment: Environment,
         saitamaDataSource: DataSource,
         fukushimaDataSource: DataSource,
         tochigiDataSource: DataSource,
         integrationDataSource: DataSource
     ): DataSource {
         logger.info("Creating routing DataSource")
-        val routingDataSource = RoutingDataSource()
+        val allowFallbackToIntegrationWhenUnset =
+            environment.acceptsProfiles(Profiles.of("local", "test"))
+
+        val routingDataSource = RoutingDataSource(
+            allowFallbackToIntegrationWhenUnset = allowFallbackToIntegrationWhenUnset
+        )
         val targetDataSources = mapOf<Any, Any>(
             Region.SAITAMA to saitamaDataSource,
             Region.FUKUSHIMA to fukushimaDataSource,
