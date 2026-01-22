@@ -1,0 +1,31 @@
+spring:
+  config:
+    activate:
+      on-profile: dev
+  batch:
+    job:
+      enabled: false
+
+nexus:
+  datasource:
+    integration:
+      url: ${NEXUS_DB_INTEGRATION_URL}
+      driver-class-name: oracle.jdbc.OracleDriver
+      username: ${NEXUS_DB_INTEGRATION_USERNAME}
+      password: ${NEXUS_DB_INTEGRATION_PASSWORD}
+    regions:
+      saitama:
+        url: ${NEXUS_DB_SAITAMA_URL}
+        driver-class-name: oracle.jdbc.OracleDriver
+        username: ${NEXUS_DB_SAITAMA_USERNAME}
+        password: ${NEXUS_DB_SAITAMA_PASSWORD}
+      fukushima:
+        url: ${NEXUS_DB_FUKUSHIMA_URL}
+        driver-class-name: oracle.jdbc.OracleDriver
+        username: ${NEXUS_DB_FUKUSHIMA_USERNAME}
+        password: ${NEXUS_DB_FUKUSHIMA_PASSWORD}
+      tochigi:
+        url: ${NEXUS_DB_TOCHIGI_URL}
+        driver-class-name: oracle.jdbc.OracleDriver
+        username: ${NEXUS_DB_TOCHIGI_USERNAME}
+        password: ${NEXUS_DB_TOCHIGI_PASSWORD}

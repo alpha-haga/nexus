@@ -11,7 +11,14 @@
  * 依存先: nexus-api, nexus-batch
  */
 
+plugins {
+    // 既に plugins ブロックがある場合はそこに追記してください
+    kotlin("kapt")
+}
+
 dependencies {
+    // VSCode / IDE が nexus.datasource.* を既知プロパティとして解釈できるように
+    kapt("org.springframework.boot:spring-boot-configuration-processor")
     implementation(project(":nexus-core"))
     implementation(project(":nexus-identity"))
     implementation(project(":nexus-household"))
