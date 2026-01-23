@@ -14,19 +14,23 @@ import org.springframework.stereotype.Service
 /**
  * 法人横断契約一覧 QueryService（JDBC 実装）
  *
- * P0-3d-5:
- * - JDBC 実装を追加し、差し替え導線を固定する
- * - P0 のため SQL は空結果（スキーマ確定後に実装）
+ * P04 Week1: JDBC Read 実装
+ * - Profile "jdbc" で有効化
+ * - SqlLoader を使用して SQL を読み込み
+ * - PaginationOffsetLimit を使用してページネーション
  *
  * Bean競合回避:
- * - local プロファイルでのみ有効化する（JPA MIN は残す）
+ * - jdbc プロファイルでのみ有効化する（JPA MIN は残す）
+ *
  */
-@Profile("local")
+@Profile("jdbc")
 @Service
 class JdbcGroupContractQueryService(
     private val jdbc: NamedParameterJdbcTemplate,
     private val sqlLoader: SqlLoader,
 ) : GroupContractQueryService {
+
+    private val rowMapper = GroupContractRowMapper()
 
     override fun search(
         corporationId: CorporationId,
@@ -36,26 +40,24 @@ class JdbcGroupContractQueryService(
     ): PaginatedResult<GroupContractDto> {
         val pagination = PaginationOffsetLimit.of(page = page, size = size)
 
-        // SqlLoader が "sql/" を前置する前提（P0-3d-2の固定）
-        val sql = sqlLoader.load("group/group_contract_search.sql")
+        val searchSql = sqlLoader.load("group/group_contract_search.sql")
+        val countSql = sqlLoader.load("group/group_contract_count.sql")
 
         val params = mapOf(
-            "offset" to pagination.offset,
-            "limit" to pagination.limit,
-            // 将来用（SQL確定後に使う）
             "corporationId" to corporationId.value,
             "personId" to personId?.value,
+            "offset" to pagination.offset,
+            "limit" to pagination.limit,
         )
 
-        val content: List<GroupContractDto> = jdbc.query(sql, params) { _, _ ->
-            // P0: SQL が空結果なので到達しない
-            throw IllegalStateException("RowMapper should not be invoked because SQL returns no rows in P0.")
-        }
+        val content = jdbc.query(searchSql, params, rowMapper)
+        val total = jdbc.queryForObject(countSql, params, Long::class.java) ?: 0L
+        val totalPages = if (total > 0) ((total + size - 1) / size).toInt() else 0
 
         return PaginatedResult(
             content = content,
-            totalElements = 0L,
-            totalPages = 0,
+            totalElements = total,
+            totalPages = totalPages,
             page = page,
             size = size,
         )

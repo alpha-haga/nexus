@@ -1,32 +1,30 @@
 package nexus.infrastructure.jdbc
 
+import org.springframework.core.io.ClassPathResource
+import org.springframework.stereotype.Component
 import java.nio.charset.StandardCharsets
 
 /**
- * SQL ローダ
+ * SQL Loader
  *
- * - 呼び出し側は相対パスのみ渡す（例: "group/group_contract_search.sql"）
- * - このクラスが "sql/" を必ず前置して classpath から読み込む
- *
- * ルール:
- * - path は "/" で開始しない（揺れ防止）
- * - 実体は classpath: sql/<path>
+ * P0-3d-2 / P04:
+ * - resources/sql 配下の SQL をクラスパスから読み込む
+ * - 呼び出し側は "group/xxx.sql" のように指定
+ * - 実際のパスは "sql/{path}"
  */
-object SqlLoader {
-
-    private const val SQL_PREFIX = "sql/"
+@Component
+class SqlLoader {
 
     fun load(path: String): String {
-        require(path.isNotBlank()) { "SQL path must not be blank." }
-        require(!path.startsWith("/")) { "SQL path must be relative (must not start with '/'): $path" }
-        require(!path.startsWith(SQL_PREFIX)) {
-            "SQL path must be relative without 'sql/' prefix: $path"
+        val resourcePath = "sql/$path"
+        val resource = ClassPathResource(resourcePath)
+
+        require(resource.exists()) {
+            "SQL resource not found: $resourcePath"
         }
 
-        val fullPath = SQL_PREFIX + path
-        val stream = Thread.currentThread().contextClassLoader.getResourceAsStream(fullPath)
-            ?: throw IllegalArgumentException("SQL file not found on classpath: $fullPath")
-
-        return stream.use { it.readBytes().toString(StandardCharsets.UTF_8) }
+        return resource.inputStream.use {
+            it.readBytes().toString(StandardCharsets.UTF_8)
+        }
     }
 }

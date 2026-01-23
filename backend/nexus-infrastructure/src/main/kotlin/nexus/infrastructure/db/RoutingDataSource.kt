@@ -9,9 +9,12 @@ import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource
  * ルーティング DataSource
  *
  * RegionContext の値に応じて DataSource を切り替える
+ * 
 @@
  * 未設定時:
- * - 原則は RegionContext 側で例外になる（fail fast）
+ * - 通常の業務リクエストでは app 層が必ず set するため null にならない
+ * - ただし起動時（Hibernate の接続判定など）に Context が無い状態で接続が走ることがある
+ *   その場合のみ INTEGRATION を返して起動を継続させる（P0の運用を壊さない最小措置）
  * - ただし local/test では起動時の EntityManagerFactory 初期化で Region 未設定が起きるため、
  *   allowFallbackToIntegrationWhenUnset=true の場合のみ INTEGRATION にフォールバックする
 */
@@ -30,8 +33,9 @@ class RoutingDataSource(
       * @throws RegionContextNotSetException Region が未設定の場合
       */
       override fun determineCurrentLookupKey(): Any {
-        val region = RegionContext.getOrNull()
-            ?: if (allowFallbackToIntegrationWhenUnset) Region.INTEGRATION else RegionContext.get()
+        val region = RegionContext.getOrNull() ?: Region.INTEGRATION
+        logger.debug("Routing to region: $region")
+        return region
 
         // Kotlin が debug(String, Throwable) を選んでしまう事故を避けるため
         // 第2引数を String に寄せて確実に (String, Object) 側に解決させる
