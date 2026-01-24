@@ -1,62 +1,104 @@
 package nexus.infrastructure.group.query
 
-import nexus.core.id.CorporationId
-import nexus.core.id.GojoContractId
-import nexus.core.id.PersonId
-import nexus.group.query.GroupContractDto
+import nexus.group.query.GroupContractSearchDto
 import org.springframework.jdbc.core.RowMapper
 import java.sql.ResultSet
 
 /**
- * GroupContractDto の RowMapper
+ * GroupContractSearchDto の RowMapper
  *
- * P04-1-2: JDBC RowMapper 完成
- * - ResultSet から GroupContractDto を構築
- * - ID は core の Value Object を生成
- * - LocalDate など型変換も行う
+ * P04-2: SQL alias (snake_case) を直接読むよう全面修正
+ * - 命名ルール: SQL alias は lower_snake_case
+ * - 変換は RowMapper で明示的に行う（自動マッピング禁止）
+ * - 取得できない項目（CAST(NULL AS ...)）は nullable として扱う
  */
-class GroupContractRowMapper : RowMapper<GroupContractDto> {
-    override fun mapRow(rs: ResultSet, rowNum: Int): GroupContractDto =
-        GroupContractDto(
-            id = GojoContractId(
-                requireNotNull(rs.getString("contract_id")) {
-                    "contract_id is null (row=$rowNum)"
-                }
-            ),
-            corporationId = CorporationId(
-                requireNotNull(rs.getString("corporation_id")) {
-                    "corporation_id is null (contract_id=${rs.getString("contract_id")})"
-                }
-            ),
-            contractorPersonId = PersonId(
-                requireNotNull(rs.getString("contractor_person_id")) {
-                    "contractor_person_id is null (contract_id=${rs.getString("contract_id")})"
-                }
-            ),
-            beneficiaryPersonId = rs.getString("beneficiary_person_id")?.let { PersonId(it) },
-
-            planCode = requireNotNull(rs.getString("plan_code")) {
-                "plan_code is null (contract_id=${rs.getString("contract_id")})"
+class GroupContractRowMapper : RowMapper<GroupContractSearchDto> {
+    override fun mapRow(rs: ResultSet, rowNum: Int): GroupContractSearchDto =
+        GroupContractSearchDto(
+            // 基本情報
+            companyCd = requireNotNull(rs.getString("company_cd")) {
+                "company_cd is null (row=$rowNum)"
             },
-            planName = requireNotNull(rs.getString("plan_name")) {
-                "plan_name is null (contract_id=${rs.getString("contract_id")})"
+            companyShortName = rs.getString("company_short_name"),
+            contractNo = requireNotNull(rs.getString("contract_no")) {
+                "contract_no is null (row=$rowNum)"
             },
-            monthlyFee = rs.getLong("monthly_fee").also {
-                if (rs.wasNull()) {
-                    error("monthly_fee is null (contract_id=${rs.getString("contract_id")})")
-                }
+            familyNo = requireNotNull(rs.getString("family_no")) {
+                "family_no is null (row=$rowNum)"
             },
-            maturityAmount = rs.getLong("maturity_amount").also {
-                if (rs.wasNull()) {
-                    error("maturity_amount is null (contract_id=${rs.getString("contract_id")})")
-                }
-            },
-            contractDate = requireNotNull(rs.getDate("contract_date")) {
-                "contract_date is null (contract_id=${rs.getString("contract_id")})"
-            }.toLocalDate(),
-            maturityDate = rs.getDate("maturity_date")?.toLocalDate(),
-            status = requireNotNull(rs.getString("status")) {
-                "status is null (contract_id=${rs.getString("contract_id")})"
-            }            
+            houseNo = rs.getString("house_no"),
+            familyNameGaiji = rs.getString("family_name_gaiji"),
+            firstNameGaiji = rs.getString("first_name_gaiji"),
+            familyNameKana = rs.getString("family_name_kana"),
+            firstNameKana = rs.getString("first_name_kana"),
+            contractReceiptYmd = rs.getString("contract_receipt_ymd"),
+            birthday = rs.getString("birthday"),
+            
+            // 契約状態
+            contractStatusKbn = rs.getString("contract_status_kbn"),
+            dmdStopRasonKbn = rs.getString("dmd_stop_rason_kbn"),
+            cancelReasonKbn = rs.getString("cancel_reason_kbn"),
+            cancelStatusKbn = rs.getString("cancel_status_kbn"),
+            zashuReasonKbn = rs.getString("zashu_reason_kbn"),
+            contractStatus = rs.getString("contract_status"),
+            taskName = rs.getString("task_name"),
+            statusUpdateYmd = rs.getString("status_update_ymd"),
+            
+            // コース・保障内容
+            courseCd = rs.getString("course_cd"),
+            courseName = rs.getString("course_name"),
+            shareNum = rs.getInt("share_num").takeIf { !rs.wasNull() },
+            monthlyPremium = rs.getLong("monthly_premium").takeIf { !rs.wasNull() },
+            contractGaku = rs.getLong("contract_gaku").takeIf { !rs.wasNull() },
+            totalSaveNum = rs.getLong("total_save_num").takeIf { !rs.wasNull() },
+            totalGaku = rs.getLong("total_gaku").takeIf { !rs.wasNull() },
+            
+            // 住所
+            zipCd = rs.getString("zip_cd"),
+            prefName = rs.getString("pref_name"),
+            cityTownName = rs.getString("city_town_name"),
+            oazaTownName = rs.getString("oaza_town_name"),
+            azaChomeName = rs.getString("aza_chome_name"),
+            addr1 = rs.getString("addr1"),
+            addr2 = rs.getString("addr2"),
+            
+            // 連絡先
+            telNo = rs.getString("tel_no"),
+            mobileNo = rs.getString("mobile_no"),
+            
+            // ポイント
+            saPoint = rs.getInt("sa_point").takeIf { !rs.wasNull() },
+            aaPoint = rs.getInt("aa_point").takeIf { !rs.wasNull() },
+            aPoint = rs.getInt("a_point").takeIf { !rs.wasNull() },
+            newPoint = rs.getInt("new_point").takeIf { !rs.wasNull() },
+            addPoint = rs.getInt("add_point").takeIf { !rs.wasNull() },
+            noallwPoint = rs.getInt("noallw_point").takeIf { !rs.wasNull() },
+            ssPoint = rs.getInt("ss_point").takeIf { !rs.wasNull() },
+            upPoint = rs.getInt("up_point").takeIf { !rs.wasNull() },
+            
+            // 募集
+            entryKbnName = rs.getString("entry_kbn_name"),
+            recruitRespBosyuCd = rs.getString("recruit_resp_bosyu_cd"),
+            bosyuFamilyNameKanji = rs.getString("bosyu_family_name_kanji"),
+            bosyuFirstNameKanji = rs.getString("bosyu_first_name_kanji"),
+            entryRespBosyuCd = rs.getString("entry_resp_bosyu_cd"),
+            entryFamilyNameKanji = rs.getString("entry_family_name_kanji"),
+            entryFirstNameKanji = rs.getString("entry_first_name_kanji"),
+            
+            // 供給ランク / 部門
+            motoSupplyRankOrgCd = rs.getString("moto_supply_rank_org_cd"),
+            motoSupplyRankOrgName = rs.getString("moto_supply_rank_org_name"),
+            supplyRankOrgCd = rs.getString("supply_rank_org_cd"),
+            supplyRankOrgName = rs.getString("supply_rank_org_name"),
+            sectCd = rs.getString("sect_cd"),
+            sectName = rs.getString("sect_name"),
+            
+            // その他
+            anspFlg = rs.getString("ansp_flg"),
+            agreementKbn = rs.getString("agreement_kbn"),
+            collectOfficeCd = rs.getString("collect_office_cd"),
+            foreclosureFlg = rs.getString("foreclosure_flg"),
+            registYmd = rs.getString("regist_ymd"),
+            receptionNo = rs.getString("reception_no")
         )
 }
