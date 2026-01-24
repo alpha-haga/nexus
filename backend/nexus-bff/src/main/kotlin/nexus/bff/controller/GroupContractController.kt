@@ -1,28 +1,46 @@
 package nexus.bff.controller
 
+import nexus.core.exception.ValidationException
+import nexus.core.id.CorporationId
+import nexus.core.id.PersonId
 import nexus.core.pagination.PaginatedResult
 import nexus.group.query.GroupContractDto
-import nexus.group.service.GroupQueryService
+import nexus.group.query.GroupContractQueryService
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDate
 
 /**
  * 法人横断契約API
+ *
+ * P04: Read 導線（GroupContractQueryService）に統一する
  */
 @RestController
 @RequestMapping("/api/v1/group/contracts")
 class GroupContractController(
-    private val groupQueryService: GroupQueryService
+    private val groupContractQueryService: GroupContractQueryService
 ) {
 
     @GetMapping
-    fun listContracts(
-        @RequestParam(required = false) corporationId: String?,
-        @RequestParam(required = true) page: Int,
-        @RequestParam(required = true) size: Int
+    fun search(
+        @RequestParam(required = true) corporationId: String,
+        @RequestParam(required = false) personId: String?,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "20") size: Int
     ): ResponseEntity<GroupContractListResponse> {
-        val result = groupQueryService.listContracts(corporationId, page, size)
+        if (page < 0) throw ValidationException("page", "page must be >= 0")
+        if (size <= 0) throw ValidationException("size", "size must be > 0")
+
+        val result = groupContractQueryService.search(
+            corporationId = CorporationId(corporationId),
+            personId = personId?.let { PersonId(it) },
+            page = page,
+            size = size
+        )
+
         return ResponseEntity.ok(result.toResponse())
     }
 }
@@ -30,10 +48,11 @@ class GroupContractController(
 // Response DTOs
 
 data class GroupContractListResponse(
-    val items: List<GroupContractResponse>,
+    val content: List<GroupContractResponse>,
+    val totalElements: Long,
+    val totalPages: Int,
     val page: Int,
-    val size: Int,
-    val total: Long
+    val size: Int
 )
 
 data class GroupContractResponse(
@@ -50,17 +69,17 @@ data class GroupContractResponse(
     val status: String
 )
 
-private fun PaginatedResult<GroupContractDto>.toResponse(): GroupContractListResponse {
-    return GroupContractListResponse(
-        items = content.map { it.toResponse() },
+private fun PaginatedResult<GroupContractDto>.toResponse(): GroupContractListResponse =
+    GroupContractListResponse(
+        content = content.map { it.toResponse() },
+        totalElements = totalElements,
+        totalPages = totalPages,
         page = page,
-        size = size,
-        total = totalElements
+        size = size
     )
-}
 
-private fun GroupContractDto.toResponse(): GroupContractResponse {
-    return GroupContractResponse(
+private fun GroupContractDto.toResponse(): GroupContractResponse =
+    GroupContractResponse(
         id = id.value,
         corporationId = corporationId.value,
         contractorPersonId = contractorPersonId.value,
@@ -73,4 +92,3 @@ private fun GroupContractDto.toResponse(): GroupContractResponse {
         maturityDate = maturityDate,
         status = status
     )
-}

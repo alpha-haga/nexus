@@ -6,6 +6,7 @@ import nexus.core.id.PersonId
 import nexus.core.pagination.PaginatedResult
 import nexus.group.query.GroupContractDto
 import nexus.group.query.GroupContractQueryService
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
 
 /**
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service
  * - RegionContext を直接参照しない（DataSource ルーティングは共通基盤に委譲）
  * - ReadModel（GroupContractDto）を返す（Entity を返さない）
  */
+@Profile("!jdbc")
 @Service
 class JpaGroupContractQueryService(
     private val entityManager: EntityManager
