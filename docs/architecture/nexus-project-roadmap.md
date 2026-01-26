@@ -98,27 +98,39 @@
 
 ---
 
-### P04-4（次に進む作業）— Region 側の法人別スキーマ切替設計
+ ### P04-4（次に進む作業）— Region 側の法人別スキーマ切替設計
 
-* Region DB（saitama / fukushima / tochigi）側の法人別スキーマ/認証切替設計に着手
-* 同一 region 内の複数法人（例: XXXX_gojo / XXXX_master / XXXX_sousai）への切替方式を設計
-* 切替方式の候補比較と採用判断
+**目的**: region×corp×DomainAccount の切替設計/成立
+
+* Region DB（saitama / fukushima / tochigi）側の業務ドメイン別 DB 接続アカウント（DomainAccount）切替設計に着手
+* 切替キー `(region, corporation, domainAccount)` による接続切替方式を設計
+* DomainAccount の定義（GOJO / FUNERAL、master は synonym 経由）
 * 既存の DataSourceConfiguration 制約との整合性確認
-* 最小実装スコープの確定
+* 切替方式の決定と実装
 
-**設計範囲**：
+ **設計範囲**：
 
 * 切替方式の設計（実装は設計確定後）
-* RegionContext の拡張方針
+* RegionContext の拡張方針（region, corporation, domainAccount の追加）
 * 環境変数の命名規則確定
 * 接続プール管理方針
+* master の扱い（synonym 経由、直接接続しない）
 
-**成果物**：
+ **成果物**：
 
-* [p04-4-region-corp-schema-switching.md](./p04-4-region-corp-schema-switching.md)
+ * [p04-4-region-corp-schema-switching.md](./p04-4-region-corp-schema-switching.md)
 
----
+**Done 条件**：
 
+* `(region, corporation, domainAccount)` による切替方式が決定し、設計ドキュメントに明文化されている
+* RegionContext に `(region, corporation, domainAccount)` が追加されている（実装着手の場合）
+* DataSource 切替ロジックが実装されている（実装着手の場合）
+* 環境変数の命名規則が確定している
+* 同一 region 内の複数法人・複数 DomainAccount への切替が動作する（実装着手の場合）
+* `(region, corporation, domainAccount)` 未設定時は FAIL FAST する
+* 接続ユーザー未定義時は FAIL FAST する
+
+ ---
 
 ## 補足
 

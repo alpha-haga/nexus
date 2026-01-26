@@ -74,16 +74,29 @@ nexus-infrastructure/src/main/resources/sql/
 
 ---
 
-## 4. 環境・接続方針
+ ## 4. 環境・接続方針
 
-### 4.1 DB 接続
+ ### 4.1 DB 接続
 
-- Oracle（integration / region DB）
-  - Integration DB: 法人横断検索専用（nexus-group）
-  - Region DB: 地区別業務データ（saitama / fukushima / tochigi）
-  - 各地区は別 Oracle インスタンス
-  - 同一 region 内に複数の法人スキーマが存在（例: XXXX_gojo / XXXX_master / XXXX_sousai）
-  - 接続ユーザー/パスワードは法人により切替が必要（P04-4 で設計・実装）
+ - Oracle（integration / region DB）
+   - Integration DB: 法人横断検索専用（nexus-group）
+   - Region DB: 地区別業務データ（saitama / fukushima / tochigi）
+  - **Region（地区）**: 各地区は別 Oracle インスタンス
+  - **Corporation（法人）**: 地区インスタンス内に複数の法人が存在する
+    - saitama: musashino / saikan / fukushisousai
+    - fukushima: fukushima / touhoku / gifu
+    - tochigi: tochigi / shizuoka / tochigi_takusel / 新法人予定
+  - **DomainAccount（業務ドメイン別 DB 接続アカウント種別）**:
+    - GOJO: `XXX_gojo`（nexus-gojo ドメイン用）
+    - FUNERAL: `XXX_sousai`（nexus-funeral ドメイン用）
+    - master は DomainAccount に内包（synonym 経由で参照可能）だが、直接接続対象にしない
+  - **業務ドメイン接続の切替単位**: `(region, corporation, domainAccount)` の 3 要素
+    - 業務ドメインの DB 接続は「地区×法人×業務システム」で接続ユーザーが変わる
+    - nexus-gojo: `XXX_gojo`（`XXX_master` は synonym で gojo から参照可能）
+    - nexus-funeral: `XXX_sousai`（`XXX_master` は synonym で sousai から参照可能）
+  - **integration インスタンス（read only）を使うドメイン**: nexus-group / nexus-identity / nexus-household
+  - **横断ドメイン**: payment / accounting / reporting 等は業務ドメイン DB にアクセス可能（= region / corp の切替が必要）
+  - P04-4 の段階では解決策を断定せず、責務境界（domain へ持ち込まない、infrastructure で扱う）を固定する
 
 ### 4.2 環境変数
 
@@ -137,11 +150,18 @@ nexus-infrastructure/src/main/resources/sql/
 - BFF 新検索 API 実装
 - SQL ⇄ DTO ⇄ RowMapper 整合
 
-### **P04-3（次に進む作業）**
+### P04-3（完了）
 - Oracle 接続用 env 定義整理
 - local/dev/stg/prod の接続定義方針固定
 - 実 Oracle での検索確認
 - エラーハンドリング方針整理
+
+### **P04-4（次に進む作業）**
+- Region DB 側の業務ドメイン別 DB 接続アカウント（DomainAccount）切替設計
+- 切替キー `(region, corporation, domainAccount)` による接続切替方式の設計
+- DomainAccount の定義（GOJO / FUNERAL、master は synonym 経由）
+- 既存の DataSourceConfiguration 制約との整合性確認
+- 切替方式の決定と実装
 
 ---
 
