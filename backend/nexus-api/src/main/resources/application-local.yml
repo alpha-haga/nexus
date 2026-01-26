@@ -7,7 +7,6 @@ spring:
     # P0-3b: RoutingDataSource は RegionContext 未設定を FAIL させる方針のため、
     # 起動時に Hibernate が JDBC メタデータ取得で DataSource#getConnection() を呼ぶと
     # RegionContext 未設定で落ちる。local では起動時アクセスを抑制する。
-    database-platform: org.hibernate.dialect.H2Dialect
     properties:
       hibernate:
         boot:

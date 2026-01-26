@@ -29,3 +29,19 @@ nexus:
         driver-class-name: ${NEXUS_DB_DRIVER:oracle.jdbc.OracleDriver}
         username: ${NEXUS_DB_TOCHIGI_USER}
         password: ${NEXUS_DB_TOCHIGI_PASSWORD}
+    region-configs:
+      saitama:
+        corporations:
+          - musashino
+          - saikan
+          - fukushisousai
+      fukushima:
+        corporations:
+          - fukushima
+          - touhoku
+          - gifu
+      tochigi:
+        corporations:
+          - tochigi
+          - shizuoka
+          - tochigi_takusel

@@ -98,7 +98,7 @@
 
 ---
 
- ### P04-4（次に進む作業）— Region 側の法人別スキーマ切替設計
+### P04-4（完了）— Region 側の法人別スキーマ切替設計
 
 **目的**: region×corp×DomainAccount の切替設計/成立
 
@@ -130,10 +130,21 @@
 * `(region, corporation, domainAccount)` 未設定時は FAIL FAST する
 * 接続ユーザー未定義時は FAIL FAST する
 
+**完了の根拠**：
+
+* local,jdbc で bootRun 起動成功
+* integration の既存導線が 200（group 契約検索）
+* region（saitama/fukushima/tochigi）は起動時に接続せず遅延生成（DomainAccount/Corporation 前提）
+* Context 未設定時は fail fast
+
+**未実施/次フェーズでやること**：
+
+* gojo/sousai は PoC で実テーブル未整合・region 導線未整備のため、実 SQL 疎通（DomainAccount 切替の実接続確認）は P1/導線実装時に行う
+
  ---
 
 ## 補足
 
 * 本ドキュメントは**更新される前提**の資料
 * 設計原則の変更は nexus-design-constitution.md のみで行う
-* Cursor / Agent 実行時は、常に「現在地（P04-3）」を明示して開始する
+* Cursor / Agent 実行時は、常に「現在地（P04-4 完了）」を明示して開始する

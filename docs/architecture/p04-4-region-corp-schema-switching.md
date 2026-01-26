@@ -143,10 +143,15 @@
    - DataSource 切替ロジックが実装されている
    - 環境変数の命名規則が確定している
 
-3. **動作確認**
-   - 同一 region 内の複数法人・複数 DomainAccount への切替が動作する
-   - `(region, corporation, domainAccount)` 未設定時は FAIL FAST する
-   - 接続ユーザー未定義時は FAIL FAST する
+3. **動作確認（方法A）**
+   - アプリが起動すること（bootRun コマンドで起動成功）
+   - integration の既存導線（group contracts search）が 200 で動作すること
+   - integration への影響がないこと（既存導線が正常に動作すること）
+   - region は遅延生成設計が実装されていること（起動時に接続しない）
+   - `(region, corporation, domainAccount)` 未設定時に FAIL FAST すること（例外メッセージで確認）
+   - 接続ユーザー未定義時に FAIL FAST すること（例外メッセージで確認）
+   - 実導線が来た時に遅延生成＋キャッシュで切替可能な実装が成立していること
+   - **注意**: region DB への実クエリ実行による疎通確認は P04-4 では行わない（導線未整備・実テーブル整合未完のため）
 
 4. **ドキュメント更新**
    - 設計憲法に P04-4 の決定事項が追記されている
@@ -160,13 +165,74 @@
 - 必須化はしない（本番では権限制御等で決定される想定）
 - local 環境での動作確認を可能にする
 
+### 8.1 起動手順
+
+```bash
+cd backend
+./gradlew :nexus-bff:bootRun --args='--spring.profiles.active=local,jdbc'
+```
+
+起動ログで以下を確認：
+- DataSource 生成ログ（region 用の CorporationDomainAccountRoutingDataSource が生成されていること）
+- エラーなく起動完了すること
+
+### 8.2 動作確認（curl 例）
+
+#### integration DB の既存確認
+
+```bash
+curl -X GET "http://localhost:8080/api/v1/group/contracts/search?page=0&size=20" \
+  -H "X-NEXUS-REGION: integration"
+```
+
+期待結果: 200 OK（integration DB への接続が正常に動作すること）
+
+#### region DB の検証（方法A: P04-4 では実クエリ実行は行わない）
+
+**現状の事実**:
+- 現時点で gojo / funeral は PoC で実テーブル整合が未完
+- region を叩く実導線（bff endpoint）が未整備の場合がある
+
+**P04-4 での確認範囲（方法A）**:
+- アプリ起動成功（上記 8.1）
+- integration 導線の動作確認（上記）
+- region DB への実クエリ実行による疎通確認は行わない（導線未整備・実テーブル整合未完のため）
+- **P04-4 では「起動成功＋遅延生成設計が実装された」ことをもって完了とする**
+- 実導線が揃った時点（P1 または該当導線実装時）に DomainAccount 切替の実接続検証を行う
+
+**将来（P1 以降または実導線実装時）の検証例**（参考）:
+
+```bash
+# 以下は P1 以降または実導線・実テーブル整合が揃ったタイミングで実行する想定
+# Saitama Region - Musashino Corporation - GOJO DomainAccount
+# curl -X GET "http://localhost:8080/api/v1/gojo/contracts/search?page=0&size=20" \
+#   -H "X-NEXUS-REGION: saitama" \
+#   -H "X-NEXUS-CORP: musashino" \
+#   -H "X-NEXUS-DOMAIN-ACCOUNT: GOJO"
+
+# Saitama Region - Musashino Corporation - FUNERAL DomainAccount
+# curl -X GET "http://localhost:8080/api/v1/funeral/contracts/search?page=0&size=20" \
+#   -H "X-NEXUS-REGION: saitama" \
+#   -H "X-NEXUS-CORP: musashino" \
+#   -H "X-NEXUS-DOMAIN-ACCOUNT: FUNERAL"
+```
+
 ---
 
 ## 9. 次のフェーズ（P1）への前提
 
- - P04-4 で確定した切替方式は P1 以降も維持
- - JOIN 復活時も法人別スキーマ切替は影響を受けない
- - 性能最適化時も切替方式は変更しない
+### 9.1 P1 以降で実施する検証（region DB の実接続確認）
+
+**前提条件**:
+- region の実導線（gojo / funeral 等の API）が整備されていること
+- region DB の実テーブルとの整合が確認されていること
+
+**検証内容**:
+- DomainAccount 切替の実接続検証（SELECT 1 FROM DUAL または実 SQL）
+- 同一 region 内の複数法人・複数 DomainAccount への切替が実際に動作することを確認
+- 実テーブルに対するクエリが正常に実行されることを確認
+
+**注意**: 上記検証は P04-4 の Done 条件には含めない（導線未整備・実テーブル整合未完のため）
 
  ---
 

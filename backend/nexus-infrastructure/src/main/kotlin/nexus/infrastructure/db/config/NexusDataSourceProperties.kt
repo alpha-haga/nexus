@@ -38,7 +38,24 @@ data class NexusDataSourceProperties(
      * 地区DB設定（Map<regionId, DataSourceProps>）
      * 例: tokyo, osaka, fukuoka
      */
-    val regions: Map<String, DataSourceProps> = emptyMap()
+    val regions: Map<String, DataSourceProps> = emptyMap(),
+
+    /**
+     * 地区DB設定（P04-4: corporations 列挙を含む）
+     * Map<regionId, RegionDataSourceConfig>
+     */
+    val regionConfigs: Map<String, RegionDataSourceConfig> = emptyMap()
+)
+
+/**
+ * Region DataSource 設定（P04-4）
+ */
+data class RegionDataSourceConfig(
+    /**
+     * 法人一覧（列挙された法人のみ使用可能）
+     * 例: [musashino, saikan, fukushisousai]
+     */
+    val corporations: List<String> = emptyList()
 )
 
 /**
