@@ -1,5 +1,5 @@
 SELECT
-    contract_search.cmp_no AS company_cd
+    contract_search.cmp_cd AS company_cd
     , CAST(NULL AS VARCHAR2(20)) AS company_short_name
     , contract_search.contract_no AS contract_no
     , contract_search.contract_no AS family_no

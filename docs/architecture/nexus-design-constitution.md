@@ -78,18 +78,23 @@ nexus-infrastructure/src/main/resources/sql/
 
 ### 4.1 DB 接続
 
-- 業務データ:
 - Oracle（integration / region DB）
-- H2:
-- Keycloak / 開発補助用途のみ
-- 業務検索では使用しない
+  - Integration DB: 法人横断検索専用（nexus-group）
+  - Region DB: 地区別業務データ（saitama / fukushima / tochigi）
+  - 各地区は別 Oracle インスタンス
+  - 同一 region 内に複数の法人スキーマが存在（例: XXXX_gojo / XXXX_master / XXXX_sousai）
+  - 接続ユーザー/パスワードは法人により切替が必要（P04-4 で設計・実装）
 
 ### 4.2 環境変数
 
-- Oracle 接続情報は **環境変数で注入**
 - `application.yml` に直書きしない
-- local / dev / stg / prod で切替
-
+- DB 接続定義は `application-jdbc.yml` に集約
+- `application-local.yml` / `application-dev.yml` / `application-stg.yml` / `application-prod.yml` は DB 定義を持たない
+- local 環境の `.env` 自動読み込みは **Gradle bootRun タスク限定**
+  - `./gradlew build` には影響しない
+  - CI / 本番環境には影響しない
+  - OS 側で既に設定済みの環境変数は上書きしない
+  
 ---
 
 ## 5. 全体ロードマップ（P0〜P2）

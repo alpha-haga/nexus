@@ -78,12 +78,12 @@
 
 ---
 
-### P04-3（次に進む作業）— Oracle 接続・実行確認
+### P04-3（完了）— Oracle 接続・実行確認
 
 * Oracle 接続用 env 定義整理
-
-  * local / dev / stg / prod 方針確定
-* Datasource 定義の最終固定
+* local / dev / stg / prod 方針確定
+* Datasource 定義の最終固定（application-jdbc.yml に集約）
+* local の .env 自動読み込み方針確定（Gradle bootRun 限定）
 * 実 Oracle での検索確認
 * エラーハンドリング方針整理
 
@@ -92,7 +92,33 @@
 * Oracle 実 DB で検索 API が成立
 * SQL / DTO / RowMapper が実テーブル前提で破綻しない
 
+**成果物**：
+
+* [p04-3-oracle-env.md](./p04-3-oracle-env.md)
+
 ---
+
+### P04-4（次に進む作業）— Region 側の法人別スキーマ切替設計
+
+* Region DB（saitama / fukushima / tochigi）側の法人別スキーマ/認証切替設計に着手
+* 同一 region 内の複数法人（例: XXXX_gojo / XXXX_master / XXXX_sousai）への切替方式を設計
+* 切替方式の候補比較と採用判断
+* 既存の DataSourceConfiguration 制約との整合性確認
+* 最小実装スコープの確定
+
+**設計範囲**：
+
+* 切替方式の設計（実装は設計確定後）
+* RegionContext の拡張方針
+* 環境変数の命名規則確定
+* 接続プール管理方針
+
+**成果物**：
+
+* [p04-4-region-corp-schema-switching.md](./p04-4-region-corp-schema-switching.md)
+
+---
+
 
 ## 補足
 

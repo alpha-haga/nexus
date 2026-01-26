@@ -6,26 +6,26 @@ spring:
 nexus:
   datasource:
     integration:
-      url: ${NEXUS_DB_INTEGRATION_URL:jdbc:h2:mem:nexus_integration;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
-      driver-class-name: ${NEXUS_DB_DRIVER:org.h2.Driver}
-      username: ${NEXUS_DB_INTEGRATION_USER:sa}
-      password: ${NEXUS_DB_INTEGRATION_PASS:}
+      url: jdbc:oracle:thin:@//${NEXUS_DB_INTEGRATION_HOST}:${NEXUS_DB_INTEGRATION_PORT}/${NEXUS_DB_INTEGRATION_SERVICE}
+      driver-class-name: ${NEXUS_DB_DRIVER:oracle.jdbc.OracleDriver}
+      username: ${NEXUS_DB_INTEGRATION_USER}
+      password: ${NEXUS_DB_INTEGRATION_PASSWORD}
       hikari:
         maximum-pool-size: ${NEXUS_DB_POOL_MAX:5}
         minimum-idle: ${NEXUS_DB_POOL_MIN:1}
     regions:
       saitama:
-        url: ${NEXUS_DB_SAITAMA_URL:jdbc:h2:mem:nexus_saitama;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
-        driver-class-name: ${NEXUS_DB_DRIVER:org.h2.Driver}
-        username: ${NEXUS_DB_SAITAMA_USER:sa}
-        password: ${NEXUS_DB_SAITAMA_PASS:}
+        url: jdbc:oracle:thin:@//${NEXUS_DB_SAITAMA_HOST}:${NEXUS_DB_SAITAMA_PORT}/${NEXUS_DB_SAITAMA_SERVICE}
+        driver-class-name: ${NEXUS_DB_DRIVER:oracle.jdbc.OracleDriver}
+        username: ${NEXUS_DB_SAITAMA_USER}
+        password: ${NEXUS_DB_SAITAMA_PASSWORD}
       fukushima:
-        url: ${NEXUS_DB_FUKUSHIMA_URL:jdbc:h2:mem:nexus_fukushima;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
-        driver-class-name: ${NEXUS_DB_DRIVER:org.h2.Driver}
-        username: ${NEXUS_DB_FUKUSHIMA_USER:sa}
-        password: ${NEXUS_DB_FUKUSHIMA_PASS:}
+        url: jdbc:oracle:thin:@//${NEXUS_DB_FUKUSHIMA_HOST}:${NEXUS_DB_FUKUSHIMA_PORT}/${NEXUS_DB_FUKUSHIMA_SERVICE}
+        driver-class-name: ${NEXUS_DB_DRIVER:oracle.jdbc.OracleDriver}
+        username: ${NEXUS_DB_FUKUSHIMA_USER}
+        password: ${NEXUS_DB_FUKUSHIMA_PASSWORD}
       tochigi:
-        url: ${NEXUS_DB_TOCHIGI_URL:jdbc:h2:mem:nexus_tochigi;MODE=Oracle;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
-        driver-class-name: ${NEXUS_DB_DRIVER:org.h2.Driver}
-        username: ${NEXUS_DB_TOCHIGI_USER:sa}
-        password: ${NEXUS_DB_TOCHIGI_PASS:}
+        url: jdbc:oracle:thin:@//${NEXUS_DB_TOCHIGI_HOST}:${NEXUS_DB_TOCHIGI_PORT}/${NEXUS_DB_TOCHIGI_SERVICE}
+        driver-class-name: ${NEXUS_DB_DRIVER:oracle.jdbc.OracleDriver}
+        username: ${NEXUS_DB_TOCHIGI_USER}
+        password: ${NEXUS_DB_TOCHIGI_PASSWORD}
