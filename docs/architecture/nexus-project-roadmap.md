@@ -26,13 +26,14 @@
 
 ---
 
-### P04（現在進行中）— JDBC Read 実戦投入
+### P04（完了）— JDBC Read 実戦投入
 
 * JDBC Read 導線の本格導入
 * SQL を正とした Read 設計
 * DTO / RowMapper / Controller 再設計
 * JOIN なしでの検索成立
 * Oracle 実 DB を前提とした確認準備
+* Keycloak Claim による権限制御設計確定
 
 **位置づけ**：
 
@@ -40,13 +41,14 @@
 
 ---
 
-### P1（予定）— 業務要件との接続
+### P1（現在進行中）— 業務要件との接続
 
 * JOIN の段階的復活
 * 表示要件の確定（業務と合意）
 * パフォーマンスチューニング
 * Count / Search SQL 最適化
 * 不要カラム・条件の整理
+* Keycloak Claim による権限制御実装
 
 ---
 
@@ -59,7 +61,7 @@
 
 ---
 
-## P04 詳細ロードマップ（現在地）
+## P04 詳細ロードマップ（完了）
 
 ### P04-1（完了）— JDBC 導線確立
 
@@ -145,12 +147,9 @@
 
 ### P04-5（完了）— Keycloak Claim による権限制御設計（DB Routing 連携）
 
-**目的**  
-Keycloak token claim（`nexus_db_access`）を用いて、  
-BFF が Region × Corporation × DomainAccount の許可判定を行い、  
-Context を fail fast で設定するための設計を確定する。
+**目的**: Keycloak token claim（`nexus_db_access`）を用いて、BFF が Region × Corporation × DomainAccount の許可判定を行い、Context を fail fast で設定するための設計を確定する。
 
-**スコープ（設計のみ）**
+**スコープ（設計のみ）**:
 - `nexus_db_access` claim の形式・命名規約の確定
 - ワイルドカード（ALL）の使用条件の固定
 - DomainAccount / Region / Corporation の決定規則の明文化
@@ -158,21 +157,54 @@ Context を fail fast で設定するための設計を確定する。
 - 403 / 404 の使い分けルール確定
 - local 検証ヘッダーと本番相当の切り分け明示
 
-**非スコープ**
+**非スコープ**:
 - Keycloak の実設定手順（別ドキュメントに委譲）
 - BFF の実装（P1-1 で実施）
 - Region を token からどう取得するかの詳細（P1-1 で確定）
 
-**成果物**
-- 設計正本:
-  - `docs/architecture/p04-5-keycloak-claims-db-routing.md`
-- 実設定手順書:
-  - `docs/architecture/p04-5b-keycloak-setup-guide.md`
+**成果物**:
+- 設計正本: [p04-5-keycloak-claims-db-routing.md](./p04-5-keycloak-claims-db-routing.md)
+- 実設定手順書: [p04-5b-keycloak-setup-guide.md](./p04-5b-keycloak-setup-guide.md)
 
-**状態**
-- 設計確定（Implementation Free）
+**状態**: 設計確定（Implementation Free）
 
 **注意**: P04-5 は設計確定フェーズであり、実装は含めない。実装は P1-1 で行う。
+
+ ---
+
+## P1 詳細ロードマップ（現在地）
+
+### P1-1（次フェーズ・実装開始）— Keycloak Claim による権限制御実装
+
+**目的**: P04-5 で確定した設計に基づいて、BFF で Keycloak token claim による権限制御を実装する。
+
+**実装範囲**:
+
+* Keycloak token claim（`nexus_db_access`）を BFF で解析する実装
+* Region / Corporation / DomainAccount の token 由来決定ロジック実装
+* 認可判定（403 fail fast）と Context set フィルター実装
+* local 検証ヘッダーと token 由来の切替制御
+* Infrastructure 層は変更最小（Context を読むだけ）
+
+**設計前提**:
+
+* 設計正本: [p04-5-keycloak-claims-db-routing.md](./p04-5-keycloak-claims-db-routing.md) に従う
+* P04-5 の再設計・再解釈は禁止
+
+**成果物**:
+
+* BFF 認可フィルター実装
+* Keycloak token 解析ロジック実装
+* Context set ロジック実装
+
+**Done 条件**:
+
+* Keycloak token から `nexus_db_access` claim を取得できる
+* Region / Corporation / DomainAccount を token から決定できる（本番相当）
+* 未許可リクエストに対して 403 Forbidden を返す（fail fast）
+* 許可リクエストに対して Context を set する
+* local 検証ヘッダーと token 由来の切替が動作する
+* Infrastructure 層は Context を読むだけ（変更最小）
 
  ---
 
@@ -180,4 +212,4 @@ Context を fail fast で設定するための設計を確定する。
 
 * 本ドキュメントは**更新される前提**の資料
 * 設計原則の変更は nexus-design-constitution.md のみで行う
-* Cursor / Agent 実行時は、常に「現在地（P04-4 完了）」を明示して開始する
+* Cursor / Agent 実行時は、常に「現在地（P1-1 開始準備完了）」を明示して開始する
