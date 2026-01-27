@@ -188,6 +188,111 @@ export interface FuneralCase {
   status: FuneralStatus;
 }
 
+
+// ============================================
+//  Group Contract Search Types
+// ============================================
+export interface GroupContractSearchCondition {
+  contractReceiptYmdFrom?: string;
+  contractReceiptYmdTo?: string;
+  contractNo?: string;
+  familyNmKana?: string;
+  telNo?: string;
+  bosyuCd?: string;
+  courseCd?: string;
+  contractStatusKbn?: string;
+}
+
+export interface GroupContractSearchResponse {
+  // 基本情報
+  companyCd: string;
+  companyShortName: string | null;
+  contractNo: string;
+  familyNo: string;
+  houseNo: string | null;
+  familyNameGaiji: string | null;
+  firstNameGaiji: string | null;
+  familyNameKana: string | null;
+  firstNameKana: string | null;
+  contractReceiptYmd: string | null; // YYYYMMDD format
+  birthday: string | null; // YYYYMMDD format;
+  
+  // 契約状態
+  contractStatusKbn: string | null;
+  dmdStopRasonKbn: string | null;
+  cancelReasonKbn: string | null;
+  cancelStatusKbn: string | null;
+  zashuReasonKbn: string | null;
+  contractStatus: string | null;
+  taskName: string | null;
+  statusUpdateYmd: string | null; // YYYYMMDD format;
+  
+  // コース・保障内容
+  courseCd: string | null;
+  courseName: string | null;
+  shareNum: number | null;
+  monthlyPremium: number | null;
+  contractGaku: number | null;
+  totalSaveNum: number | null;
+  totalGaku: number | null;
+  
+  // 住所
+  zipCd: string | null;
+  prefName: string | null;
+  cityTownName: string | null;
+  oazaTownName: string | null;
+  azaChomeName: string | null;
+  addr1: string | null;
+  addr2: string | null;
+  
+  // 連絡先
+  telNo: string | null;
+  mobileNo: string | null;
+  
+  // ポイント
+  saPoint: number | null;
+  aaPoint: number | null;
+  aPoint: number | null;
+  newPoint: number | null;
+  addPoint: number | null;
+  noallwPoint: number | null;
+  ssPoint: number | null;
+  upPoint: number | null;
+  
+  // 募集
+  entryKbnName: string | null;
+  recruitRespBosyuCd: string | null;
+  bosyuFamilyNameKanji: string | null;
+  bosyuFirstNameKanji: string | null;
+  entryRespBosyuCd: string | null;
+  entryFamilyNameKanji: string | null;
+  entryFirstNameKanji: string | null;
+  
+  // 供給ランク / 部門
+  motoSupplyRankOrgCd: string | null;
+  motoSupplyRankOrgName: string | null;
+  supplyRankOrgCd: string | null;
+  supplyRankOrgName: string | null;
+  sectCd: string | null;
+  sectName: string | null;
+  
+  // その他
+  anspFlg: string | null;
+  agreementKbn: string | null;
+  collectOfficeCd: string | null;
+  foreclosureFlg: string | null;
+  registYmd: string | null; // YYYYMMDD format
+  receptionNo: string | null;
+}
+
+export interface PaginatedGroupContractResponse {
+  content: GroupContractSearchResponse[];
+  totalElements: number;
+  totalPages: number;
+  page: number;
+  size: number;
+}
+
 // ============================================
 // Bridal Types
 // ============================================

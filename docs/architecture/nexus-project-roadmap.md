@@ -143,6 +143,37 @@
 
  ---
 
+### P04-5（設計確定）— Keycloak claim 設計（Region×Corp×DomainAccount）
+
+**目的**: Keycloak token claim から権限（Region×Corporation×DomainAccount）を取得し、BFF で fail fast する設計を確定する
+
+* Keycloak token の claim（`nexus_db_access`）から許可された `(region, corporation, domainAccount)` を取得する設計
+* Claim 形式の確定（`List<String>`、各要素は `"{region}:{corporation}:{domainAccount}"`）
+* ワイルドカード方針の確定（`"*"` は integration の corp 不要表現のみ許可）
+* DomainAccount の決め方の確定（API の所属ドメインで固定：gojo → GOJO、funeral → FUNERAL）
+* BFF の責務確定（token → 許可判定 → Context set / 未許可は 403）
+* Infrastructure 層の責務再確認（Context を読むだけ、権限判定しない）
+
+**設計範囲**：
+
+* Claim 名・形式・ワイルドカード方針の確定
+* 判定責務の確定（Presentation 層が判定、Infrastructure 層は Context を読むだけ）
+* Fail fast 方針の確定（未許可は 403 Forbidden）
+* ローカル検証ヘッダーとの関係（検証専用、本番は token 由来）
+
+**成果物**：
+
+* [p04-5-keycloak-claims-db-routing.md](./p04-5-keycloak-claims-db-routing.md)
+
+**Done 条件**：
+
+* Claim 形式・判定責務・fail fast 方針が docs で固定されている
+* 設計ドキュメントに上記が明文化されている
+
+**注意**: P04-5 は設計確定フェーズであり、実装は含めない。実装は P1-1 で行う。
+
+ ---
+
 ## 補足
 
 * 本ドキュメントは**更新される前提**の資料

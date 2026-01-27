@@ -107,6 +107,18 @@ nexus-infrastructure/src/main/resources/sql/
   - `./gradlew build` には影響しない
   - CI / 本番環境には影響しない
   - OS 側で既に設定済みの環境変数は上書きしない
+
+### 4.3 権限制御（Keycloak Claim）と DB Routing の関係
+
+- **Presentation 層（BFF）の責務**:
+  - Keycloak token の claim（`nexus_db_access`）から許可された `(region, corporation, domainAccount)` を取得する
+  - リクエストの `(region, corporation, domainAccount)` が許可されているかを判定し、未許可の場合は 403 Forbidden を返す（fail fast）
+  - 許可されている場合のみ、RegionContext / CorporationContext / DomainAccountContext を設定する
+- **Infrastructure 層の責務**:
+  - Context を読むだけ（権限判定は行わない）
+  - DataSource 切替は Context の値に基づいて行う
+  - Context 未設定時は既存の fail fast 機構（DomainAccountContextNotSetException 等）で例外を投げる
+- **詳細設計**: [p04-5-keycloak-claims-db-routing.md](./p04-5-keycloak-claims-db-routing.md) を参照
   
 ---
 
