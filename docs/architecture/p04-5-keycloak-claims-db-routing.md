@@ -125,6 +125,14 @@ P04-5 の目的は以下です：
 
 **注意**: Local 検証と本番相当は区別して扱う。混ぜない。
 
+**重要（fail fast 規則）**  
+同一 DomainAccount に対して、`nexus_db_access` 配列から
+- 複数の Region  
+- または複数の Corporation  
+
+が解釈される token は **403 Forbidden** を返す。
+これは認可判定以前の段階で検出し、処理を継続してはならない。
+
 ### 4.4 Integration の場合の判定フロー
 
 1. **必要 role の確認**: `integration__ALL__GROUP`
@@ -144,6 +152,12 @@ P04-5 の目的は以下です：
 4. **未許可の場合**: → **403 Forbidden**
 5. **許可されている場合**:
    - RegionContext / CorporationContext / DomainAccountContext を set
+
+**重要（fail fast 規則）**: 同一 DomainAccount で複数の Region または複数の Corporation が解釈される token は **403 Forbidden** を返す（fail fast）。これは、token の `nexus_db_access` 配列に、同一 DomainAccount に対して異なる Region または異なる Corporation の role が含まれている場合を指す。
+
+**例（403 を返すべきケース）**:
+- DomainAccount が `GOJO` で、`nexus_db_access` に `saitama__musashino__GOJO` と `fukushima__fukushima__GOJO` が両方含まれている（複数 Region）
+- DomainAccount が `GOJO` で、`nexus_db_access` に `saitama__musashino__GOJO` と `saitama__saikan__GOJO` が両方含まれている（複数 Corporation）
 
 ### 4.6 Context set
 
@@ -196,8 +210,11 @@ DomainAccount は token から推測しない。BFF が request path から決�
 ### 7.1 現状（P04-4 確定事項）
 
 - `X-NEXUS-REGION` / `X-NEXUS-CORP` / `X-NEXUS-DOMAIN-ACCOUNT` ヘッダーを検証用に使用可能
-- local プロファイルでのみ有効
-
+- **local プロファイルでのみ有効**
+- **本番環境では完全に無効**
+- 本番では token（`nexus_db_access`）由来のみを使用する
+- 将来削除前提
+  
 ### 7.2 将来の移行方針
 
 - **Local 検証ヘッダーは「検証専用」であり、本番では token 由来にする**

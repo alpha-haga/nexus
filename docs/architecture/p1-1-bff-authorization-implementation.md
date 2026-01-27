@@ -1,4 +1,4 @@
-# P1-1 実装ロードマップ  
+# P1-1 実装ロードマップ（確定版）
 （BFF 認可・Context 設定 実装フェーズ）
 
 本ドキュメントは、P1-1 における **BFF の認可処理（Keycloak Claim → 403 判定 → Context set）の実装ロードマップ** を確定するものである。
@@ -10,6 +10,7 @@
 
 設計の正は以下を必ず参照すること：  
 - `docs/architecture/p04-5-keycloak-claims-db-routing.md`
+- `docs/architecture/p04-5b-keycloak-setup-guide.md`
 
 ---
 
@@ -33,6 +34,9 @@ P1-1 の目的は以下である。
 - Claim 名・形式  
   - `nexus_db_access: List<String>`
   - 形式: `{region}__{corporation}__{domainAccount}`
+  - role 名そのまま（変換/接頭辞付与なし）
+- 要素形式
+  - `{region}__{corporation}__{domainAccount}`（domainAccount は大文字固定）
 - ワイルドカード規則  
   - `integration__ALL__GROUP` のみ許可
   - region 側での `ALL` 使用は禁止
@@ -42,6 +46,13 @@ P1-1 の目的は以下である。
 - 認可責務  
   - BFF が判定
   - Infrastructure 層は判定しない
+- Integration API の扱い
+  - Integration API は RegionContext のみ set（Corp/DomainAccount は set しない）
+- Fail fast 規則
+  - 同一 DomainAccount で複数 Region / 複数 Corporation が解釈される token は 403（fail fast）
+- 検証ヘッダー
+  - local では検証ヘッダー（X-NEXUS-REGION / X-NEXUS-CORP）併用可
+  - 本番では無効（token 由来のみ）
 
 詳細は `p04-5-keycloak-claims-db-routing.md` を正とする。
 
@@ -52,10 +63,12 @@ P1-1 の目的は以下である。
 ### 3.1 実装スコープ（P1-1 でやる）
 
 - Keycloak access token から `nexus_db_access` claim を取得
-- BFF に認可フィルターを追加
+- BFF に認可フィルター（NexusAuthorizationContextFilter）を追加
+- `extractDbAccessRolesOrFail` 関数の実装（claim 取得・検証）
 - 認可失敗時の 403 / 404 制御
 - Context の set / clear
 - local 検証ヘッダーとの併用（local プロファイル限定）
+- 同一 DomainAccount で複数 Region/Corporation が解釈される token の 403 判定
 
 ### 3.2 非スコープ（P1-1 ではやらない）
 
@@ -71,15 +84,16 @@ P1-1 の目的は以下である。
 
 以下の順序が **実装順・理解順の正** である。
 
-1. Authorization Filter を BFF に追加
+1. Authorization Filter（NexusAuthorizationContextFilter）を BFF に追加
 2. Request path から DomainAccount を決定
-3. token から `nexus_db_access` を取得
+3. token から `nexus_db_access` を取得（`extractDbAccessRolesOrFail`）
 4. Region / Corporation の決定
-5. 必要 role の組み立て
-6. Claim 照合
-7. 403 / 404 判定
-8. Context set
-9. finally で Context clear
+5. 同一 DomainAccount で複数 Region/Corporation が解釈される token の検証（403）
+6. 必要 role の組み立て
+7. Claim 照合
+8. 403 / 404 判定
+9. Context set
+10. finally で Context clear
 
 ---
 
@@ -95,6 +109,7 @@ P1-1 の目的は以下である。
 
 - Spring Filter（OncePerRequestFilter）
 - BFF 層に配置
+- クラス名: `NexusAuthorizationContextFilter`
 - try / finally で Context clear を保証
 
 ---
@@ -121,10 +136,19 @@ P1-1 の目的は以下である。
 
 ---
 
-## 7. Step 3: Claim 取得
+## 7. Step 3: Claim 取得（`extractDbAccessRolesOrFail`）
 
-- access token から `nexus_db_access` を取得
+### 7.1 役割
+
+- access token から `nexus_db_access` claim を取得
 - claim が存在しない / 空配列の場合 → **403 Forbidden**
+
+### 7.2 実装方針
+
+- 関数名: `extractDbAccessRolesOrFail`
+- Keycloak token から `nexus_db_access` claim を取得
+- `List<String>` として返却
+- claim 不在 / 空配列の場合は例外を投げ（403 に変換）
 
 ---
 
@@ -132,19 +156,40 @@ P1-1 の目的は以下である。
 
 ### 8.1 Region
 
-- 本番相当: token 由来（claim 名は後続）
-- local 検証: `X-NEXUS-REGION` ヘッダーを許容
+- 本番相当: `nexus_db_access` の role 文字列から決定（別claimは作らない）
+- local 検証: `X-NEXUS-REGION` ヘッダーを許容（local プロファイル限定）
+- 本番環境では検証ヘッダーは無効
 
 ### 8.2 Corporation
 
 - 本番相当: `nexus_db_access` の role 文字列から抽出
-- local 検証: `X-NEXUS-CORP` ヘッダーを許容
+- local 検証: `X-NEXUS-CORP` ヘッダーを許容（local プロファイル限定）
+- 本番環境では検証ヘッダーは無効
 
 ---
 
-## 9. Step 5: 認可判定
+## 9. Step 5: 同一 DomainAccount で複数 Region/Corporation の検証（fail fast）
 
-### 9.1 Integration API
+### 9.1 検証規則
+
+- 同一 DomainAccount で複数の Region または複数の Corporation が解釈される token は **403 Forbidden** を返す（fail fast）
+- これは、token の `nexus_db_access` 配列に、同一 DomainAccount に対して異なる Region または異なる Corporation の role が含まれている場合を指す
+
+### 9.2 検証例
+
+**403 を返すべきケース**:
+- DomainAccount が `GOJO` で、`nexus_db_access` に `saitama__musashino__GOJO` と `fukushima__fukushima__GOJO` が両方含まれている（複数 Region）
+- DomainAccount が `GOJO` で、`nexus_db_access` に `saitama__musashino__GOJO` と `saitama__saikan__GOJO` が両方含まれている（複数 Corporation）
+
+**許可されるケース**:
+- DomainAccount が `GOJO` で、`nexus_db_access` に `saitama__musashino__GOJO` のみ含まれている
+- DomainAccount が `GOJO` で、`nexus_db_access` に `saitama__musashino__GOJO` と `saitama__musashino__FUNERAL` が含まれている（異なる DomainAccount は許可）
+
+---
+
+## 10. Step 6: 認可判定
+
+### 10.1 Integration API
 
 - 必要 role: `integration__ALL__GROUP`
 - 存在しない場合 → **403 Forbidden**
@@ -152,7 +197,7 @@ P1-1 の目的は以下である。
   - RegionContext のみ set
   - Corporation / DomainAccount は set しない
 
-### 9.2 Region API
+### 10.2 Region API
 
 - 必要 role: `{region}__{corporation}__{domainAccount}`
 - 存在しない場合 → **403 Forbidden**
@@ -161,7 +206,7 @@ P1-1 の目的は以下である。
 
 ---
 
-## 10. Context 管理
+## 11. Context 管理
 
 - Context は ThreadLocal
 - **必ず finally で clear**
@@ -169,33 +214,209 @@ P1-1 の目的は以下である。
 
 ---
 
-## 11. 403 / 404 の使い分け
+## 12. 403 / 404 の使い分け
 
-### 403 Forbidden
+### 12.1 403 Forbidden
 
 - claim 不在
 - role 不一致
 - integration / region の誤用
+- 同一 DomainAccount で複数 Region/Corporation が解釈される token
 
-### 404 Not Found
+### 12.2 404 Not Found
 
 - DomainAccount に対応しない API パス
 
 ---
 
-## 12. Done 条件（P1-1 完了条件）
+## 13. Done 条件（P1-1 完了条件）
 
-- `nexus_db_access` を用いた認可判定が BFF で動作する
-- 未許可リクエストが Controller に到達しない
-- Context が正しく set / clear される
-- Infrastructure 層に認可ロジックが存在しない
-- local / 本番相当の切り分けが守られている
+以下の条件を満たした場合、P1-1 は完了とする：
+
+1. **実装完了**
+   - `NexusAuthorizationContextFilter` が実装されている
+   - `extractDbAccessRolesOrFail` 関数が実装されている
+   - `nexus_db_access` を用いた認可判定が BFF で動作する
+   - 未許可リクエストが Controller に到達しない
+   - Context が正しく set / clear される
+   - Infrastructure 層に認可ロジックが存在しない
+   - local / 本番相当の切り分けが守られている
+   - 同一 DomainAccount で複数 Region/Corporation が解釈される token が 403 を返す
+
+2. **検証完了**
+   - 検証手順（後述）をすべて実行し、期待通り動作することを確認
 
 ---
 
-## 13. 次フェーズ（P1-2 以降）
+## 14. 検証手順（curl 想定）
 
-- Region を token から完全決定する
+### 14.1 前提
+
+- Keycloak が設定済みで、`nexus_db_access` claim が token に含まれること
+- local 環境で検証ヘッダーを使用可能なこと
+
+### 14.2 検証ケース 1: 正常系（Region API - GOJO）
+
+**Token claim (`nexus_db_access`)**: `["saitama__musashino__GOJO"]`
+
+**リクエスト**:
+```bash
+curl -X GET "http://localhost:8080/api/v1/gojo/contracts/search?page=0&size=20" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-NEXUS-REGION: saitama" \
+  -H "X-NEXUS-CORP: musashino"
+```
+
+**期待結果**: 200 OK、Context が正しく set される
+
+### 14.3 検証ケース 2: 正常系（Integration API）
+
+**Token claim (`nexus_db_access`)**: `["integration__ALL__GROUP"]`
+
+**リクエスト**:
+```bash
+curl -X GET "http://localhost:8080/api/v1/group/contracts/search?page=0&size=20" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-NEXUS-REGION: integration"
+```
+
+**期待結果**: 200 OK、RegionContext のみ set（Corp/DomainAccount は set されない）
+
+### 14.4 検証ケース 3: 403（role 不一致）
+
+**Token claim (`nexus_db_access`)**: `["saitama__musashino__GOJO"]`
+
+**リクエスト**:
+```bash
+curl -X GET "http://localhost:8080/api/v1/gojo/contracts/search?page=0&size=20" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-NEXUS-REGION: saitama" \
+  -H "X-NEXUS-CORP: fukushisousai"
+```
+
+**期待結果**: 403 Forbidden（role 不一致）
+
+### 14.5 検証ケース 4: 403（claim 不在）
+
+**Token claim (`nexus_db_access`)**: `[]` または claim 不在
+
+**リクエスト**:
+```bash
+curl -X GET "http://localhost:8080/api/v1/gojo/contracts/search?page=0&size=20" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-NEXUS-REGION: saitama" \
+  -H "X-NEXUS-CORP: musashino"
+```
+
+**期待結果**: 403 Forbidden（認可情報なし）
+
+### 14.6 検証ケース 5: 403（同一 DomainAccount で複数 Region）
+
+**Token claim (`nexus_db_access`)**: `["saitama__musashino__GOJO", "fukushima__fukushima__GOJO"]`
+
+**リクエスト**:
+```bash
+curl -X GET "http://localhost:8080/api/v1/gojo/contracts/search?page=0&size=20" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-NEXUS-REGION: saitama" \
+  -H "X-NEXUS-CORP: musashino"
+```
+
+**期待結果**: 403 Forbidden（同一 DomainAccount で複数 Region が解釈される）
+
+### 14.7 検証ケース 6: 403（同一 DomainAccount で複数 Corporation）
+
+**Token claim (`nexus_db_access`)**: `["saitama__musashino__GOJO", "saitama__saikan__GOJO"]`
+
+**リクエスト**:
+```bash
+curl -X GET "http://localhost:8080/api/v1/gojo/contracts/search?page=0&size=20" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-NEXUS-REGION: saitama" \
+  -H "X-NEXUS-CORP: musashino"
+```
+
+**期待結果**: 403 Forbidden（同一 DomainAccount で複数 Corporation が解釈される）
+
+### 14.8 検証ケース 7: 404（存在しない API パス）
+
+**リクエスト**:
+```bash
+curl -X GET "http://localhost:8080/api/v1/unknown/contracts/search?page=0&size=20" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-NEXUS-REGION: saitama" \
+  -H "X-NEXUS-CORP: musashino"
+```
+
+**期待結果**: 404 Not Found（DomainAccount に対応しない API パス）
+
+---
+
+## 15. 失敗時の切り分け
+
+### 15.1 403 が返らない（認可判定が動作していない）
+
+**確認事項**:
+- `NexusAuthorizationContextFilter` が正しく登録されているか
+- Filter の順序が適切か（Controller より前か）
+- `extractDbAccessRolesOrFail` が正しく呼ばれているか
+
+**切り分け手順**:
+1. Filter のログを確認
+2. `extractDbAccessRolesOrFail` の呼び出しを確認
+3. Spring の Filter 登録順序を確認
+
+### 15.2 claim が取得できない
+
+**確認事項**:
+- Keycloak token に `nexus_db_access` claim が含まれているか
+- token のデコードが正しく行われているか
+- claim 名が `nexus_db_access` であるか（スペルミス等）
+
+**切り分け手順**:
+1. token をデコードして claim を確認
+2. `extractDbAccessRolesOrFail`の実装を確認
+3. Keycloak 側の mapper 設定を確認
+
+### 15.3 Context が set されない
+
+**確認事項**:
+- 認可判定が成功しているか
+- Context set のコードが実行されているか
+- ThreadLocal の実装が正しいか
+
+**切り分け手順**:
+1. 認可判定のログを確認
+2. Context set のコードにブレークポイントを設定
+3. ThreadLocal の実装を確認
+
+### 15.4 同一 DomainAccount で複数 Region/Corporation の検証が動作しない
+
+**確認事項**:
+- Step 5 の検証ロジックが実装されているか
+- token に複数の role が含まれているか
+- DomainAccount の抽出が正しいか
+
+**切り分け手順**:
+1. token の `nexus_db_access` を確認
+2. Step 5 の検証ロジックを確認
+3. DomainAccount の抽出ロジックを確認
+
+### 15.5 検証ヘッダーが本番で有効になっている
+
+**確認事項**:
+- local プロファイル限定の実装になっているか
+- 本番環境で検証ヘッダーが無効化されているか
+
+**切り分け手順**:
+1. プロファイル判定の実装を確認
+2. 本番環境での動作を確認
+
+---
+
+## 16. 次フェーズ（P1-2 以降）
+
+- Region/Corporation の決定を `nexus_db_access` のみへ完全移行（local検証ヘッダー依存の段階的縮小）
 - local 検証ヘッダーの段階的縮小
 - 監査・ログ整備
 
