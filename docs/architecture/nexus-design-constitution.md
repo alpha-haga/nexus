@@ -114,10 +114,15 @@ nexus-infrastructure/src/main/resources/sql/
 - **設計正本**: [p04-5-keycloak-claims-db-routing.md](./p04-5-keycloak-claims-db-routing.md) を参照
 - **実装開始（P1-1）**: BFF で Keycloak token claim による権限制御の実装に入る
 
+- **Source of Truth**: `nexus_db_access` claim（`List<String>`）が唯一の権限情報源である。他の claim やヘッダーから権限を推測してはならない。
+
 - **Presentation 層（BFF）の責務**:
   - Keycloak token の claim（`nexus_db_access`）から許可された `(region, corporation, domainAccount)` を取得する
-  - リクエストの `(region, corporation, domainAccount)` が許可されているかを判定し、未許可の場合は 403 Forbidden を返す（fail fast）
+  - リクエストの `(region, corporation, domainAccount)` が許可されているかを **BFF で fail fast 判定**し、未許可の場合は 403 Forbidden を返す
+  - 同一 DomainAccount で複数の Region または複数の Corporation が解釈される token は 403 Forbidden を返す（認可判定以前に検出）
   - 許可されている場合のみ、RegionContext / CorporationContext / DomainAccountContext を設定する
+  - 本番環境では検証ヘッダー（`X-NEXUS-REGION` / `X-NEXUS-CORP`）は完全に無効。local プロファイル限定で検証ヘッダーを読み取る。
+
 - **Infrastructure 層の責務**:
   - Context を読むだけ（権限判定は行わない）
   - DataSource 切替は Context の値に基づいて行う

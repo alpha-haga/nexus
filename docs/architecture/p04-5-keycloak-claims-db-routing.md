@@ -59,6 +59,7 @@ P04-5 の目的は以下です：
 
 - **Claim 名**: `nexus_db_access`
 - **Claim 型**: `List<String>`
+- **Source of Truth**: `nexus_db_access` が唯一の権限情報源である。他の claim やヘッダーから権限を推測してはならない。
 
 ### 3.2 Claim 要素形式
 
@@ -117,23 +118,31 @@ P04-5 の目的は以下です：
 
 - **Region は認証済み token の claim を正とする**
 - 具体的な claim 名・形式は設計側で後続定義（P1-1 実装時に確定）
+- **本番環境では検証ヘッダー（`X-NEXUS-REGION` / `X-NEXUS-CORP`）は完全に無効**。token 由来のみを使用する。
 
 #### 4.3.2 Local 検証（現段階）
 
 - `X-NEXUS-REGION` ヘッダーを許容する
 - P04-5 / local 検証段階では、ヘッダー由来の Region を許容する
+- **本番環境では検証ヘッダーは完全に無効**。実装時は local プロファイル限定で検証ヘッダーを読み取る。
 
 **注意**: Local 検証と本番相当は区別して扱う。混ぜない。
 
-**重要（fail fast 規則）**  
-同一 DomainAccount に対して、`nexus_db_access` 配列から
-- 複数の Region  
-- または複数の Corporation  
+### 4.4 同一 DomainAccount で複数 Region/Corporation の検証（fail fast 規則）
 
-が解釈される token は **403 Forbidden** を返す。
-これは認可判定以前の段階で検出し、処理を継続してはならない。
+**重要（fail fast 規則）**: 同一 DomainAccount に対して、`nexus_db_access` 配列から複数の Region または複数の Corporation が解釈される token は **403 Forbidden** を返す。これは認可判定以前の段階で検出し、処理を継続してはならない。
 
-### 4.4 Integration の場合の判定フロー
+**検証タイミング**: Region / Corporation 決定後、必要 role 構築前に実施する。
+
+**403 を返すべきケース**:
+- DomainAccount が `GOJO` で、`nexus_db_access` に `saitama__musashino__GOJO` と `fukushima__fukushima__GOJO` が両方含まれている（複数 Region）
+- DomainAccount が `GOJO` で、`nexus_db_access` に `saitama__musashino__GOJO` と `saitama__saikan__GOJO` が両方含まれている（複数 Corporation）
+
+**許可されるケース**:
+- DomainAccount が `GOJO` で、`nexus_db_access` に `saitama__musashino__GOJO` のみ含まれている
+- DomainAccount が `GOJO` で、`nexus_db_access` に `saitama__musashino__GOJO` と `saitama__musashino__FUNERAL` が含まれている（異なる DomainAccount は許可）
+
+### 4.5 Integration の場合の判定フロー
 
 1. **必要 role の確認**: `integration__ALL__GROUP`
 2. **Claim 照合**: `nexus_db_access` 配列に `integration__ALL__GROUP` が存在するか確認
@@ -142,30 +151,24 @@ P04-5 の目的は以下です：
    - RegionContext のみ set（integration の場合）
    - CorporationContext / DomainAccountContext は set しない
 
-### 4.5 Region の場合の判定フロー
+### 4.6 Region の場合の判定フロー
 
 1. **Corporation の決定**:
    - 本番相当: token の `nexus_db_access` 配列から該当 role を抽出し、corporation 部分を取得
-   - Local 検証: `X-NEXUS-CORP` ヘッダーから取得（検証専用）
+   - Local 検証: `X-NEXUS-CORP` ヘッダーから取得（検証専用、local プロファイル限定）
 2. **必要 role の構築**: `{region}__{corporation}__{domainAccount}`
 3. **Claim 照合**: 該当 role が `nexus_db_access` 配列に存在するか確認
 4. **未許可の場合**: → **403 Forbidden**
 5. **許可されている場合**:
    - RegionContext / CorporationContext / DomainAccountContext を set
 
-**重要（fail fast 規則）**: 同一 DomainAccount で複数の Region または複数の Corporation が解釈される token は **403 Forbidden** を返す（fail fast）。これは、token の `nexus_db_access` 配列に、同一 DomainAccount に対して異なる Region または異なる Corporation の role が含まれている場合を指す。
-
-**例（403 を返すべきケース）**:
-- DomainAccount が `GOJO` で、`nexus_db_access` に `saitama__musashino__GOJO` と `fukushima__fukushima__GOJO` が両方含まれている（複数 Region）
-- DomainAccount が `GOJO` で、`nexus_db_access` に `saitama__musashino__GOJO` と `saitama__saikan__GOJO` が両方含まれている（複数 Corporation）
-
-### 4.6 Context set
+### 4.7 Context set
 
 - 許可判定が成功した場合のみ、該当する Context を set する
 - Integration の場合: RegionContext のみ
 - Region の場合: RegionContext / CorporationContext / DomainAccountContext
 
-### 4.7 Finally で clear
+### 4.8 Finally で clear
 
 - ThreadLocal リーク防止のため、必ず finally で Context を clear
 
@@ -196,6 +199,7 @@ DomainAccount は token から推測しない。BFF が request path から決�
 - `nexus_db_access` claim が存在しない、または空配列の場合（認可情報なし）
 - 必要な role が `nexus_db_access` 配列に存在しない場合（role 不一致）
   - 例: Integration API に region role だけ付いている等
+- **同一 DomainAccount で複数の Region または複数の Corporation が解釈される token の場合**（fail fast 規則、4.4 参照）
 
 ### 6.2 404 Not Found（存在しない API）
 
@@ -211,16 +215,18 @@ DomainAccount は token から推測しない。BFF が request path から決�
 
 - `X-NEXUS-REGION` / `X-NEXUS-CORP` / `X-NEXUS-DOMAIN-ACCOUNT` ヘッダーを検証用に使用可能
 - **local プロファイルでのみ有効**
-- **本番環境では完全に無効**
+- **本番環境では完全に無効**（実装時は local プロファイル限定で読み取る）
 - 本番では token（`nexus_db_access`）由来のみを使用する
 - 将来削除前提
-  
+
 ### 7.2 将来の移行方針
 
 - **Local 検証ヘッダーは「検証専用」であり、本番では token 由来にする**
 - P1-1 以降で Keycloak token からの claim 取得に移行する
 - 移行後も local 環境では検証ヘッダーを併用可能（開発・テスト用途）
 - **将来の削除前提**であることを明記
+
+**重要**: 実装時は local プロファイル判定を行い、本番環境（dev/stg/prod）では検証ヘッダーを一切読み取らない。
 
 ---
 
@@ -252,10 +258,11 @@ DomainAccount は token から推測しない。BFF が request path から決�
 1. DomainAccount 決定: `GOJO`（API パスから自動判定）
 2. Region 決定: `saitama`（local 検証ではヘッダーから、本番相当では token から）
 3. Corporation 決定: `musashino`（local 検証ではヘッダーから、本番相当では token から）
-4. 必要 role: `saitama__musashino__GOJO`
-5. Claim 照合: `saitama__musashino__GOJO` が claim に含まれている → **許可**
-6. Context set: RegionContext / CorporationContext / DomainAccountContext を set
-7. 処理継続
+4. 複数 Region/Corporation 検証: 同一 DomainAccount で複数 Region/Corporation は存在しない → 検証通過
+5. 必要 role: `saitama__musashino__GOJO`
+6. Claim 照合: `saitama__musashino__GOJO` が claim に含まれている → **許可**
+7. Context set: RegionContext / CorporationContext / DomainAccountContext を set
+8. 処理継続
 
 ### 9.2 例 2: Integration DB - GROUP（ALL 使用）
 
@@ -295,9 +302,52 @@ DomainAccount は token から推測しない。BFF が request path から決�
 1. DomainAccount 決定: `GOJO`（API パスから自動判定）
 2. Region 決定: `saitama`
 3. Corporation 決定: `fukushisousai`
-4. 必要 role: `saitama__fukushisousai__GOJO`
-5. Claim 照合: `saitama__fukushisousai__GOJO` が claim に含まれていない → **未許可**
-6. **403 Forbidden を返す**（fail fast）
+4. 複数 Region/Corporation 検証: 同一 DomainAccount で複数 Region/Corporation は存在しない → 検証通過
+5. 必要 role: `saitama__fukushisousai__GOJO`
+6. Claim 照合: `saitama__fukushisousai__GOJO` が claim に含まれていない → **未許可**
+7. **403 Forbidden を返す**（fail fast）
+
+### 9.4 例 4: 同一 DomainAccount で複数 Region（403 を返す）
+
+**Token claim (`nexus_db_access`)**:
+```json
+[
+  "saitama__musashino__GOJO",
+  "fukushima__fukushima__GOJO"
+]
+```
+
+**リクエスト**:
+- API パス: `/api/v1/gojo/contracts/search`
+- リクエストヘッダー（local 検証）: `X-NEXUS-REGION: saitama`, `X-NEXUS-CORP: musashino`
+
+**処理フロー**:
+1. DomainAccount 決定: `GOJO`（API パスから自動判定）
+2. Region 決定: `saitama`
+3. Corporation 決定: `musashino`
+4. 複数 Region/Corporation 検証: 同一 DomainAccount（`GOJO`）で複数 Region（`saitama` と `fukushima`）が解釈される → **検証失敗**
+5. **403 Forbidden を返す**（fail fast、認可判定以前）
+
+### 9.5 例 5: 同一 DomainAccount で複数 Corporation（403 を返す）
+
+**Token claim (`nexus_db_access`)**:
+```json
+[
+  "saitama__musashino__GOJO",
+  "saitama__saikan__GOJO"
+]
+```
+
+**リクエスト**:
+- API パス: `/api/v1/gojo/contracts/search`
+- リクエストヘッダー（local 検証）: `X-NEXUS-REGION: saitama`, `X-NEXUS-CORP: musashino`
+
+**処理フロー**:
+1. DomainAccount 決定: `GOJO`（API パスから自動判定）
+2. Region 決定: `saitama`
+3. Corporation 決定: `musashino`
+4. 複数 Region/Corporation 検証: 同一 DomainAccount（`GOJO`）で複数 Corporation（`musashino` と `saikan`）が解釈される → **検証失敗**
+5. **403 Forbidden を返す**（fail fast、認可判定以前）
 
 ---
 
@@ -310,6 +360,7 @@ DomainAccount は token から推測しない。BFF が request path から決�
    - Claim 形式: `List<String>`（各要素は `"{region}__{corporation}__{domainAccount}"`）
    - DomainAccount は大文字固定（GOJO / FUNERAL / GROUP）
    - ワイルドカード方針: `ALL` は integration の corp 不要表現のみ許可
+   - `nexus_db_access` が唯一の source of truth であること
 
 2. **判定責務の確定**
    - BFF が token claim から許可判定を行い、Context を設定する
@@ -317,6 +368,7 @@ DomainAccount は token から推測しない。BFF が request path から決�
 
 3. **Fail Fast 方針の確定**
    - 未許可のリクエストは 403 Forbidden を返す
+   - 同一 DomainAccount で複数 Region/Corporation が解釈される token は 403 Forbidden を返す（認可判定以前）
    - Infrastructure 層での権限判定は行わない
 
 4. **決定規則の固定**
@@ -327,8 +379,13 @@ DomainAccount は token から推測しない。BFF が request path から決�
 5. **処理フローの固定**
    - 認可判定と Context set の順序（処理フローとして箇条書きで固定）
    - 失敗時の扱い（404/403 の使い分けを固定）
+   - 同一 DomainAccount で複数 Region/Corporation の検証タイミング（認可判定以前）
 
-6. **ドキュメント化**
+6. **検証ヘッダーの位置づけ確定**
+   - local プロファイルでのみ有効
+   - 本番環境では完全に無効（実装時は local プロファイル限定で読み取る）
+
+7. **ドキュメント化**
    - 本設計ドキュメントに上記が明文化されている
    - 実設定手順書へのリンク: [p04-5b-keycloak-setup-guide.md](./p04-5b-keycloak-setup-guide.md)
 
@@ -349,6 +406,7 @@ P1-1 で本設計に基づいて実装する際の境界：
 3. **許可判定ロジックの実装**
    - リクエストの `(region, corporation, domainAccount)` と claim を照合するロジック
    - `ALL` の処理（integration のみ許可）
+   - **同一 DomainAccount で複数 Region/Corporation の検証ロジック**（認可判定以前に実施）
 
 4. **Context 設定フィルターの実装**
    - 許可判定後に RegionContext / CorporationContext / DomainAccountContext を設定するフィルター
@@ -356,7 +414,7 @@ P1-1 で本設計に基づいて実装する際の境界：
 
 5. **ローカル検証ヘッダーとの併用**
    - local 環境では検証ヘッダーを併用可能（開発・テスト用途）
-   - 本番環境では token 由来のみを使用
+   - **本番環境では token 由来のみを使用**（local プロファイル判定を実装）
 
 ---
 

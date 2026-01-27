@@ -156,6 +156,7 @@
 - BFF における認可判定と Context set の責務確定
 - 403 / 404 の使い分けルール確定
 - local 検証ヘッダーと本番相当の切り分け明示
+- 同一 DomainAccount で複数 Region/Corporation が解釈される token の 403 判定規則確定
 
 **非スコープ**:
 - Keycloak の実設定手順（別ドキュメントに委譲）
@@ -174,7 +175,7 @@
 
 ## P1 詳細ロードマップ（現在地）
 
-### P1-1（次フェーズ・実装開始）— Keycloak Claim による権限制御実装
+### P1-1（実装開始）— Keycloak Claim による権限制御実装
 
 **目的**: P04-5 で確定した設計に基づいて、BFF で Keycloak token claim による権限制御を実装する。
 
@@ -183,28 +184,39 @@
 * Keycloak token claim（`nexus_db_access`）を BFF で解析する実装
 * Region / Corporation / DomainAccount の token 由来決定ロジック実装
 * 認可判定（403 fail fast）と Context set フィルター実装
-* local 検証ヘッダーと token 由来の切替制御
+* local 検証ヘッダーと token 由来の切替制御（local プロファイル限定）
+* 同一 DomainAccount で複数 Region/Corporation が解釈される token の 403 判定実装
 * Infrastructure 層は変更最小（Context を読むだけ）
 
 **設計前提**:
 
 * 設計正本: [p04-5-keycloak-claims-db-routing.md](./p04-5-keycloak-claims-db-routing.md) に従う
+* 実装ロードマップ: [p1-1-bff-authorization-implementation.md](./p1-1-bff-authorization-implementation.md) に従う
 * P04-5 の再設計・再解釈は禁止
 
 **成果物**:
 
-* BFF 認可フィルター実装
-* Keycloak token 解析ロジック実装
+* BFF 認可フィルター実装（`NexusAuthorizationContextFilter`）
+* Keycloak token 解析ロジック実装（`extractDbAccessRolesOrFail`）
 * Context set ロジック実装
+* 同一 DomainAccount で複数 Region/Corporation の検証ロジック実装
 
-**Done 条件**:
+**Done 条件**（[p1-1-bff-authorization-implementation.md](./p1-1-bff-authorization-implementation.md) の 13 節と整合）:
 
-* Keycloak token から `nexus_db_access` claim を取得できる
-* Region / Corporation / DomainAccount を token から決定できる（本番相当）
-* 未許可リクエストに対して 403 Forbidden を返す（fail fast）
-* 許可リクエストに対して Context を set する
-* local 検証ヘッダーと token 由来の切替が動作する
-* Infrastructure 層は Context を読むだけ（変更最小）
+1. **実装完了**
+   - `NexusAuthorizationContextFilter` が実装されている
+   - `extractDbAccessRolesOrFail` 関数が実装されている
+   - `nexus_db_access` を用いた認可判定が BFF で動作する
+   - 未許可リクエストが Controller に到達しない
+   - Context が正しく set / clear される
+   - Infrastructure 層に認可ロジックが存在しない
+   - local / 本番相当の切り分けが守られている（local プロファイル限定で検証ヘッダーを読み取る）
+   - 同一 DomainAccount で複数 Region/Corporation が解釈される token が 403 を返す
+
+2. **検証完了**
+   - 検証手順（[p1-1-bff-authorization-implementation.md](./p1-1-bff-authorization-implementation.md) の 14 節）をすべて実行し、期待通り動作することを確認
+
+**現在地**: P1-1 実装開始
 
  ---
 
@@ -212,4 +224,4 @@
 
 * 本ドキュメントは**更新される前提**の資料
 * 設計原則の変更は nexus-design-constitution.md のみで行う
-* Cursor / Agent 実行時は、常に「現在地（P1-1 開始準備完了）」を明示して開始する
+* Cursor / Agent 実行時は、常に「現在地（P1-1 実装開始）」を明示して開始する
