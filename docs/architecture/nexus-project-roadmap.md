@@ -43,12 +43,19 @@
 
 ### P1（現在進行中）— 業務要件との接続
 
-* JOIN の段階的復活
-* 表示要件の確定（業務と合意）
-* パフォーマンスチューニング
-* Count / Search SQL 最適化
-* 不要カラム・条件の整理
-* Keycloak Claim による権限制御実装
+P1 は **2 レーン構成**で進行する。
+
+**前提**:
+- 現時点では Keycloak の実設定は未完了
+- `nexus_db_access` claim を用いた BFF 認可実装（P1-A1）は完了済み
+- ただし、実トークンを用いた E2E 検証は未実施
+- JOIN / 表示要件 / パフォーマンス最適化は、認可成立前提で進める必要がある
+
+**レーン構成**:
+- **P1-A（最優先）**: セキュリティ・ルーティング成立レーン
+  - 本番相当の入口条件を確定させる
+- **P1-B（後続）**: 業務成立・検索成立レーン
+  - 業務要件と検索要件を成立させる
 
 ---
 
@@ -180,7 +187,28 @@
 
 ## P1 詳細ロードマップ（現在地）
 
-### P1-1（完了）— BFF 認可（Keycloak Claim）+ Context set 実装
+### P1-A：セキュリティ・ルーティング成立レーン（最優先）
+
+P1-A は「本番相当の入口条件」を確定させるフェーズとする。
+
+#### P1-A0（未着手）— Keycloak 設定
+
+**目的**: `nexus_db_access` claim を実トークンに載せる。
+
+**スコープ**:
+- Keycloak 側の設定（client role / mapper / scope）
+- 実トークンに `nexus_db_access` claim が含まれることを確認
+
+**参照**:
+- [p04-5b-keycloak-setup-guide.md](./p04-5b-keycloak-setup-guide.md)
+
+**Done 条件**:
+- 任意ユーザーで token に `nexus_db_access` が配列で出力される
+- 例の role（例: `saitama__musashino__GOJO`、`integration__ALL__GROUP`）が claim に含まれることを確認済み
+
+---
+
+#### P1-A1（完了）— BFF 認可・Context set 実装
 
 **目的**: P04-5 で確定した設計に基づいて、BFF で Keycloak token claim による権限制御を実装する。
 
@@ -199,13 +227,6 @@
 * 実装ロードマップ: [p1-1-bff-authorization-implementation.md](./p1-1-bff-authorization-implementation.md) に従う
 * P04-5 の再設計・再解釈は禁止
 
-**成果物**:
-
-* BFF 認可フィルター実装（`NexusAuthorizationContextFilter`）
-* Keycloak token 解析ロジック実装（`extractDbAccessRolesOrFail`）
-* Context set ロジック実装
-* 同一 DomainAccount で複数 Region/Corporation の検証ロジック実装
-
 **実装成果物**:
 - backend/nexus-bff/src/main/kotlin/nexus/bff/security/NexusAuthorizationContextFilter.kt
 - backend/nexus-bff/src/main/kotlin/nexus/bff/security/DbAccessRoleExtractor.kt
@@ -223,10 +244,116 @@
 
 **状態**: 実装完了（マージ済み）
 
- ---
+---
+
+#### P1-A2（未着手）— E2E 検証
+
+**目的**: 実トークンを用いた E2E 検証を実施する。
+
+**スコープ**:
+- Keycloak から取得した実トークンで curl 検証
+- 403 / 404 / 200 の確認
+- local 検証ヘッダーと token 由来の動作確認
+- 同一 DomainAccount で複数 Region/Corporation の 403 確認
+
+**前提**:
+- P1-A0（Keycloak 設定）が完了していること
+
+**Done 条件**:
+- 検証手順（[p1-1-bff-authorization-implementation.md](./p1-1-bff-authorization-implementation.md) の 15 節）をすべて実行し、期待通り動作することを確認
+
+---
+
+#### P1-A3（未着手）— 本番境界整理
+
+**目的**: 本番運用に向けた境界を整理する。
+
+**スコープ**:
+- local 検証ヘッダー無効化方針の確定
+- ログ・運用前提の整理
+- 監査ログの要件整理
+
+**Done 条件**:
+- local 検証ヘッダーの無効化方針が確定
+- ログ出力要件が整理されている
+- 運用前提が明文化されている
+
+---
+
+### P1-B：業務成立・検索成立レーン（後続）
+
+P1-B は「業務要件と検索要件を成立させる」ためのフェーズとする。
+
+**前提**:
+- P1-A の完了を前提とする（特に P1-A2 の E2E 検証完了後）
+
+**順序**: 以下の順で固定（前フェーズ完了後に次フェーズに着手）
+
+---
+
+#### P1-B0（未着手）— 表示要件確定
+
+**目的**: 業務要件として必要な表示項目・条件を確定する。
+
+**スコープ**:
+- 一覧項目の確定
+- 絞り込み条件の確定
+- ソート要件の確定
+
+**Done 条件**:
+- 表示要件が業務と合意されている
+- 要件がドキュメント化されている
+
+---
+
+#### P1-B1（未着手）— JOIN の段階的復活
+
+**目的**: 表示要件を満たすために必要な JOIN を段階的に復活させる。
+
+**スコープ**:
+- 最小 JOIN から開始
+- 必要 JOIN の順で追加
+- JOIN によるパフォーマンス影響を確認
+
+**Done 条件**:
+- 表示要件を満たす JOIN が実装されている
+- JOIN によるパフォーマンス影響が許容範囲内である
+
+---
+
+#### P1-B2（未着手）— Count / Search の最適化
+
+**目的**: Count クエリと Search クエリを最適化する。
+
+**スコープ**:
+- count クエリの最適化
+- paging 方針の確定
+- 検索条件の最適化
+
+**Done 条件**:
+- count クエリが許容時間内で実行される
+- paging 方針が確定している
+- 検索条件が最適化されている
+
+---
+
+#### P1-B3（未着手）— パフォーマンスチューニング
+
+**目的**: 実データ量・権限スコープ前提でパフォーマンスを調整する。
+
+**スコープ**:
+- 実データ量を前提としたチューニング
+- 権限スコープを考慮した最適化
+- 原則 P2 送りだが、業務に耐えない場合のみ P1 に繰り上げ可能
+
+**Done 条件**:
+- 実データ量・権限スコープ前提で許容時間内で動作する
+- パフォーマンス要件が満たされている
+
+---
 
 ## 補足
 
 * 本ドキュメントは**更新される前提**の資料
 * 設計原則の変更は nexus-design-constitution.md のみで行う
-* Cursor / Agent 実行時は、常に「現在地（P1-1 完了）」を明示して開始する
+* Cursor / Agent 実行時は、常に「現在地（P1-A1 完了、P1-A0 未着手）」を明示して開始する
