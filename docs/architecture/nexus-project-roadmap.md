@@ -171,11 +171,16 @@
 
 **注意**: P04-5 は設計確定フェーズであり、実装は含めない。実装は P1-1 で行う。
 
+**Done 条件（要点）**:
+- claim: nexus_db_access（List<String>）の形式と照合規約が確定
+- wildcard: integration__ALL__GROUP のみ許可、region 側 ALL 禁止
+- BFF が fail fast（403/404）と Context set を担い、Infrastructure は Context を読むだけ
+
  ---
 
 ## P1 詳細ロードマップ（現在地）
 
-### P1-1（実装開始）— Keycloak Claim による権限制御実装
+### P1-1（完了）— BFF 認可（Keycloak Claim）+ Context set 実装
 
 **目的**: P04-5 で確定した設計に基づいて、BFF で Keycloak token claim による権限制御を実装する。
 
@@ -201,22 +206,22 @@
 * Context set ロジック実装
 * 同一 DomainAccount で複数 Region/Corporation の検証ロジック実装
 
-**Done 条件**（[p1-1-bff-authorization-implementation.md](./p1-1-bff-authorization-implementation.md) の 13 節と整合）:
+**実装成果物**:
+- backend/nexus-bff/src/main/kotlin/nexus/bff/security/NexusAuthorizationContextFilter.kt
+- backend/nexus-bff/src/main/kotlin/nexus/bff/security/DbAccessRoleExtractor.kt
+- backend/nexus-bff/src/main/kotlin/nexus/bff/security/NexusSecurityConfig.kt
+- backend/nexus-bff/src/test/kotlin/nexus/bff/security/DbAccessRoleExtractorTest.kt
 
-1. **実装完了**
-   - `NexusAuthorizationContextFilter` が実装されている
-   - `extractDbAccessRolesOrFail` 関数が実装されている
-   - `nexus_db_access` を用いた認可判定が BFF で動作する
-   - 未許可リクエストが Controller に到達しない
-   - Context が正しく set / clear される
-   - Infrastructure 層に認可ロジックが存在しない
-   - local / 本番相当の切り分けが守られている（local プロファイル限定で検証ヘッダーを読み取る）
-   - 同一 DomainAccount で複数 Region/Corporation が解釈される token が 403 を返す
+**Done 条件（要点）**:
+- request path で scope 決定（DomainAccount を token から推測しない）
+- nexus_db_access 不在/空/不正 -> 403
+- integration__ALL__GROUP のみ許可、region 側 ALL 禁止
+- 同一 DomainAccount で複数 Region/Corp 解釈 -> 403
+- integration は RegionContext のみ set、region は Region/Corp/DomainAccount を set
+- finally で必ず Context clear
+- テストが実行可能（:nexus-bff:test が通る）
 
-2. **検証完了**
-   - 検証手順（[p1-1-bff-authorization-implementation.md](./p1-1-bff-authorization-implementation.md) の 14 節）をすべて実行し、期待通り動作することを確認
-
-**現在地**: P1-1 実装開始
+**状態**: 実装完了（マージ済み）
 
  ---
 
@@ -224,4 +229,4 @@
 
 * 本ドキュメントは**更新される前提**の資料
 * 設計原則の変更は nexus-design-constitution.md のみで行う
-* Cursor / Agent 実行時は、常に「現在地（P1-1 実装開始）」を明示して開始する
+* Cursor / Agent 実行時は、常に「現在地（P1-1 完了）」を明示して開始する

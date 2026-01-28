@@ -498,3 +498,68 @@ curl -X GET "http://localhost:8080/api/v1/unknown/contracts/search?page=0&size=2
 ---
 
 以上。本書が P1-1 実装ロードマップの正本である。
+
+---
+
+## P1-1 実装結果（マージ済み）
+
+本章は P1-1 の「ロードマップ」ではなく、**実装がマージ済みである事実の記録**である。設計の正（P04-5）を変更するものではない。
+
+### 変更ファイル一覧（実装）
+
+追加:
+- backend/nexus-bff/src/main/kotlin/nexus/bff/security/NexusAuthorizationContextFilter.kt
+- backend/nexus-bff/src/main/kotlin/nexus/bff/security/DbAccessRoleExtractor.kt
+- backend/nexus-bff/src/main/kotlin/nexus/bff/security/NexusSecurityConfig.kt
+- backend/nexus-bff/src/test/kotlin/nexus/bff/security/DbAccessRoleExtractorTest.kt
+
+変更:
+- backend/nexus-bff/build.gradle.kts  
+  - spring-security / oauth2-resource-server 依存追加  
+  - spring-boot-starter-test 追加  
+  - useJUnitPlatform を有効化
+
+削除（P1-1 により置き換え）:
+- backend/nexus-bff/src/main/kotlin/nexus/bff/config/RegionContextFilter.kt
+- backend/nexus-bff/src/main/kotlin/nexus/bff/config/CorporationDomainAccountContextFilter.kt
+
+### 実装仕様（設計の正との対応）
+
+- request path から scope を決定（token から DomainAccount を推測しない）
+  - /api/v1/gojo/** -> Region（GOJO）
+  - /api/v1/funeral/** -> Region（FUNERAL）
+  - /api/v1/group/**, /api/v1/identity/**, /api/v1/household/** -> Integration
+  - 上記以外 -> 404
+
+- claim 取得・検証
+  - nexus_db_access（List<String>）不在/空/不正 -> 403（fail fast）
+  - role は正規化（region/corp は lowercase、domainAccount は uppercase）
+
+- wildcard 規則（P04-5 3.4）
+  - integration__ALL__GROUP のみ許可
+  - region 側 ALL 禁止
+  - ※実装では「正規化後の値」で判定し、case ブレでも同一扱いにしている
+
+- fail fast 規則（P04-5）
+  - 同一 DomainAccount で複数 Region または複数 Corporation が解釈される token は 403
+
+- Integration API
+  - 必要 role: integration__ALL__GROUP
+  - 無ければ 403
+  - 許可時: RegionContext のみ set（Corp/DomainAccount は set しない）
+
+- Region API
+  - 必要 role: {region}__{corp}__{domainAccount}
+  - 無ければ 403
+  - 許可時: RegionContext / CorporationContext / DomainAccountContext を set
+
+- local 検証ヘッダー（local プロファイル限定）
+  - local かつ X-NEXUS-REGION と X-NEXUS-CORP が「両方ある場合のみ」ヘッダーを優先
+  - それ以外は token から region/corp を決定（local でも本番相当で動作させる）
+
+- Context clear
+  - finally で必ず clear（ThreadLocal leak 防止）
+
+### テスト配置について
+- DbAccessRoleExtractorTest は src/test/kotlin/nexus/bff/security 配下に配置する
+- nexus/bff/architecture は「アーキテクチャテスト用途」であり、security 単体テストは同フォルダに置く必要はない
