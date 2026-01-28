@@ -248,14 +248,52 @@ P1-1 の目的は以下である。
 
 ---
 
-## 14. 検証手順（curl 想定）
+## 14. 検証観点
 
-### 14.1 前提
+### 14.1 基本動作
+
+#### Integration API
+- `integration__ALL__GROUP` が token に含まれていれば 200 OK
+- `integration__ALL__GROUP` が無ければ 403 Forbidden
+- RegionContext のみ set（Corp/DomainAccount は set されない）
+
+#### Region API（token ベース）
+- token に同一 DomainAccount の role が1つだけある場合: 200 OK
+- token に同一 DomainAccount の role が複数ある場合（複数 region または複数 corp）: 403 Forbidden
+- requiredRole が token に無い場合: 403 Forbidden
+
+#### Region API（local ヘッダー優先）
+- local プロファイルかつ `X-NEXUS-REGION` と `X-NEXUS-CORP` が両方存在する場合:
+  - ヘッダーで region/corp を確定
+  - requiredRole が token に存在すれば 200 OK（token の複数候補チェックは行わない）
+  - requiredRole が token に無ければ 403 Forbidden
+- local プロファイルだがヘッダーが無い or 片方欠けの場合:
+  - token ベースの判定にフォールバック（複数候補チェックあり）
+
+### 14.2 重要な検証ポイント
+
+1. **同一 DomainAccount で複数 Region/Corporation の扱い**
+   - token に同一 DomainAccount の複数 region/corp が混在していても、local で `X-NEXUS-REGION` と `X-NEXUS-CORP` を両方付ければ requiredRole がある限り通る
+   - ヘッダー無し（または片方欠け）で複数候補なら 403
+
+2. **Integration API の権限チェック**
+   - integration は `integration__ALL__GROUP` が無ければ 403
+   - Integration API では RegionContext のみ set（Corp/DomainAccount は set しない）
+
+3. **検証ヘッダーの扱い**
+   - local プロファイルでのみ有効
+   - 本番環境では無効（token 由来のみ）
+
+---
+
+## 15. 検証手順（curl 想定）
+
+### 15.1 前提
 
 - Keycloak が設定済みで、`nexus_db_access` claim が token に含まれること
 - local 環境で検証ヘッダーを使用可能なこと
 
-### 14.2 検証ケース 1: 正常系（Region API - GOJO）
+### 15.2 検証ケース 1: 正常系（Region API - GOJO）
 
 **Token claim (`nexus_db_access`)**: `["saitama__musashino__GOJO"]`
 
@@ -269,7 +307,7 @@ curl -X GET "http://localhost:8080/api/v1/gojo/contracts/search?page=0&size=20" 
 
 **期待結果**: 200 OK、Context が正しく set される
 
-### 14.3 検証ケース 2: 正常系（Integration API）
+### 15.3 検証ケース 2: 正常系（Integration API）
 
 **Token claim (`nexus_db_access`)**: `["integration__ALL__GROUP"]`
 
@@ -282,7 +320,7 @@ curl -X GET "http://localhost:8080/api/v1/group/contracts/search?page=0&size=20"
 
 **期待結果**: 200 OK、RegionContext のみ set（Corp/DomainAccount は set されない）
 
-### 14.4 検証ケース 3: 403（role 不一致）
+### 15.4 検証ケース 3: 403（role 不一致）
 
 **Token claim (`nexus_db_access`)**: `["saitama__musashino__GOJO"]`
 
@@ -296,7 +334,7 @@ curl -X GET "http://localhost:8080/api/v1/gojo/contracts/search?page=0&size=20" 
 
 **期待結果**: 403 Forbidden（role 不一致）
 
-### 14.5 検証ケース 4: 403（claim 不在）
+### 15.5 検証ケース 4: 403（claim 不在）
 
 **Token claim (`nexus_db_access`)**: `[]` または claim 不在
 
@@ -310,7 +348,7 @@ curl -X GET "http://localhost:8080/api/v1/gojo/contracts/search?page=0&size=20" 
 
 **期待結果**: 403 Forbidden（認可情報なし）
 
-### 14.6 検証ケース 5: 403（同一 DomainAccount で複数 Region）
+### 15.6 検証ケース 5: 正常系（local ヘッダー優先 - 複数候補あり）
 
 **Token claim (`nexus_db_access`)**: `["saitama__musashino__GOJO", "fukushima__fukushima__GOJO"]`
 
@@ -322,23 +360,60 @@ curl -X GET "http://localhost:8080/api/v1/gojo/contracts/search?page=0&size=20" 
   -H "X-NEXUS-CORP: musashino"
 ```
 
-**期待結果**: 403 Forbidden（同一 DomainAccount で複数 Region が解釈される）
+**期待結果**: 200 OK（ヘッダーで一意化されるため、token の複数候補チェックは行わない）
 
-### 14.7 検証ケース 6: 403（同一 DomainAccount で複数 Corporation）
+### 15.7 検証ケース 6: 403（同一 DomainAccount で複数 Region - ヘッダー無し）
+
+**Token claim (`nexus_db_access`)**: `["saitama__musashino__GOJO", "fukushima__fukushima__GOJO"]`
+
+**リクエスト**:
+```bash
+curl -X GET "http://localhost:8080/api/v1/gojo/contracts/search?page=0&size=20" \
+  -H "Authorization: Bearer <token>"
+```
+
+**期待結果**: 403 Forbidden（ヘッダー無しのため token ベース判定、複数候補で 403）
+
+### 15.8 検証ケース 7: 403（同一 DomainAccount で複数 Corporation - ヘッダー無し）
 
 **Token claim (`nexus_db_access`)**: `["saitama__musashino__GOJO", "saitama__saikan__GOJO"]`
 
 **リクエスト**:
 ```bash
 curl -X GET "http://localhost:8080/api/v1/gojo/contracts/search?page=0&size=20" \
-  -H "Authorization: Bearer <token>" \
-  -H "X-NEXUS-REGION: saitama" \
-  -H "X-NEXUS-CORP: musashino"
+  -H "Authorization: Bearer <token>"
 ```
 
-**期待結果**: 403 Forbidden（同一 DomainAccount で複数 Corporation が解釈される）
+**期待結果**: 403 Forbidden（ヘッダー無しのため token ベース判定、複数候補で 403）
 
-### 14.8 検証ケース 7: 404（存在しない API パス）
+### 15.9 検証ケース 8: 403（local ヘッダー優先 - requiredRole 不在）
+
+**Token claim (`nexus_db_access`)**: `["saitama__musashino__GOJO"]`
+
+**リクエスト**:
+```bash
+curl -X GET "http://localhost:8080/api/v1/gojo/contracts/search?page=0&size=20" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-NEXUS-REGION: saitama" \
+  -H "X-NEXUS-CORP: fukushisousai"
+```
+
+**期待結果**: 403 Forbidden（requiredRole が token に無い）
+
+### 15.10 検証ケース 9: 403（integration に region role のみ）
+
+**Token claim (`nexus_db_access`)**: `["saitama__musashino__GOJO"]`
+
+**リクエスト**:
+```bash
+curl -X GET "http://localhost:8080/api/v1/group/contracts/search?page=0&size=20" \
+  -H "Authorization: Bearer <token>" \
+  -H "X-NEXUS-REGION: integration"
+```
+
+**期待結果**: 403 Forbidden（integration__ALL__GROUP が無い）
+
+### 15.11 検証ケース 10: 404（存在しない API パス）
 
 **リクエスト**:
 ```bash
@@ -352,9 +427,9 @@ curl -X GET "http://localhost:8080/api/v1/unknown/contracts/search?page=0&size=2
 
 ---
 
-## 15. 失敗時の切り分け
+## 16. 失敗時の切り分け
 
-### 15.1 403 が返らない（認可判定が動作していない）
+### 16.1 403 が返らない（認可判定が動作していない）
 
 **確認事項**:
 - `NexusAuthorizationContextFilter` が正しく登録されているか
@@ -366,7 +441,7 @@ curl -X GET "http://localhost:8080/api/v1/unknown/contracts/search?page=0&size=2
 2. `extractDbAccessRolesOrFail` の呼び出しを確認
 3. Spring の Filter 登録順序を確認
 
-### 15.2 claim が取得できない
+### 16.2 claim が取得できない
 
 **確認事項**:
 - Keycloak token に `nexus_db_access` claim が含まれているか
@@ -378,7 +453,7 @@ curl -X GET "http://localhost:8080/api/v1/unknown/contracts/search?page=0&size=2
 2. `extractDbAccessRolesOrFail`の実装を確認
 3. Keycloak 側の mapper 設定を確認
 
-### 15.3 Context が set されない
+### 16.3 Context が set されない
 
 **確認事項**:
 - 認可判定が成功しているか
@@ -390,7 +465,7 @@ curl -X GET "http://localhost:8080/api/v1/unknown/contracts/search?page=0&size=2
 2. Context set のコードにブレークポイントを設定
 3. ThreadLocal の実装を確認
 
-### 15.4 同一 DomainAccount で複数 Region/Corporation の検証が動作しない
+### 16.4 同一 DomainAccount で複数 Region/Corporation の検証が動作しない
 
 **確認事項**:
 - Step 5 の検証ロジックが実装されているか
@@ -402,7 +477,7 @@ curl -X GET "http://localhost:8080/api/v1/unknown/contracts/search?page=0&size=2
 2. Step 5 の検証ロジックを確認
 3. DomainAccount の抽出ロジックを確認
 
-### 15.5 検証ヘッダーが本番で有効になっている
+### 16.5 検証ヘッダーが本番で有効になっている
 
 **確認事項**:
 - local プロファイル限定の実装になっているか
@@ -414,7 +489,7 @@ curl -X GET "http://localhost:8080/api/v1/unknown/contracts/search?page=0&size=2
 
 ---
 
-## 16. 次フェーズ（P1-2 以降）
+## 17. 次フェーズ（P1-2 以降）
 
 - Region/Corporation の決定を `nexus_db_access` のみへ完全移行（local検証ヘッダー依存の段階的縮小）
 - local 検証ヘッダーの段階的縮小
