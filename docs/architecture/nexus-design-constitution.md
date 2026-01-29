@@ -58,6 +58,8 @@ nexus-infrastructure/src/main/resources/sql/
 - DTO / RowMapper / Controller は SQL に合わせて変更する
 - POC 時代の DTO は「暫定」であり、将来の表示要件に従って破棄・再設計する
 
+**P1 適用メモ**: P1 では SQL 起点を徹底する。表示要件（P1-B0）で確定した項目のみを SQL に反映し、DTO/Mapper/Controller は SQL に従属させる。
+
 ### 3.2 命名ルール
 
 | 対象 | ルール |
@@ -71,6 +73,8 @@ nexus-infrastructure/src/main/resources/sql/
 - 初期段階では JOIN を行わない
 - 取得できない列は `CAST(NULL AS ...) AS column_name` で定義
 - JOIN 復活時に SQL のみを修正し、DTO/Mapper は維持する
+
+**P1 適用メモ**: P1-B0 で JOIN 復活順序を固定し、P1-B1 で段階的に復活させる。順序は P1-B0 で合意した順でのみ進める。
 
 ---
 
@@ -132,7 +136,44 @@ nexus-infrastructure/src/main/resources/sql/
   
 ---
 
-## 5. 全体ロードマップ（P0〜P2）
+## 5. Read / Write 分離方針
+
+### 5.1 Read 導線（JDBC / SQL）
+
+- Read は **JDBC + SQL 正** とする
+- SQL が返す列定義を正とし、DTO / RowMapper は SQL に従属する
+- JOIN は段階的に復活させる（P1-B0 で順序を固定）
+
+**P1 適用メモ**: P1-B1 では P1-B0 で固定した JOIN 復活順序に従い、SQL → DTO → Mapper → API の順で段階的に実装する。
+
+### 5.2 Write 導線（JPA / Domain）
+
+- Write は **JPA + Domain 正** とする
+- Domain は技術詳細を持たない
+- Infrastructure で JPA 実装を行う
+
+---
+
+## 6. Fail Fast とエラーの意味
+
+### 6.1 「動いている風」禁止
+
+- すべての API で **200 / 400 / 403 / 404 の意味が明確** であること
+- 曖昧な成功・失敗は禁止
+- エラーレスポンスは業務的に意味を持つ
+
+**P1 適用メモ**: P1-B0 で各エラーの意味を固定し、P1-B1 で実装時に 200/400/403/404 の境界を明確にする。
+
+### 6.2 Fail Fast 方針
+
+- 未許可のリクエストは早期に拒否（403 Forbidden）
+- 不正な入力は早期に拒否（400 Bad Request）
+- 存在しないリソースは早期に拒否（404 Not Found）
+- Infrastructure 層での権限判定は行わない（BFF で判定）
+
+---
+
+## 7. 全体ロードマップ（P0〜P2）
 
 ### P0（完了）
 - PoC
@@ -161,7 +202,7 @@ nexus-infrastructure/src/main/resources/sql/
 
 ---
 
-## 6. P04 詳細ロードマップ（完了）
+## 8. P04 詳細ロードマップ（完了）
 
 ### P04-1（完了）
 - JDBC QueryService 導入
@@ -194,7 +235,7 @@ nexus-infrastructure/src/main/resources/sql/
 
 ---
 
-## 7. 引き継ぎ・AI 利用ルール
+## 9. 引き継ぎ・AI 利用ルール
 
 - 新チャット開始時は必ず本設計憲法を貼る
 - Cursor / Agent 実行時は以下を明示する:
