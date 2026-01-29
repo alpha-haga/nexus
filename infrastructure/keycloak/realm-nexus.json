@@ -5,6 +5,34 @@
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
   "sslRequired": "external",
+  "clientScopes": [
+    {
+      "name": "nexus-db-access",
+      "description": "NEXUS DB Access Scope - client roles を nexus_db_access claim として出力",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "nexus-db-access-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-client-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "multivalued": "true",
+            "userinfo.token.claim": "false",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "claim.name": "nexus_db_access",
+            "jsonType.label": "String",
+            "usermodel.clientRoleMapping.clientId": "nexus-bff"
+          }
+        }
+      ]
+    }
+  ],
   "clients": [
     {
       "clientId": "nexus-frontend",
@@ -18,7 +46,7 @@
         "http://localhost:3000"
       ],
       "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": false,
+      "directAccessGrantsEnabled": true,
       "protocol": "openid-connect",
       "attributes": {
         "post.logout.redirect.uris": "http://localhost:3000/*"
@@ -61,6 +89,63 @@
           }
         }
       ]
+    },
+    {
+      "clientId": "nexus-bff",
+      "name": "NEXUS BFF Client",
+      "description": "Backend for Frontend - DB アクセス権限を client role で管理",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "nexus-bff-secret",
+      "redirectUris": [
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080"
+      ],
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "attributes": {
+        "post.logout.redirect.uris": "http://localhost:8080/*"
+      },
+      "defaultClientScopes": [
+        "nexus-db-access"
+      ]
+    }
+  ],
+  "roles": {
+    "client": {
+      "nexus-bff": [
+        {
+          "name": "integration__ALL__GROUP",
+          "description": "Integration DB へのアクセス権限（GROUP scope）"
+        },
+        {
+          "name": "saitama__musashino__GOJO",
+          "description": "埼玉地区 武蔵野法人 GOJO ドメインへのアクセス権限"
+        },
+        {
+          "name": "saitama__musashino__FUNERAL",
+          "description": "埼玉地区 武蔵野法人 FUNERAL ドメインへのアクセス権限"
+        }
+      ]
+    }
+  },
+  "groups": [
+    {
+      "name": "corp-musashino",
+      "path": "/corp-musashino",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {
+        "nexus-bff": [
+          "integration__ALL__GROUP",
+          "saitama__musashino__GOJO",
+          "saitama__musashino__FUNERAL"
+        ]
+      }
     }
   ],
   "users": [
@@ -78,10 +163,19 @@
         }
       ],
       "attributes": {
-        "employeeId": ["E001"],
-        "corporationId": ["corp-001"],
-        "corporationName": ["サンプル法人"]
-      }
+        "employeeId": [
+          "E001"
+        ],
+        "corporationId": [
+          "corp-001"
+        ],
+        "corporationName": [
+          "サンプル法人"
+        ]
+      },
+      "groups": [
+        "/corp-musashino"
+      ]
     }
   ]
 }

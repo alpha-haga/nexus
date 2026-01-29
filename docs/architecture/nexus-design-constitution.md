@@ -107,6 +107,28 @@ nexus-infrastructure/src/main/resources/sql/
   - `./gradlew build` には影響しない
   - CI / 本番環境には影響しない
   - OS 側で既に設定済みの環境変数は上書きしない
+
+### 4.3 権限制御（Keycloak Claim）と DB Routing の関係
+
+- **設計確定（P04-5 完了）**: Keycloak token claim（`nexus_db_access`）による権限制御と DB Routing の設計が確定している
+- **設計正本**: [p04-5-keycloak-claims-db-routing.md](./p04-5-keycloak-claims-db-routing.md) を参照
+- **実装開始（P1-1）**: BFF で Keycloak token claim による権限制御の実装に入る
+
+- **Source of Truth**: `nexus_db_access` claim（`List<String>`）が唯一の権限情報源である。他の claim やヘッダーから権限を推測してはならない。
+
+- **Presentation 層（BFF）の責務**:
+  - Keycloak token の claim（`nexus_db_access`）から許可された `(region, corporation, domainAccount)` を取得する
+  - リクエストの `(region, corporation, domainAccount)` が許可されているかを **BFF で fail fast 判定**し、未許可の場合は 403 Forbidden を返す
+  - 同一 DomainAccount で複数の Region または複数の Corporation が解釈される token は 403 Forbidden を返す（認可判定以前に検出）
+  - 許可されている場合のみ、RegionContext / CorporationContext / DomainAccountContext を設定する
+  - 本番環境では検証ヘッダー（`X-NEXUS-REGION` / `X-NEXUS-CORP`）は完全に無効。local プロファイル限定で検証ヘッダーを読み取る。
+
+- **Infrastructure 層の責務**:
+  - Context を読むだけ（権限判定は行わない）
+  - DataSource 切替は Context の値に基づいて行う
+  - Context 未設定時は既存の fail fast 機構（DomainAccountContextNotSetException 等）で例外を投げる
+
+**責務境界**: 設計責務（P04-5 で確定）と実装責務（P1-1 で実施）は明確に分かれている。設計の再解釈・再設計は禁止。
   
 ---
 
@@ -118,17 +140,19 @@ nexus-infrastructure/src/main/resources/sql/
 - Read / Write 導線分離
 - RegionContext / RoutingDataSource 確立
 
-### P04（現在進行中）
+### P04（完了）
 - JDBC Read 導線の実戦投入
 - SQL 正式化
 - DTO / RowMapper / Controller の再設計
 - Oracle 接続を前提とした検索確認
+- Keycloak Claim による権限制御設計確定
 
-### P1（予定）
+### P1（現在進行中）
 - JOIN 段階的復活
 - 表示要件確定
 - パフォーマンスチューニング
 - Count / Search の最適化
+- Keycloak Claim による権限制御実装
 
 ### P2（予定）
 - Frontend 本格接続
@@ -137,7 +161,7 @@ nexus-infrastructure/src/main/resources/sql/
 
 ---
 
-## 6. P04 詳細ロードマップ（現在地）
+## 6. P04 詳細ロードマップ（完了）
 
 ### P04-1（完了）
 - JDBC QueryService 導入
@@ -156,12 +180,17 @@ nexus-infrastructure/src/main/resources/sql/
 - 実 Oracle での検索確認
 - エラーハンドリング方針整理
 
-### **P04-4（次に進む作業）**
+### P04-4（完了）
 - Region DB 側の業務ドメイン別 DB 接続アカウント（DomainAccount）切替設計
 - 切替キー `(region, corporation, domainAccount)` による接続切替方式の設計
 - DomainAccount の定義（GOJO / FUNERAL、master は synonym 経由）
 - 既存の DataSourceConfiguration 制約との整合性確認
 - 切替方式の決定と実装
+
+### P04-5（完了）
+- Keycloak token claim（`nexus_db_access`）による権限制御設計確定
+- BFF における認可判定と Context set の責務確定
+- 詳細は [p04-5-keycloak-claims-db-routing.md](./p04-5-keycloak-claims-db-routing.md) を参照
 
 ---
 
@@ -169,7 +198,7 @@ nexus-infrastructure/src/main/resources/sql/
 
 - 新チャット開始時は必ず本設計憲法を貼る
 - Cursor / Agent 実行時は以下を明示する:
-- 対象フェーズ（例: P04-3）
+- 対象フェーズ（例: P1-1）
 - 変更対象ファイル一覧
 - diff か全文かの指定
 - Done 条件

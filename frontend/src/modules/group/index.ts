@@ -14,5 +14,5 @@
  */
 
 // コンポーネントをエクスポート
-// export { GroupSearch } from './components/GroupSearch';
-// export { PersonSummary } from './components/PersonSummary';
+export { GroupContractsList } from './components/GroupContractsList';
+export { GroupContractSearchForm } from './components/GroupContractSearchForm';
