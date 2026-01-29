@@ -27,4 +27,4 @@ spring:
 nexus:
   security:
     oauth2:
-      issuer-uri: ${NEXUS_OIDC_ISSUER_URI:http://localhost:18080/realms/nexus}
+      issuer-uri: ${NEXUS_OIDC_ISSUER_URI:http://localhost:8180/realms/nexus}

@@ -191,7 +191,7 @@ P1 は **2 レーン構成**で進行する。
 
 P1-A は「本番相当の入口条件」を確定させるフェーズとする。
 
-#### P1-A0（未着手）— Keycloak 設定
+#### P1-A0（完了）— Keycloak 設定
 
 **目的**: `nexus_db_access` claim を実トークンに載せる。
 
@@ -201,10 +201,16 @@ P1-A は「本番相当の入口条件」を確定させるフェーズとする
 
 **参照**:
 - [p04-5b-keycloak-setup-guide.md](./p04-5b-keycloak-setup-guide.md)
+- [P1-A0-VERIFICATION.A.md](./P1-A0-VERIFICATION.A.md)（検証手順書）
+- [P1-A0-COMPLETION.md](./P1-A0-COMPLETION.md)（完了宣言）
 
 **Done 条件**:
 - 任意ユーザーで token に `nexus_db_access` が配列で出力される
 - 例の role（例: `saitama__musashino__GOJO`、`integration__ALL__GROUP`）が claim に含まれることを確認済み
+
+**状態**: 完了
+
+**完了宣言**: [P1-A0-COMPLETION.md](./P1-A0-COMPLETION.md) を参照
 
 ---
 
@@ -356,4 +362,4 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 
 * 本ドキュメントは**更新される前提**の資料
 * 設計原則の変更は nexus-design-constitution.md のみで行う
-* Cursor / Agent 実行時は、常に「現在地（P1-A1 完了、P1-A0 未着手）」を明示して開始する
+* Cursor / Agent 実行時は、常に「現在地（P1-A1 完了、P1-A0 完了）」を明示して開始する
