@@ -1,6 +1,6 @@
 SELECT
     contract_search.cmp_cd AS company_cd
-    , CAST(NULL AS VARCHAR2(20)) AS company_short_name
+    , cmp.cmp_short_nm AS company_short_name
     , contract_search.contract_no AS contract_no
     , contract_search.contract_no AS family_no
     , contract_search.house_no AS house_no
@@ -19,9 +19,9 @@ SELECT
     , CAST(NULL AS VARCHAR2(30)) AS task_name
     , CAST(NULL AS CHAR(8)) AS status_update_ymd
     , contract_search.course_cd AS course_cd
-    , CAST(NULL AS VARCHAR2(15)) AS course_name
+    , course.course_nm AS course_name
     , CAST(NULL AS NUMBER(2)) AS share_num
-    , CAST(NULL AS NUMBER(7)) AS monthly_premium
+    , NVL(course.monthly_premium, 0) AS monthly_premium
     , CAST(NULL AS NUMBER(7)) AS contract_gaku
     , CAST(NULL AS NUMBER(7)) AS total_save_num
     , CAST(NULL AS NUMBER(7)) AS total_gaku
@@ -62,6 +62,23 @@ SELECT
     , CAST(NULL AS CHAR(8)) AS regist_ymd
     , CAST(NULL AS CHAR(16)) AS reception_no 
 FROM zgot_contract_search_key contract_search
+LEFT JOIN zgom_cmp cmp
+    ON cmp.cmp_cd = contract_search.cmp_cd
+    AND cmp.delete_flg = '0'
+LEFT JOIN zgom_course_cd_all course
+    ON contract_search.cmp_cd = course.cmp_cd
+    AND contract_search.course_cd = course.course_cd
+    AND course.tekiyo_start_ymd <= GREATEST(
+        NVL(contract_search.change_course_ymd, '0')
+        , NVL(contract_search.share_num_div_process_ymd, '0')
+        , NVL(contract_search.contract_receipt_ymd, '0')
+    )
+    AND course.tekiyo_end_ymd > GREATEST(
+        NVL(contract_search.change_course_ymd, '0')
+        , NVL(contract_search.share_num_div_process_ymd, '0')
+        , NVL(contract_search.contract_receipt_ymd, '0')
+    )
+    AND course.delete_flg = '0'
 WHERE
     (:contractReceiptYmdFrom IS NULL OR contract_search.contract_receipt_ymd >= :contractReceiptYmdFrom)
     AND (:contractReceiptYmdTo IS NULL OR contract_search.contract_receipt_ymd <= :contractReceiptYmdTo)

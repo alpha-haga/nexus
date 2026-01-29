@@ -323,7 +323,7 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 
 ---
 
-#### P1-B1（未着手）— JOIN 段階的復活（SQL→DTO→Mapper→API）
+#### P1-B1（完了）— JOIN 段階的復活（SQL→DTO→Mapper→API）
 
 **目的**: P1-B0 で固定した JOIN 復活順序に従い、段階的に JOIN を復活させる。
 
@@ -332,10 +332,19 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 - SQL → DTO → Mapper → API の順で実装
 - 各段階で回帰テストを実施
 
+**実施内容**:
+- Step 1: `company_short_name`（法人名）のJOIN復活（`zgom_cmp` テーブル）
+- Step 2: `course_name`, `monthly_premium`（コース名・月額保険料）のJOIN復活（`zgom_course_cd_all` テーブル）
+- `GlobalExceptionHandler` 追加（`nexus-bff` モジュール）
+
 **Done 条件**:
-- P1-B0 の MUST が 200 で返る
-- 400/403/404 の境界が明確
-- 回帰が取れている（既存機能が壊れていない）
+- ✅ P1-B0 の MUST が 200 で返る
+- ✅ 400/403/404 の境界が明確
+- ✅ 回帰が取れている（既存機能が壊れていない）
+
+**状態**: 完了（Step 1 & Step 2）
+
+**完了宣言**: [p1-b1-completion.md](./p1-b1-completion.md) を参照
 
 ---
 
