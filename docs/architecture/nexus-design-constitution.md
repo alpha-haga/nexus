@@ -189,11 +189,11 @@ nexus-infrastructure/src/main/resources/sql/
 - Keycloak Claim による権限制御設計確定
 
 ### P1（現在進行中）
-- JOIN 段階的復活
-- 表示要件確定
-- パフォーマンスチューニング
-- Count / Search の最適化
-- Keycloak Claim による権限制御実装
+- JOIN 段階的復活（P1-B1 完了）
+- 表示要件確定（P1-B0）
+- Count / Search の最適化（P1-B2 完了）
+- パフォーマンスチューニング（P1-B3、原則P2送り）
+- Keycloak Claim による権限制御実装（P1-A1 完了）
 
 ### P2（予定）
 - Frontend 本格接続

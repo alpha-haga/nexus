@@ -43,6 +43,7 @@ class GroupContractSearchController(
         // ページネーション検証
         if (page < 0) throw ValidationException("page", "page must be >= 0")
         if (size <= 0) throw ValidationException("size", "size must be > 0")
+        if (size > 100) throw ValidationException("size", "size must be <= 100")
 
         // 検索条件を構築（全て nullable、指定されたもののみ WHERE に含める）
         val condition = GroupContractSearchCondition(

@@ -2,7 +2,7 @@ SELECT
     contract_search.cmp_cd AS company_cd
     , cmp.cmp_short_nm AS company_short_name
     , contract_search.contract_no AS contract_no
-    , contract_search.contract_no AS family_no
+    , contract_search.family_no AS family_no
     , contract_search.house_no AS house_no
     , contract_search.family_nm_gaiji AS family_name_gaiji
     , contract_search.first_nm_gaiji AS first_name_gaiji
@@ -68,16 +68,8 @@ LEFT JOIN zgom_cmp cmp
 LEFT JOIN zgom_course_cd_all course
     ON contract_search.cmp_cd = course.cmp_cd
     AND contract_search.course_cd = course.course_cd
-    AND course.tekiyo_start_ymd <= GREATEST(
-        NVL(contract_search.change_course_ymd, '0')
-        , NVL(contract_search.share_num_div_process_ymd, '0')
-        , NVL(contract_search.contract_receipt_ymd, '0')
-    )
-    AND course.tekiyo_end_ymd > GREATEST(
-        NVL(contract_search.change_course_ymd, '0')
-        , NVL(contract_search.share_num_div_process_ymd, '0')
-        , NVL(contract_search.contract_receipt_ymd, '0')
-    )
+    AND course.tekiyo_start_ymd <= contract_search.effective_ymd
+    AND course.tekiyo_end_ymd > contract_search.effective_ymd
     AND course.delete_flg = '0'
 WHERE
     (:contractReceiptYmdFrom IS NULL OR contract_search.contract_receipt_ymd >= :contractReceiptYmdFrom)
