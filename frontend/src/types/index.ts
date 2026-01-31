@@ -372,6 +372,7 @@ declare module 'next-auth' {
       corporationName?: string;
     };
     accessToken?: string;
+    error?: 'RefreshAccessTokenError' | 'NoRefreshToken';
   }
 
   interface User {
@@ -391,5 +392,8 @@ declare module 'next-auth/jwt' {
     corporationId?: string;
     corporationName?: string;
     accessToken?: string;
+    refreshToken?: string;
+    accessTokenExpires?: number;
+    error?: 'RefreshAccessTokenError' | 'NoRefreshToken';
   }
 }

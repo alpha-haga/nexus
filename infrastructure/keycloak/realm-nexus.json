@@ -98,10 +98,12 @@
       "publicClient": false,
       "secret": "nexus-bff-secret",
       "redirectUris": [
-        "http://localhost:8080/*"
-      ],
+        "http://localhost:8080/*",
+        "http://localhost:3000/*"
+          ],
       "webOrigins": [
-        "http://localhost:8080"
+        "http://localhost:8080",
+        "http://localhost:3000"
       ],
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,
