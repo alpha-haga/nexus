@@ -455,20 +455,31 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 
 ---
 
-### P2-2（次着手）— Frontend 本格接続（Group Contract List の完成）
+### P2-2（次着手）— Frontend 本格接続（Group Contract List 完成 + Region 正道化）
 
-**目的**: Frontend の Group Contract List 画面を完成させ、Backend BFF API と完全に統合する。
+**目的**:
+- Frontend の Group Contract List 画面を完成させ、Backend BFF API と完全統合する
+- X-NEXUS-REGION を Frontend 側で明示状態として扱い、暗黙・補完を排除する
 
 **スコープ**:
-- Group Contract List 画面の完成
-- エラーハンドリングの実装（400/403/404/500）
-- ローディング状態の表示
-- ソート機能の実装
+- Group Contract List 画面完成
+  - 検索（初期表示では実行しない）
+  - ページネーション
+  - ソート
+- ローディング状態表示
+- エラーハンドリング（400 / 403 / 404 / 500）
+- Region 明示管理
+  - Region 未設定時は API を実行しない
+  - 全 API リクエストに X-NEXUS-REGION を必須付与
+- E2E / 手動検証ドキュメント整備
 
 **Done 条件**:
-- Group Contract List 画面が正常に表示される
+- Group Contract List が正常表示される
 - 検索・ページネーション・ソートが動作する
-- エラーハンドリングが適切に実装されている
+- ローディング・エラー状態が UI に明示される
+- Region が画面上で明示され、未設定時は検索不可
+- 全 API に X-NEXUS-REGION が付与されている
+- 再現可能な手順が docs に記載されている
 
 ---
 
