@@ -53,8 +53,8 @@ P2-1 の E2E 検証の目的は以下である：
 
 **Frontend** (`frontend/.env.local`):
 ```env
-KEYCLOAK_CLIENT_ID=nexus-bff
-KEYCLOAK_CLIENT_SECRET=nexus-bff-secret
+KEYCLOAK_CLIENT_ID=nexus-frontend
+KEYCLOAK_CLIENT_SECRET=nexus-frontend-secret
 KEYCLOAK_ISSUER=http://localhost:8180/realms/nexus
 NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
 NEXTAUTH_URL=http://localhost:3000
@@ -72,10 +72,20 @@ ORACLE_INTEGRATION_PASSWORD=password
 ### 2.3 Keycloak設定確認
 
 - Realm: `nexus`
-- Client: `nexus-bff`
-  - Valid Redirect URIs: `http://localhost:3000/*`, `http://localhost:8080/*`
-  - Web Origins: `http://localhost:3000`, `http://localhost:8080`
+- Client: `nexus-frontend`（Frontend認証用）
+  - Valid Redirect URIs: `http://localhost:3000/*`
+  - Web Origins: `http://localhost:3000`
+  - Default Client Scopes: `profile`, `email`, `roles`, `web-origins`
+  
+  ※ `openid` は OIDC 必須 scope（Authorization Request の scope）であり、
+    Keycloak の Client Scope として追加する対象ではない。
+    NextAuth がログイン開始時に自動的に要求する。
+  - Protocol Mappers: `employeeId`, `corporationId`, `corporationName`
+- Client: `nexus-bff`（Backend BFF用）
+  - Valid Redirect URIs: `http://localhost:8080/*`, `http://localhost:3000/*`
+  - Web Origins: `http://localhost:8080`, `http://localhost:3000`
   - Default Client Scopes: `nexus-db-access`
+- Realm Client Scopes: `nexus-db-access`, `profile`, `email`, `roles`, `web-origins`
 - テストユーザー: `dev-user` / `password`
   - Group: `corp-musashino`
   - Client Roles: `integration__ALL__GROUP`, `saitama__musashino__GOJO`, `saitama__musashino__FUNERAL`
@@ -146,6 +156,20 @@ ORACLE_INTEGRATION_PASSWORD=password
   Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
   ```
 
+#### 代替（画面未接続でもOK）: DevTools Console で検証
+
+`/group/contracts` 等の画面が未接続の場合は、以下で代替検証する。
+
+1. ブラウザでログイン完了後、DevTools を開く
+2. Console で以下を実行：
+   ```javascript
+   const s = await (await fetch('/api/auth/session')).json();
+   await fetch('http://localhost:8080/api/v1/group/contracts/search?page=0&size=1', {
+     headers: { Authorization: `Bearer ${s.accessToken}` }
+   });
+   ```
+3. Network タブで request headers を確認し、`Authorization: Bearer <token>` が付与されていることを確認する
+
 **記録**:
 - [ ] 合格 / [ ] 不合格
 - 確認内容: 
@@ -153,6 +177,11 @@ ORACLE_INTEGRATION_PASSWORD=password
 ---
 
 ### 検証項目3: accessTokenExpires が閾値に近い状態で refresh が発火し、accessToken が更新される
+
+**優先順位**:
+- Keycloak 設定（Token lifespan 等）で検証する（推奨・再現性が高い）
+- 実装改変（jwt callback を短縮/refreshToken を壊す等）は最終手段とする
+- ※ 実装改変を行った場合は、必ず差分を戻してから完了とする
 
 **目的**: Token refresh が正常に動作し、access token が自動更新されることを確認する。
 
@@ -193,6 +222,11 @@ ORACLE_INTEGRATION_PASSWORD=password
 ---
 
 ### 検証項目4: refresh を意図的に失敗させた場合、session.error が立ち、最終的に 401 → /login に落ちる（fail fast）
+
+**優先順位**:
+- Keycloak 設定（Token lifespan 等）で検証する（推奨・再現性が高い）
+- 実装改変（jwt callback を短縮/refreshToken を壊す等）は最終手段とする
+- ※ 実装改変を行った場合は、必ず差分を戻してから完了とする
 
 **目的**: Token refresh 失敗時に適切に fail fast し、ログイン画面にリダイレクトされることを確認する。
 
@@ -299,7 +333,7 @@ ORACLE_INTEGRATION_PASSWORD=password
 **原因**: Keycloak の redirect URI が正しく設定されていない
 
 **解決方法**:
-1. Keycloak 管理画面で `nexus-bff` クライアントの Valid Redirect URIs を確認
+1. Keycloak 管理画面で `nexus-frontend` クライアントの Valid Redirect URIs を確認
 2. `http://localhost:3000/api/auth/callback/keycloak` が含まれていることを確認
 3. 含まれていない場合は追加
 
@@ -310,7 +344,8 @@ ORACLE_INTEGRATION_PASSWORD=password
 **解決方法**:
 1. Console で `session.accessToken` を確認
 2. `undefined` の場合は、Keycloak の設定を確認
-3. `nexus-bff` クライアントの `defaultClientScopes` に `nexus-db-access` が含まれていることを確認
+3. `nexus-frontend` クライアントの `defaultClientScopes` に `profile`, `email` が含まれていることを確認
+   （`openid` は OIDC 必須 scope のため、Client Scope として追加不要）
 
 ### 5.3 Token refresh が動作しない
 
@@ -328,6 +363,44 @@ ORACLE_INTEGRATION_PASSWORD=password
 1. `frontend/src/services/api.ts` の 403 処理を確認
 2. UI 側のエラーハンドリングを確認
 
+### 5.5 invalid_scope エラーが発生する
+
+**原因**: Keycloak クライアントの `defaultClientScopes` に存在しない scope 名（例: `openid`）が混入している、または `clientScopes` セクションにスコープ定義が存在しない
+
+**注意**: `openid` は OIDC 必須 scope（Authorization Request の scope）であり、Keycloak の Client Scope として追加する対象ではない。`defaultClientScopes` に `openid` を含めると `invalid_scope` エラーが発生する。
+
+**エラーメッセージ例**:
+```
+[next-auth][error][OAUTH_CALLBACK_HANDLER_ERROR] invalid_scope
+error_description: 'Invalid scopes: openid email profile'
+```
+
+**解決方法**:
+1. `infrastructure/keycloak/realm-nexus.json` を確認
+2. `nexus-frontend` クライアントに `defaultClientScopes` が設定されていることを確認：
+   ```json
+   "defaultClientScopes": [
+     "profile",
+     "email",
+     "roles",
+     "web-origins"
+   ]
+   ```
+   
+   **重要**: `openid` は含めないこと（OIDC 必須 scope であり、Client Scope として追加不要）
+3. `clientScopes` セクションに以下のスコープ定義が存在することを確認：
+   - `profile`
+   - `email`
+   - `roles`
+   - `web-origins`
+4. 設定を修正した場合は、Keycloak の realm 設定を再インポート：
+   ```bash
+   cd infrastructure
+   docker compose -f docker-compose.dev.yml down -v
+   docker compose -f docker-compose.dev.yml up -d
+   ```
+5. ブラウザのキャッシュとCookieをクリアして再試行
+
 ---
 
 ## 6. 参照
@@ -344,3 +417,23 @@ ORACLE_INTEGRATION_PASSWORD=password
 - 本検証は P2-1 の Done 条件確認のためのものである
 - 検証結果は本ドキュメントに記録し、P2-1 完了宣言の根拠とする
 - すべての検証項目が合格した場合、P2-1 は完了と判断できる
+
+### 重要な設定確認事項
+
+- **Frontend認証クライアント**: `nexus-frontend` を使用（`nexus-bff` ではない）
+- **Keycloak Client Scopes**: `profile`, `email`, `roles`, `web-origins` が `clientScopes` セクションに定義されている必要がある
+- **Keycloak Default Client Scopes**: `nexus-frontend` クライアントに `profile`, `email`, `roles`, `web-origins` が `defaultClientScopes` として設定されている必要がある
+  - ※ `openid` は OIDC 必須 scope（Authorization Request の scope）であり、Keycloak の Client Scope として追加する対象ではない
+- **環境変数**: `KEYCLOAK_CLIENT_ID=nexus-frontend` を設定すること
+
+### BFF 必須ヘッダー（X-NEXUS-REGION）について
+
+**重要**: BFF は `X-NEXUS-REGION` ヘッダーを必須として fail fast する設計である。
+
+- **P2-1 の暫定対応**: 
+  - `frontend/src/services/api.ts` の `ApiClient` が `X-NEXUS-REGION: INTEGRATION` を固定付与している
+  - これにより、P2-1 の検証対象である group API（integration DB）へのアクセスが可能になる
+- **P2-2 での改善予定**:
+  - Region selector UI コンポーネントの実装
+  - 選択された region を state で保持し、API リクエスト時に動的に `X-NEXUS-REGION` ヘッダーを付与する
+  - 暫定の固定付与実装は削除される

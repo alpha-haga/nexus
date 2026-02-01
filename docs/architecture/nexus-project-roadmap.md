@@ -422,8 +422,8 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 
 | フェーズ | 名称 | 状態 |
 |---------|------|------|
-| P2-1 | Frontend 認証・認可統合 | **次着手** |
-| P2-2 | Frontend 本格接続 | 未着手 |
+| P2-1 | Frontend 認証・認可統合 | **完了** |
+| P2-2 | Frontend 本格接続 | **次着手** |
 | P2-3 | 権限制御反映 | 未着手 |
 | P2-4 | 検索条件拡張 | 未着手 |
 | P2-5 | パフォーマンス最適化 | 未着手 |
@@ -431,7 +431,7 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 
 ---
 
-### P2-1（次着手）— Frontend 認証・認可統合（Keycloak 統合）
+### P2-1（完了）— Frontend 認証・認可統合（Keycloak 統合）
 
 **目的**: Frontend（Next.js）と Keycloak の認証・認可を統合し、Backend BFF への認証付きリクエストを実現する。
 
@@ -443,13 +443,19 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 - 認証失敗時のリダイレクト
 
 **Done 条件**:
-- NextAuth.js と Keycloak が統合されている
-- Keycloak から取得した token で Backend BFF にリクエストできる
-- E2E 検証（Frontend → Keycloak → Backend BFF → API）が成立する
+- ✅ NextAuth.js と Keycloak が統合されている
+- ✅ Keycloak から取得した token で Backend BFF にリクエストできる
+- ✅ Token の自動リフレッシュが動作する
+- ✅ 認証失敗時にログイン画面にリダイレクトされる
+- ✅ E2E 検証（Frontend → Keycloak → Backend BFF → API）が成立する
+
+**状態**: 完了
+
+**完了宣言**: E2E 検証完了により、P2-1 は完了と判断する。詳細は [p2-1-e2e-verification.md](./p2-1-e2e-verification.md) を参照。
 
 ---
 
-### P2-2（未着手）— Frontend 本格接続（Group Contract List の完成）
+### P2-2（次着手）— Frontend 本格接続（Group Contract List の完成）
 
 **目的**: Frontend の Group Contract List 画面を完成させ、Backend BFF API と完全に統合する。
 
@@ -531,4 +537,4 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 
 * 本ドキュメントは**更新される前提**の資料
 * 設計原則の変更は nexus-design-constitution.md のみで行う
-* Cursor / Agent 実行時は、常に「現在地（P1 完了、P2-1 次着手）」を明示して開始する
+* Cursor / Agent 実行時は、常に「現在地（P1 完了、P2-1 完了、P2-2 次着手）」を明示して開始する

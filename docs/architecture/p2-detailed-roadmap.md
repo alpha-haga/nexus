@@ -56,14 +56,14 @@ P2 は以下を目的として実施する：
 
 ## 4. P2 サブフェーズ一覧
 
-| フェーズ | 名称 | 目的 |
-|---------|------|------|
-| P2-1 | Frontend 認証・認可統合 | NextAuth と Keycloak の統合 |
-| P2-2 | Frontend 本格接続 | Group Contract List 画面の完成 |
-| P2-3 | 権限制御反映 | Frontend 側での権限制御 |
-| P2-4 | 検索条件拡張 | 追加検索条件の実装 |
-| P2-5 | パフォーマンス最適化 | P1-B3 の実施 |
-| P2-6 | 本番運用前最終調整 | ログ・監査・セキュリティ |
+| フェーズ | 名称 | 目的 | 状態 |
+|---------|------|------|------|
+| P2-1 | Frontend 認証・認可統合 | NextAuth と Keycloak の統合 | 完了 |
+| P2-2 | Frontend 本格接続 | Group Contract List 画面の完成 | 次着手 |
+| P2-3 | 権限制御反映 | Frontend 側での権限制御 | 未着手 |
+| P2-4 | 検索条件拡張 | 追加検索条件の実装 | 未着手 |
+| P2-5 | パフォーマンス最適化 | P1-B3 の実施 | 未着手 |
+| P2-6 | 本番運用前最終調整 | ログ・監査・セキュリティ | 未着手 |
 
 **順序**: 前フェーズ完了後に次フェーズに着手（P2-1 → P2-2 → ... → P2-6）
 
@@ -97,11 +97,13 @@ Frontend（Next.js）と Keycloak の認証・認可を統合し、Backend BFF �
 
 ### 5.5 Done 条件
 
-- [ ] NextAuth.js と Keycloak が統合されている
-- [ ] Keycloak から取得した token で Backend BFF にリクエストできる
-- [ ] Token の自動リフレッシュが動作する
-- [ ] 認証失敗時にログイン画面にリダイレクトされる
-- [ ] E2E 検証（Frontend → Keycloak → Backend BFF → API）が成立する
+- [x] NextAuth.js と Keycloak が統合されている
+- [x] Keycloak から取得した token で Backend BFF にリクエストできる
+- [x] Token の自動リフレッシュが動作する
+- [x] 認証失敗時にログイン画面にリダイレクトされる
+- [x] E2E 検証（Frontend → Keycloak → Backend BFF → API）が成立する
+
+**状態**: 完了
 
 ### 5.6 参照
 

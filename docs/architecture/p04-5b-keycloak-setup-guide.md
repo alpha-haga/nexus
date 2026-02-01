@@ -18,7 +18,78 @@
 
 ---
 
-## 2. 用語（最小）
+## 2. 開発環境でのKeycloak起動とRealm設定の自動インポート
+
+本プロジェクトでは、開発環境（local）において、Keycloakのrealm設定を自動インポートする方式を採用しています。
+
+### 2.1 自動インポートの仕組み
+
+- **設定ファイル**: `infrastructure/keycloak/realm-nexus.json`
+- **Docker Compose**: `infrastructure/docker-compose.dev.yml`
+- **自動インポート**: Keycloak起動時に`--import-realm`オプションにより、`realm-nexus.json`が自動的にインポートされます
+
+### 2.2 初回起動
+
+```bash
+cd infrastructure
+docker compose -f docker-compose.dev.yml up -d
+```
+
+**動作確認**:
+- Keycloak管理画面: http://localhost:8180
+- ログイン情報:
+  - Username: `admin`
+  - Password: `admin`
+- Realm: `nexus`が自動的に作成されていることを確認
+
+### 2.3 Realm設定の再作成（データリセット）
+
+`realm-nexus.json`を修正した場合や、Keycloakのデータをリセットしたい場合は、以下のコマンドを実行してください：
+
+```bash
+cd infrastructure
+# 1. Keycloakを停止
+docker compose -f docker-compose.dev.yml down
+# 2. ボリュームを削除（データリセット）
+docker compose -f docker-compose.dev.yml down -v
+# 3. 再起動（realm-nexus.jsonが自動インポートされる）
+docker compose -f docker-compose.dev.yml up -d
+```
+
+**注意事項**:
+- `-v`オプションにより、Keycloakのデータボリュームが削除されます
+- 既存のユーザー、グループ、ロール等の設定がすべて削除されます
+- `realm-nexus.json`に定義されている設定が再インポートされます
+
+### 2.4 realm-nexus.jsonの構成
+
+`realm-nexus.json`には以下の設定が含まれています：
+
+- **Realm設定**: `nexus` realmの基本設定
+- **Client Scopes**: 
+  - `nexus-db-access`: DBアクセス権限をclaimとして出力
+  - `profile`, `email`, `roles`, `web-origins`: NextAuth.js用のデフォルトスコープ
+- **Clients**:
+  - `nexus-frontend`: Frontend認証用クライアント
+    - Default Client Scopes: `openid`, `profile`, `email`
+    - Protocol Mappers: `employeeId`, `corporationId`, `corporationName`
+  - `nexus-bff`: Backend BFF用クライアント
+    - Default Client Scopes: `nexus-db-access`
+- **Roles**: Client roles（`nexus-bff`クライアント用）
+- **Groups**: テスト用グループ（`corp-musashino`）
+- **Users**: テスト用ユーザー（`dev-user` / `password`）
+
+### 2.5 設定変更時の手順
+
+1. `infrastructure/keycloak/realm-nexus.json`を編集
+2. 上記の「2.3 Realm設定の再作成」コマンドを実行
+3. Keycloak管理画面で設定が反映されていることを確認
+
+**重要**: 本番環境では、この自動インポート方式は使用しません。本番環境の設定方法は、各環境の運用方針に従ってください。
+
+---
+
+## 3. 用語（最小）
 
 Keycloak 初学者向けに、本手順で使用する用語を一行ずつ説明します。
 
@@ -32,7 +103,7 @@ Keycloak 初学者向けに、本手順で使用する用語を一行ずつ説�
 
 ---
 
-## 3. 事前確認チェックリスト
+## 4. 事前確認チェックリスト
 
 設定を開始する前に、以下を確認してください：
 
@@ -45,7 +116,7 @@ Keycloak 初学者向けに、本手順で使用する用語を一行ずつ説�
 
 ---
 
-## 4. Client Role 命名規約（固定）
+## 5. Client Role 命名規約（固定）
 
 **フォーマット**: `{region}__{corporation}__{domainAccount}`
 
@@ -66,7 +137,7 @@ Keycloak 初学者向けに、本手順で使用する用語を一行ずつ説�
 
 ---
 
-## 5. Client Role の作成（事前準備）
+## 6. Client Role の作成（事前準備）
 
 Group に role を割り当てる前に、Client Role を作成する必要があります。
 
@@ -94,7 +165,7 @@ Group に role を割り当てる前に、Client Role を作成する必要が�
 
 ---
 
-## 6. 手順A（推奨）: Client Scope 方式で Mapper を追加
+## 7. 手順A（推奨）: Client Scope 方式で Mapper を追加
 
 ### 6.1 Client Scope を作成
 
@@ -161,7 +232,7 @@ Group に role を割り当てる前に、Client Role を作成する必要が�
 
 ---
 
-## 7. 手順B（代替）: Client 直付け Mapper
+## 8. 手順B（代替）: Client 直付け Mapper
 
 手順A（Client Scope 方式）が使えない場合（権限や運用事情）のみ、この手順を使用してください。
 
@@ -187,7 +258,7 @@ Group に role を割り当てる前に、Client Role を作成する必要が�
 
 ---
 
-## 8. Role 付与（運用推奨は Group）
+## 9. Role 付与（運用推奨は Group）
 
 ### 8.1 Group を作る（例）
 
@@ -227,7 +298,7 @@ Group に role を割り当てる前に、Client Role を作成する必要が�
 
 ---
 
-## 9. 動作確認（必須）
+## 10. 動作確認（必須）
 
 ### 9.1 Access Token を取得する
 
@@ -290,7 +361,7 @@ Group に role を割り当てる前に、Client Role を作成する必要が�
 
 ---
 
-## 10. 運用ルール（最低限）
+## 11. 運用ルール（最低限）
 
 ### 10.1 Role 追加時のルール
 
@@ -312,7 +383,7 @@ Group に role を割り当てる前に、Client Role を作成する必要が�
 
 ---
 
-## 11. Done 条件
+## 12. Done 条件
 
 以下の条件を満たした場合、設定完了とします：
 

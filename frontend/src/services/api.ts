@@ -55,6 +55,9 @@ class ApiClient {
       headersObj['Authorization'] = `Bearer ${accessToken}`;
     }
 
+    // 暫定: P2-1 は group の integration 想定
+    headersObj['X-NEXUS-REGION'] = 'INTEGRATION';
+
     const response = await fetch(url, {
       ...options,
       headers: headersObj,

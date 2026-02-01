@@ -31,6 +31,46 @@
           }
         }
       ]
+    },
+    {
+      "name": "profile",
+      "description": "Default profile scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "profile"
+      }
+    },
+    {
+      "name": "email",
+      "description": "Default email scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "email"
+      }
+    },
+    {
+      "name": "roles",
+      "description": "Default roles scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "roles"
+      }
+    },
+    {
+      "name": "web-origins",
+      "description": "Default web origins scope",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true",
+        "consent.screen.text": "web-origins"
+      }
     }
   ],
   "clients": [
@@ -88,6 +128,15 @@
             "userinfo.token.claim": "true"
           }
         }
+      ],
+      "defaultClientScopes": [
+        "profile",
+        "email",
+        "roles",
+        "web-origins"
+      ],
+      "optionalClientScopes": [
+        "nexus-db-access"
       ]
     },
     {

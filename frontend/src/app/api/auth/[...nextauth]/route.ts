@@ -14,6 +14,11 @@ export const authOptions: AuthOptions = {
       clientId: process.env.KEYCLOAK_CLIENT_ID!,
       clientSecret: process.env.KEYCLOAK_CLIENT_SECRET!,
       issuer: process.env.KEYCLOAK_ISSUER!,
+      authorization: {
+        params: {
+          scope: 'openid profile email nexus-db-access',
+        },
+      },
     }),
   ],
   callbacks: {
