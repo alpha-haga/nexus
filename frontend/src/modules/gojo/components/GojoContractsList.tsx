@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { gojoService } from '@/services/gojo';
-import type { GojoContract, PaginatedResponse } from '@/types';
+import type { GojoContract, PaginatedResponse, Region } from '@/types';
 
 interface GojoContractsListProps {
   regionId: string;
+  region: NonNullable<Region>;
 }
 
-export function GojoContractsList({ regionId }: GojoContractsListProps) {
+export function GojoContractsList({ regionId, region }: GojoContractsListProps) {
   const [data, setData] = useState<PaginatedResponse<GojoContract> | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,13 +18,13 @@ export function GojoContractsList({ regionId }: GojoContractsListProps) {
 
   useEffect(() => {
     loadContracts();
-  }, [regionId, page, size]);
+  }, [regionId, region, page, size]);
 
   const loadContracts = async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await gojoService.listLocal({ regionId, page, size });
+      const result = await gojoService.listLocal({ regionId, region, page, size });
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'エラーが発生しました');

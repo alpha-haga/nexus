@@ -2,81 +2,198 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { groupService } from '@/services/group';
 import type {
   GroupContractSearchCondition,
   PaginatedGroupContractResponse,
+  Region,
+  ApiError,
 } from '@/types';
 import { GroupContractSearchForm } from './GroupContractSearchForm';
+import { RegionSelector } from './RegionSelector';
+
+type SearchState = 'not-started' | 'loading' | 'success' | 'error';
 
 export function GroupContractsList() {
+  const [region, setRegion] = useState<Region | null>(null);
   const [result, setResult] = useState<PaginatedGroupContractResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
   const [page, setPage] = useState(0);
   const [size, setSize] = useState<20 | 50 | 100>(20);
   const [searchCondition, setSearchCondition] = useState<GroupContractSearchCondition>({});
   const [hasSearched, setHasSearched] = useState(false);
+  const [searchState, setSearchState] = useState<SearchState>('not-started');
 
-  const loadContracts = async () => {
+  // Region変更時に状態をリセット
+  useEffect(() => {
+    setResult(null);
+    setError(null);
+    setSearchState('not-started');
+    setPage(0);
+    setHasSearched(false);
+  }, [region]);
+
+  const loadContracts = async (params: {
+    region: Region | null;
+    condition: GroupContractSearchCondition;
+    page: number;
+    size: number;
+  }) => {
+    // Region未設定時はAPIを呼ばない
+    if (!params.region) {
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
+    setSearchState('loading');
+
     try {
       const result = await groupService.searchContracts({
-        ...searchCondition,
-        page,
-        size,
+        ...params.condition,
+        region: params.region,
+        page: params.page,
+        size: params.size,
       });
       setResult(result);
+      setSearchState('success');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'エラーが発生しました');
+      // ApiError として扱う
+      const apiError: ApiError =
+        err && typeof err === 'object' && 'status' in err
+          ? (err as ApiError)
+          : {
+              timestamp: new Date().toISOString(),
+              status: 500,
+              error: 'Internal Server Error',
+              message: err instanceof Error ? err.message : 'エラーが発生しました',
+              code: 'UNKNOWN_ERROR',
+            };
+      setError(apiError);
       setResult(null);
+      setSearchState('error');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSearch = (condition: GroupContractSearchCondition) => {
+    // Region未設定時は検索を実行しない
+    if (!region) {
+      return;
+    }
+
     setSearchCondition(condition);
     setPage(0); // 検索時はページをリセット
     setHasSearched(true);
-    loadContracts();
+    loadContracts({
+      region,
+      condition,
+      page: 0,
+      size,
+    });
   };
 
   // ページネーション変更時も検索を実行（検索実行済みの場合のみ）
   const handlePageChange = (newPage: number) => {
-    if (hasSearched) {
+    if (hasSearched && region) {
       setPage(newPage);
-      loadContracts();
+      loadContracts({
+        region,
+        condition: searchCondition,
+        page: newPage,
+        size,
+      });
     }
   };
 
   // ページサイズ変更時も検索を実行（検索実行済みの場合のみ）
   const handleSizeChange = (newSize: 20 | 50 | 100) => {
-    if (hasSearched) {
+    if (hasSearched && region) {
       setSize(newSize);
       setPage(0);
-      loadContracts();
+      loadContracts({
+        region,
+        condition: searchCondition,
+        page: 0,
+        size: newSize,
+      });
+    }
+  };
+
+  // エラーメッセージを取得
+  const getErrorMessage = (apiError: ApiError): string => {
+    switch (apiError.status) {
+      case 400:
+        return `バリデーションエラー: ${apiError.message}`;
+      case 403:
+        return `権限エラー: ${apiError.message}`;
+      case 404:
+        return `リソースが見つかりません: ${apiError.message}`;
+      case 500:
+        return `サーバーエラー: ${apiError.message}`;
+      default:
+        return `エラー (${apiError.status}): ${apiError.message}`;
+    }
+  };
+
+  // エラー表示のスタイルを取得
+  const getErrorStyle = (status: number) => {
+    switch (status) {
+      case 400:
+        return 'bg-amber-50 border-amber-200 text-amber-700';
+      case 403:
+        return 'bg-red-50 border-red-200 text-red-700';
+      case 404:
+        return 'bg-blue-50 border-blue-200 text-blue-700';
+      case 500:
+        return 'bg-red-50 border-red-200 text-red-700';
+      default:
+        return 'bg-red-50 border-red-200 text-red-700';
     }
   };
 
   return (
     <div className="space-y-4">
-      <GroupContractSearchForm onSearch={handleSearch} loading={isLoading} />
+      {/* Region選択 */}
+      <div className="card p-4">
+        <RegionSelector value={region} onChange={setRegion} disabled={isLoading} />
+        {!region && (
+          <p className="mt-2 text-sm text-amber-600">
+            Region を選択してください。Region が選択されていない場合、検索は実行できません。
+          </p>
+        )}
+      </div>
+
+      {/* 検索フォーム */}
+      <GroupContractSearchForm
+        onSearch={handleSearch}
+        loading={isLoading}
+        disabled={!region}
+      />
 
       {/* エラー表示 */}
       {error && (
-        <div className="card p-4 bg-red-50 border border-red-200 text-red-700">
+        <div className={`card p-4 border ${getErrorStyle(error.status)}`}>
           <p className="font-medium">エラー</p>
-          <p className="text-sm mt-1">{error}</p>
+          <p className="text-sm mt-1">{getErrorMessage(error)}</p>
+          {error.code && (
+            <p className="text-xs mt-1 opacity-75">エラーコード: {error.code}</p>
+          )}
+          {error.correlationId && (
+            <p className="text-xs mt-1 opacity-75">相関ID: {error.correlationId}</p>
+          )}
         </div>
       )}
 
       {/* 未検索時 */}
-      {!hasSearched && !isLoading && (
+      {!hasSearched && !isLoading && searchState === 'not-started' && (
         <div className="card p-6 text-center text-gray-500">
-          検索条件を入力して「検索」ボタンをクリックしてください
+          {region
+            ? '検索条件を入力して「検索」ボタンをクリックしてください'
+            : 'Region を選択してから検索条件を入力してください'}
         </div>
       )}
 
@@ -106,6 +223,7 @@ export function GroupContractsList() {
                   value={size}
                   onChange={(e) => handleSizeChange(Number(e.target.value) as 20 | 50 | 100)}
                   className="px-3 py-1 border border-gray-300 rounded"
+                  disabled={isLoading}
                 >
                   <option value={20}>20件</option>
                   <option value={50}>50件</option>

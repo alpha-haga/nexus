@@ -1,10 +1,12 @@
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { getAuthOptions } from '@/app/api/auth/[...nextauth]/auth-options';
 import { AppLayout, ComingSoon } from '@/modules/core';
 
+export const dynamic = 'force-dynamic';
+
 export default async function PointsGrantsPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(getAuthOptions());
 
   if (!session) {
     redirect('/login');

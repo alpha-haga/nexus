@@ -8,22 +8,26 @@ import type { GroupContractSearchCondition } from '@/types';
 interface GroupContractSearchFormProps {
   onSearch: (condition: GroupContractSearchCondition) => void;
   loading?: boolean;
+  disabled?: boolean;
 }
 
 export function GroupContractSearchForm({
   onSearch,
   loading = false,
+  disabled = false,
 }: GroupContractSearchFormProps) {
   const [condition, setCondition] = useState<GroupContractSearchCondition>({});
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    onSearch(condition);
+    if (!disabled) {
+      onSearch(condition);
+    }
   };
 
   const handleReset = () => {
     setCondition({});
-    onSearch({});
+    // Reset は検索を実行しない（初期検索禁止・明示的検索のみ）
   };
 
   return (
@@ -41,8 +45,9 @@ export function GroupContractSearchForm({
             onChange={(e) =>
               setCondition({ ...condition, contractReceiptYmdFrom: e.target.value || undefined })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded"
+            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
             maxLength={8}
+            disabled={disabled}
           />
         </div>
 
@@ -58,8 +63,9 @@ export function GroupContractSearchForm({
             onChange={(e) =>
               setCondition({ ...condition, contractReceiptYmdTo: e.target.value || undefined })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded"
+            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
             maxLength={8}
+            disabled={disabled}
           />
         </div>
 
@@ -74,7 +80,8 @@ export function GroupContractSearchForm({
             onChange={(e) =>
               setCondition({ ...condition, contractNo: e.target.value || undefined })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded"
+            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+            disabled={disabled}
           />
         </div>
 
@@ -89,7 +96,8 @@ export function GroupContractSearchForm({
             onChange={(e) =>
               setCondition({ ...condition, familyNmKana: e.target.value || undefined })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded"
+            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+            disabled={disabled}
           />
         </div>
 
@@ -104,7 +112,8 @@ export function GroupContractSearchForm({
             onChange={(e) =>
               setCondition({ ...condition, telNo: e.target.value || undefined })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded"
+            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+            disabled={disabled}
           />
         </div>
 
@@ -119,7 +128,8 @@ export function GroupContractSearchForm({
             onChange={(e) =>
               setCondition({ ...condition, bosyuCd: e.target.value || undefined })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded"
+            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+            disabled={disabled}
           />
         </div>
 
@@ -134,7 +144,8 @@ export function GroupContractSearchForm({
             onChange={(e) =>
               setCondition({ ...condition, courseCd: e.target.value || undefined })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded"
+            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+            disabled={disabled}
           />
         </div>
 
@@ -149,7 +160,8 @@ export function GroupContractSearchForm({
             onChange={(e) =>
               setCondition({ ...condition, contractStatusKbn: e.target.value || undefined })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded"
+            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+            disabled={disabled}
           />
         </div>
       </div>
@@ -157,16 +169,16 @@ export function GroupContractSearchForm({
       <div className="flex gap-2 pt-2">
         <button
           type="submit"
-          disabled={loading}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          disabled={loading || disabled}
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? '検索中...' : '検索'}
         </button>
         <button
           type="button"
           onClick={handleReset}
-          disabled={loading}
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50"
+          disabled={loading || disabled}
+          className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           リセット
         </button>

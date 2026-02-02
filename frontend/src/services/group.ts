@@ -4,9 +4,11 @@ import { apiClient } from './api';
 import type {
   GroupContractSearchCondition,
   PaginatedGroupContractResponse,
+  Region,
 } from '@/types';
 
 export interface SearchGroupContractsParams extends GroupContractSearchCondition {
+  region: NonNullable<Region>;
   page: number;
   size: number;
 }
@@ -53,7 +55,8 @@ export const groupService = {
     
     const queryString = queryParams.toString();
     return apiClient.get<PaginatedGroupContractResponse>(
-      `/group/contracts/search${queryString ? `?${queryString}` : ''}`
+      `/group/contracts/search${queryString ? `?${queryString}` : ''}`,
+      params.region
     );
   },
 };

@@ -2,9 +2,9 @@
 
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 
-export default function LoginPage() {
+function LoginInner() {
   const { status } = useSession();
   const router = useRouter();
   const params = useSearchParams();
@@ -78,5 +78,17 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-gray-500">読み込み中...</div>
+      </div>
+    }>
+      <LoginInner />
+    </Suspense>
   );
 }

@@ -403,6 +403,7 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 ## P2 詳細ロードマップ（現在地）
 
 **詳細ドキュメント**: [p2-detailed-roadmap.md](./p2-detailed-roadmap.md)
+**P2-2 詳細ロードマップ**: [p2-2-frontend-group-contract-list-roadmap.md](./p2-2-frontend-group-contract-list-roadmap.md)
 
 ### P2 の基本スタンス
 
@@ -520,6 +521,11 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 - インデックス追加の検討
 - 検索方式の見直し
 - パフォーマンス測定
+- JDBC 検索の SQL 生成方針の改善（QueryBuilder 導入、OR吸収廃止、許可ソートキー）
+
+**参照**:
+- [p2-detailed-roadmap.md](./p2-detailed-roadmap.md)（P2-5 詳細）
+- [p2-5-jdbc-querybuilder-guideline.md](./p2-5-jdbc-querybuilder-guideline.md)（JDBC QueryBuilder ガイド）
 
 **Done 条件**:
 - 計測根拠あり（推測禁止）

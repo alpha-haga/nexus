@@ -42,14 +42,14 @@ P2 は以下を目的として実施する：
 | P1-A0 | 完了 | Keycloak 設定完了 |
 | P1-A1 | 完了 | BFF 認可・Context set 実装完了 |
 | P1-A2 | 完了 | E2E 検証完了 |
-| P1-B0 | 完了 | 表示要件確定（ドキュメント化済み） |
+| P1-B0 | 未着手 | 表示要件確定（P2-2 の先行タスク） |
 | P1-B1 | 完了 | JOIN 段階的復活完了 |
 | P1-B2 | 完了 | Count/Search 最適化完了 |
 | P1-B3 | P2-5 で実施 | パフォーマンス最適化 |
 
 ### 3.2 P1 未完了項目の扱い
 
-- **P1-B0**: 完了済み（`p1-b0-group-contract-display-requirements.md` が存在）
+- **P1-B0**: 未着手（P2-2 のブロッカーとして扱う。詳細は [p2-2-frontend-group-contract-list-roadmap.md](./p2-2-frontend-group-contract-list-roadmap.md) の P2-2-0 を参照）
 - **P1-B3**: P2-5 で実施（原則 P2 送り、業務が死ぬ場合のみ P1 繰上げ可能）
 
 ---
@@ -121,10 +121,15 @@ Frontend の Group Contract List 画面を完成させ、Backend BFF API と完�
 ### 6.2 スコープ
 
 - Group Contract List 画面の完成（検索フォーム・結果表示・ページネーション）
-- エラーハンドリングの実装（400/403/404/500 の適切な表示）
+  - 検索（初期表示では実行しない）
+  - ページネーション
+  - ソート
 - ローディング状態の表示
-- 検索条件のバリデーション（Frontend 側）
-- ソート機能の実装（P1-B0 で確定したソート仕様に従う）
+- エラーハンドリングの実装（400 / 403 / 404 / 500 の適切な表示）
+- Region 明示管理
+  - Region 未設定時は API を実行しない
+  - 全 API リクエストに X-NEXUS-REGION を必須付与
+- E2E / 手動検証ドキュメント整備
 
 ### 6.3 非スコープ
 
@@ -151,6 +156,7 @@ Frontend の Group Contract List 画面を完成させ、Backend BFF API と完�
 
 ### 6.6 参照
 
+- [p2-2-frontend-group-contract-list-roadmap.md](./p2-2-frontend-group-contract-list-roadmap.md)（P2-2 の詳細ロードマップ）
 - [p1-b0-group-contract-display-requirements.md](./p1-b0-group-contract-display-requirements.md)
 - [p1-b1-completion.md](./p1-b1-completion.md)
 - [p1-b2-completion.md](./p1-b2-completion.md)
@@ -263,6 +269,12 @@ P1-B0 で確定した追加検索条件の実装（業務合意後に確定）�
 - 検索方式の見直し（中間一致から前方一致への変更検討）
 - 日付範囲のデフォルト設定（全件取得を避けるため）
 
+JDBC 検索の SQL 生成方針の改善：
+- OR吸収の廃止（`:p IS NULL OR ...` の形を廃止し、動的WHERE化）
+- QueryBuilder の導入（count/search の FROM/JOIN/WHERE を構造で一致させる）
+- 許可ソートキーのホワイトリスト制（P1-B0 を正とする）
+- count と select の実行分離（同一SQLに統合しない）
+
 権限スコープを考慮した最適化：
 - パフォーマンス測定の実施（実データ量前提）
 - 許容時間内で動作することを確認
@@ -275,6 +287,7 @@ P1-B0 で確定した追加検索条件の実装（業務合意後に確定）�
 ### 9.4 実装成果物
 
 - インデックス追加 SQL（必要に応じて）
+- QueryBuilder 実装（JDBC 検索の SQL 生成を統一）
 - パフォーマンス測定結果ドキュメント
 - 最適化実施内容の記録
 
@@ -284,16 +297,22 @@ P1-B0 で確定した追加検索条件の実装（業務合意後に確定）�
 - [ ] 実データ量・権限スコープ前提で許容時間内で動作する
 - [ ] パフォーマンス要件が満たされている
 - [ ] パフォーマンス測定結果が記録されている
+- [ ] OR吸収が廃止されている（動的WHERE化）
+- [ ] count/search の FROM/JOIN/WHERE が構造で一致している（QueryBuilder導入）
+- [ ] 動的ソートがホワイトリストで安全に適用される（不正は400）
+- [ ] 改善前後の計測が docs に残っている（推測禁止）
 
 ### 9.6 参照
 
 - [p1-b2-completion.md](./p1-b2-completion.md)（現状のパフォーマンス測定結果を参照）
+- [p2-5-jdbc-querybuilder-guideline.md](./p2-5-jdbc-querybuilder-guideline.md)（JDBC QueryBuilder ガイド）
 
 ### 9.7 注意事項
 
 - P1-B2 で測定した結果（平均1.6秒、最長2.6秒）を基準とする
 - パフォーマンス要件は業務合意後に確定する
 - インデックス追加は DB 管理者と合意の上で実施する
+- JDBC 検索の SQL 生成方針は [p2-5-jdbc-querybuilder-guideline.md](./p2-5-jdbc-querybuilder-guideline.md) に従う
 
 ---
 

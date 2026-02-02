@@ -5,10 +5,11 @@
  */
 
 import { apiClient } from './api';
-import type { GojoContract, PaginatedResponse } from '@/types';
+import type { GojoContract, PaginatedResponse, Region } from '@/types';
 
 export interface ListLocalContractsParams {
   regionId: string;
+  region: NonNullable<Region>;
   page: number;
   size: 20 | 50 | 100;
 }
@@ -18,9 +19,10 @@ export const gojoService = {
    * 地区内の契約をページネーションで取得
    */
   async listLocal(params: ListLocalContractsParams): Promise<PaginatedResponse<GojoContract>> {
-    const { regionId, page, size } = params;
+    const { regionId, region, page, size } = params;
     return apiClient.get<PaginatedResponse<GojoContract>>(
-      `/gojo/contracts/local?regionId=${encodeURIComponent(regionId)}&page=${page}&size=${size}`
+      `/gojo/contracts/local?regionId=${encodeURIComponent(regionId)}&page=${page}&size=${size}`,
+      region
     );
   },
 };

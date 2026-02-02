@@ -30,8 +30,8 @@ export interface ApiError {
   status: number;
   error: string;
   message: string;
-  code: string;
-  details?: Record<string, unknown>;
+  code?: string;
+  correlationId?: string;
 }
 
 export interface PaginatedResponse<T> {
@@ -41,6 +41,12 @@ export interface PaginatedResponse<T> {
   page: number;
   size: number;
 }
+
+// ============================================
+// Region Types
+// ============================================
+
+export type Region = 'INTEGRATION' | 'SAITAMA' | 'FUKUSHIMA' | 'TOCHIGI' | null;
 
 // ============================================
 // Person Types

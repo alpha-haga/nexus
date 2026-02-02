@@ -8,7 +8,7 @@
  * Server Component から呼び出す場合は、server用クライアントを別途作成する（P2-2以降で対応）。
  */
 
-import type { ApiError } from '@/types';
+import type { ApiError, Region } from '@/types';
 import { getSession, signOut } from 'next-auth/react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
@@ -22,8 +22,21 @@ class ApiClient {
 
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    region: Region | null
   ): Promise<T> {
+    // Region 未指定の場合は ApiError(400) を throw
+    if (!region) {
+      const error: ApiError = {
+        timestamp: new Date().toISOString(),
+        status: 400,
+        error: 'Bad Request',
+        message: 'Region が指定されていません。Region を選択してください。',
+        code: 'REGION_REQUIRED',
+      };
+      throw error;
+    }
+
     const url = `${this.baseUrl}${endpoint}`;
 
     // NextAuth.jsのセッションからaccessTokenを取得
@@ -55,80 +68,117 @@ class ApiClient {
       headersObj['Authorization'] = `Bearer ${accessToken}`;
     }
 
-    // 暫定: P2-1 は group の integration 想定
-    headersObj['X-NEXUS-REGION'] = 'INTEGRATION';
+    // X-NEXUS-REGION ヘッダーを付与
+    headersObj['X-NEXUS-REGION'] = region;
 
-    const response = await fetch(url, {
-      ...options,
-      headers: headersObj,
-    });
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: headersObj,
+      });
 
-    if (!response.ok) {
-      // 401 Unauthorizedの場合は認証エラーとして扱う
-      if (response.status === 401) {
-        // NextAuth.jsのsignOutを呼び出してログイン画面にリダイレクト
-        await signOut({ callbackUrl: '/login' });
-        throw new Error('認証に失敗しました。再度ログインしてください。');
+      if (!response.ok) {
+        // 401 Unauthorizedの場合は認証エラーとして扱う
+        if (response.status === 401) {
+          // NextAuth.jsのsignOutを呼び出してログイン画面にリダイレクト
+          await signOut({ callbackUrl: '/login' });
+          const error: ApiError = {
+            timestamp: new Date().toISOString(),
+            status: 401,
+            error: 'Unauthorized',
+            message: '認証に失敗しました。再度ログインしてください。',
+            code: 'UNAUTHORIZED',
+          };
+          throw error;
+        }
+
+        // エラーレスポンス本文を読み取り
+        let errorBody: ApiError;
+        try {
+          const json = await response.json();
+          errorBody = {
+            timestamp: json.timestamp || new Date().toISOString(),
+            status: json.status || response.status,
+            error: json.error || response.statusText,
+            message: json.message || 'An error occurred',
+            code: json.code,
+            correlationId: json.correlationId,
+          };
+        } catch {
+          // JSON が読めない場合は最低限の情報で組み立て
+          errorBody = {
+            timestamp: new Date().toISOString(),
+            status: response.status,
+            error: response.statusText,
+            message: 'An error occurred',
+            code: 'UNKNOWN_ERROR',
+          };
+        }
+        throw errorBody;
       }
 
-      // 403 Forbiddenの場合はApiErrorとしてthrow（UI側で明示する）
-      if (response.status === 403) {
-        const error: ApiError = await response.json().catch(() => ({
-          timestamp: new Date().toISOString(),
-          status: 403,
-          error: 'Forbidden',
-          message: 'この操作を実行する権限がありません。',
-          code: 'FORBIDDEN',
-        }));
-        throw error;
+      // 204 No Content の場合は undefined を返す
+      if (response.status === 204) {
+        return undefined as T;
       }
 
-      // その他のエラー
-      const error: ApiError = await response.json().catch(() => ({
+      return response.json();
+    } catch (err) {
+      // fetch失敗等の例外も ApiError(500) に変換
+      if (err && typeof err === 'object' && 'status' in err) {
+        // 既に ApiError の場合はそのまま throw
+        throw err;
+      }
+      const error: ApiError = {
         timestamp: new Date().toISOString(),
-        status: response.status,
-        error: response.statusText,
-        message: 'An error occurred',
-        code: 'UNKNOWN_ERROR',
-      }));
+        status: 500,
+        error: 'Internal Server Error',
+        message: err instanceof Error ? err.message : 'ネットワークエラーが発生しました',
+        code: 'NETWORK_ERROR',
+      };
       throw error;
     }
-
-    // 204 No Content の場合は undefined を返す
-    if (response.status === 204) {
-      return undefined as T;
-    }
-
-    return response.json();
   }
 
-  async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' });
+  async get<T>(endpoint: string, region: Region | null): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' }, region);
   }
 
-  async post<T>(endpoint: string, body: unknown): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      body: JSON.stringify(body),
-    });
+  async post<T>(endpoint: string, body: unknown, region: Region | null): Promise<T> {
+    return this.request<T>(
+      endpoint,
+      {
+        method: 'POST',
+        body: JSON.stringify(body),
+      },
+      region
+    );
   }
 
-  async patch<T>(endpoint: string, body: unknown): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'PATCH',
-      body: JSON.stringify(body),
-    });
+  async patch<T>(endpoint: string, body: unknown, region: Region | null): Promise<T> {
+    return this.request<T>(
+      endpoint,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      },
+      region
+    );
   }
 
-  async put<T>(endpoint: string, body: unknown): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'PUT',
-      body: JSON.stringify(body),
-    });
+  async put<T>(endpoint: string, body: unknown, region: Region | null): Promise<T> {
+    return this.request<T>(
+      endpoint,
+      {
+        method: 'PUT',
+        body: JSON.stringify(body),
+      },
+      region
+    );
   }
 
-  async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' });
+  async delete<T>(endpoint: string, region: Region | null): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE' }, region);
   }
 }
 

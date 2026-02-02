@@ -1,10 +1,12 @@
 import { getServerSession } from 'next-auth';
 import { redirect } from 'next/navigation';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { getAuthOptions } from '@/app/api/auth/[...nextauth]/auth-options';
 import { AppLayout } from '@/modules/core';
 import Link from 'next/link';
 
 // モックデータ: 実際のAPIに接続しやすい構造
+export const dynamic = 'force-dynamic';
+
 // State/Phase は docs/architecture/dependency-rules.md 準拠
 const mockDashboardData = {
   slaMetrics: {
@@ -72,7 +74,7 @@ function StatCard({ label, value, subLabel, status = 'normal', href }: StatCardP
 }
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(getAuthOptions());
 
   if (!session) {
     redirect('/login');
