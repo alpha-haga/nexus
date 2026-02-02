@@ -52,6 +52,12 @@ nexus-infrastructure/src/main/resources/sql/
   - Region 未設定時は API を実行せず、UI で未設定状態を明示する
   - 暗黙補完（デフォルト値の自動付与等）を禁止する
   - 全 API リクエストに `X-NEXUS-REGION` を必須付与する
+- **Region セレクターの扱い（P2-2 / P2-3 適用）**:
+  - **現状**: 画面に Region セレクターを表示しているのは **暫定UI** である
+  - **Region 未選択時の動作**: Region 未選択時は API を叩かない（Fail Fast / 明示状態）
+  - **X-NEXUS-REGION の付与**: X-NEXUS-REGION は明示状態の結果として付与される（隠蔽しない）
+  - **将来的な変更**: Region の指定方式を変更する可能性はあるが、それは「別フェーズ（P3以降で検討）」であり、P2-3 では触らない
+  - **規約**: Region セレクターは P2-2 で実装した暫定UIであり、P2-3 では変更しない
 
 ---
 

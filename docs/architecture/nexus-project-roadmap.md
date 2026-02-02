@@ -424,8 +424,8 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 | フェーズ | 名称 | 状態 |
 |---------|------|------|
 | P2-1 | Frontend 認証・認可統合 | **完了** |
-| P2-2 | Frontend 本格接続 | **次着手** |
-| P2-3 | 権限制御反映 | 未着手 |
+| P2-2 | Frontend 本格接続 | **一旦完了（P2-2-0 は別立て継続）** |
+| P2-3 | 権限制御反映 | **次着手** |
 | P2-4 | 検索条件拡張 | 未着手 |
 | P2-5 | パフォーマンス最適化 | 未着手 |
 | P2-6 | 本番運用前最終調整 | 未着手 |
@@ -456,7 +456,7 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 
 ---
 
-### P2-2（次着手）— Frontend 本格接続（Group Contract List 完成 + Region 正道化）
+### P2-2（一旦完了 / P2-2-0 は別立て継続）— Frontend 本格接続（Group Contract List 完成 + Region 正道化）
 
 **目的**:
 - Frontend の Group Contract List 画面を完成させ、Backend BFF API と完全統合する
@@ -482,9 +482,20 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 - 全 API に X-NEXUS-REGION が付与されている
 - 再現可能な手順が docs に記載されている
 
+**状態**: 一旦完了（ただし P2-2-0 は別立て継続）
+
+**未完了項目**:
+- **P2-2-0（エラーハンドリング検証：400/403/404/500）**: 実装/検証は別チャットで進行
+  - **詳細**: [p2-2-manual-verification-group-contract-list.md](./p2-2-manual-verification-group-contract-list.md) の「5. エラーハンドリング」セクション（5.1〜5.4）が未達
+  - **扱い**: 別チャットで継続し、P2-2-0 として切り出している
+
+**参照**:
+- [p2-2-frontend-group-contract-list-roadmap.md](./p2-2-frontend-group-contract-list-roadmap.md)（P2-2 詳細ロードマップ）
+- [p2-2-manual-verification-group-contract-list.md](./p2-2-manual-verification-group-contract-list.md)（P2-2 手動検証手順）
+
 ---
 
-### P2-3（未着手）— 権限制御反映（Frontend 側での権限制御）
+### P2-3（次着手）— 権限制御反映（Frontend 側での権限制御）
 
 **目的**: Backend BFF の権限制御を Frontend 側に反映し、権限に応じた画面表示制御を実現する。
 
@@ -496,6 +507,11 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 **Done 条件**:
 - 権限に応じた画面表示制御が実装されている
 - 権限不足時に 403 エラーが表示される
+
+**状態**: 次着手
+
+**参照**:
+- [p2-3-frontend-authorization-roadmap.md](./p2-3-frontend-authorization-roadmap.md)（P2-3 詳細ロードマップ）
 
 ---
 
