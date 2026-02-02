@@ -1,5 +1,6 @@
 import type { AuthOptions } from 'next-auth';
 import KeycloakProvider from 'next-auth/providers/keycloak';
+import { getDbAccessClaimsFromAccessToken } from '@/services/auth/dbAccess';
 
 export function getAuthOptions(): AuthOptions {
   // Keycloak設定の必須チェック（本番運用安全性のため）
@@ -101,6 +102,12 @@ export function getAuthOptions(): AuthOptions {
         };
         session.accessToken = token.accessToken;
         session.error = token.error;
+        
+        // nexus_db_access claim を解析して session に追加
+        const dbAccess = getDbAccessClaimsFromAccessToken(token.accessToken);
+        session.dbAccess = dbAccess;
+        session.dbAccessRaw = dbAccess.raw;
+        
         return session;
       },
     },

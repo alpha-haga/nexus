@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { navConfig, NavItem } from '../constants/navConfig';
+import { getScreenPermissionFromSession } from '../auth/permissionUtils';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -12,6 +14,9 @@ interface SidebarProps {
 export function Sidebar({ isOpen }: SidebarProps) {
   const pathname = usePathname();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  
+  // Hook は 1回だけ呼ぶ
+  const { data: session, status } = useSession();
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -40,17 +45,33 @@ export function Sidebar({ isOpen }: SidebarProps) {
       return null;
     }
 
+    // 権限チェック（screenKey が指定されている場合、純関数を呼ぶ）
+    const permission = item.screenKey
+      ? getScreenPermissionFromSession(session, status, item.screenKey)
+      : { canView: true };
+
     const hasChildren = item.children && item.children.length > 0 && level < 1;
     const expanded = isExpanded(item.label);
-    const active = item.href ? isActive(item.href) : false;
+    const active = item.href && permission.canView ? isActive(item.href) : false;
+    const isDisabled = !permission.canView;
 
     if (hasChildren) {
+      // 子要素がある場合、子要素の権限もチェック（表示用）
+      const childrenWithPermission = item.children?.map((child) => ({
+        child,
+        permission: child.screenKey
+          ? getScreenPermissionFromSession(session, status, child.screenKey)
+          : { canView: true },
+      })) || [];
+
       return (
         <div key={item.label}>
           <button
             onClick={() => toggleExpand(item.label)}
-            className={`nav-item w-full ${active ? 'nav-item-active' : ''} ${!isOpen ? 'justify-center' : ''}`}
-            title={!isOpen ? item.label : undefined}
+            className={`nav-item w-full ${active ? 'nav-item-active' : ''} ${!isOpen ? 'justify-center' : ''} ${
+              isDisabled ? 'opacity-75 cursor-pointer' : ''
+            }`}
+            title={!isOpen ? item.label : isDisabled && permission.reason ? permission.reason : item.label}
           >
             <span className="shrink-0">{item.icon}</span>
             <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isOpen ? 'opacity-100 ml-3 w-auto' : 'opacity-0 w-0 ml-0'}`}>
@@ -69,7 +90,44 @@ export function Sidebar({ isOpen }: SidebarProps) {
           </button>
           {isOpen && expanded && (
             <div className="ml-4 mt-1 space-y-1">
-              {item.children?.map((child) => renderNavItem(child, level + 1))}
+              {childrenWithPermission.map(({ child, permission: childPermission }) => {
+                const childDisabled = !childPermission.canView;
+                const childActive = child.href && childPermission.canView ? isActive(child.href) : false;
+
+                if (child.href) {
+                  if (childDisabled) {
+                    // disabled の場合は Link ではなく button/div で表示
+                    return (
+                      <div
+                        key={child.href}
+                        className={`nav-item ${childActive ? 'nav-item-active' : ''} ml-6 opacity-50 cursor-not-allowed`}
+                        title={childPermission.reason || child.label}
+                      >
+                        <span className="shrink-0">{child.icon}</span>
+                        <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isOpen ? 'opacity-100 ml-3 w-auto' : 'opacity-0 w-0 ml-0'}`}>
+                          {child.label}
+                        </span>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={child.href}
+                      href={child.href}
+                      className={`nav-item ${childActive ? 'nav-item-active' : ''} ml-6`}
+                      title={!isOpen ? child.label : undefined}
+                    >
+                      <span className="shrink-0">{child.icon}</span>
+                      <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isOpen ? 'opacity-100 ml-3 w-auto' : 'opacity-0 w-0 ml-0'}`}>
+                        {child.label}
+                      </span>
+                    </Link>
+                  );
+                }
+
+                return null;
+              })}
             </div>
           )}
         </div>
@@ -77,6 +135,22 @@ export function Sidebar({ isOpen }: SidebarProps) {
     }
 
     if (item.href) {
+      if (isDisabled) {
+        // disabled の場合は Link ではなく div で表示
+        return (
+          <div
+            key={item.href}
+            className={`nav-item ${active ? 'nav-item-active' : ''} ${!isOpen ? 'justify-center' : ''} ${level > 0 ? 'ml-6' : ''} opacity-50 cursor-not-allowed`}
+            title={!isOpen ? item.label : permission.reason || item.label}
+          >
+            <span className="shrink-0">{item.icon}</span>
+            <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isOpen ? 'opacity-100 ml-3 w-auto' : 'opacity-0 w-0 ml-0'}`}>
+              {item.label}
+            </span>
+          </div>
+        );
+      }
+
       return (
         <Link
           key={item.href}

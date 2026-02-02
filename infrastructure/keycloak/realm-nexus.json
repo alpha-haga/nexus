@@ -180,6 +180,10 @@
         {
           "name": "saitama__musashino__FUNERAL",
           "description": "埼玉地区 武蔵野法人 FUNERAL ドメインへのアクセス権限"
+        },
+        {
+          "name": "fukushima__fukushima__GOJO",
+          "description": "福島地区 福島法人 GOJO ドメインへのアクセス権限"
         }
       ]
     }
@@ -195,6 +199,18 @@
           "integration__ALL__GROUP",
           "saitama__musashino__GOJO",
           "saitama__musashino__FUNERAL"
+        ]
+      }
+    },
+    {
+      "name": "corp-fukushima",
+      "path": "/corp-fukushima",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {
+        "nexus-bff": [
+          "integration__ALL__GROUP",
+          "fukushima__fukushima__GOJO"
         ]
       }
     }
@@ -226,6 +242,34 @@
       },
       "groups": [
         "/corp-musashino"
+      ]
+    },
+    {
+      "username": "fukushima-user",
+      "email": "fukushima-user@example.com",
+      "enabled": true,
+      "firstName": "福島",
+      "lastName": "テストユーザー",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "attributes": {
+        "employeeId": [
+          "E002"
+        ],
+        "corporationId": [
+          "corp-fukushima"
+        ],
+        "corporationName": [
+          "福島法人"
+        ]
+      },
+      "groups": [
+        "/corp-fukushima"
       ]
     }
   ]

@@ -14,6 +14,7 @@ export { Header } from './components/Header';
 export { Sidebar } from './components/Sidebar';
 export { Providers } from './components/Providers';
 export { ComingSoon } from './components/ComingSoon';
+export { Forbidden } from './components/errors/Forbidden';
 
 // 共通ユーティリティをエクスポート
 // export { formatDate } from './utils/date';

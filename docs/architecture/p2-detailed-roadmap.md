@@ -190,14 +190,18 @@ Backend BFF の権限制御（Keycloak Claim による Region / Corporation / Do
 
 ### 7.5 Done 条件
 
-- [ ] Keycloak token の claim（`nexus_db_access`）を Frontend 側で取得できる
-- [ ] 権限に応じた画面表示制御が実装されている
-- [ ] 権限不足時に適切なエラー表示がされる（403 Forbidden）
-- [ ] 権限情報が適切に表示される（必要に応じて）
-- [ ] E2E 検証（Frontend → Keycloak → Backend BFF → API）が成立する
+- [x] Keycloak token の claim（`nexus_db_access`）を Frontend 側で取得できる
+- [x] 権限に応じた画面表示制御が実装されている
+- [x] 権限不足時に適切なエラー表示がされる（403 Forbidden）
+- [x] 権限情報が適切に表示される（必要に応じて）
+- [x] E2E 検証（Frontend → Keycloak → Backend BFF → API）が成立する
+
+**状態**: 完了
 
 ### 7.6 参照
 
+- [p2-3-frontend-authorization-roadmap.md](./p2-3-frontend-authorization-roadmap.md)（P2-3 の詳細ロードマップ）
+- [p2-3-completion.md](./p2-3-completion.md)（P2-3 完了宣言）
 - [p04-5-keycloak-claims-db-routing.md](./p04-5-keycloak-claims-db-routing.md)
 - [p1-1-bff-authorization-implementation.md](./p1-1-bff-authorization-implementation.md)
 

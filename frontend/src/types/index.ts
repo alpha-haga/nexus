@@ -379,6 +379,8 @@ declare module 'next-auth' {
     };
     accessToken?: string;
     error?: 'RefreshAccessTokenError' | 'NoRefreshToken';
+    dbAccess?: import('@/services/auth/dbAccess').DbAccessClaims;
+    dbAccessRaw?: string[];
   }
 
   interface User {

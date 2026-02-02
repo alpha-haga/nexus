@@ -260,6 +260,79 @@ P2-3 完了後の次フェーズ（P2-4 以降）への引き継ぎ事項：
 
 ---
 
+## 10. P2-3 実装完了確認チェックリスト
+
+本チェックリストは、P2-3 の実装が完了条件を満たしていることを確認するための手動確認観点である。
+
+### 10.1 Session と Claim 取得の確認
+
+- [ ] NextAuth session に `accessToken` が存在する
+- [ ] NextAuth session に `dbAccess` が存在する（`DbAccessClaims` 型）
+- [ ] NextAuth session に `dbAccessRaw` が存在する（`string[]` 型）
+- [ ] `accessToken` から `nexus_db_access` claim が正しく抽出される
+- [ ] claim が存在しない場合、`dbAccess.errors` に「nexus_db_access claim が JWT payload に存在しません」が記録される
+- [ ] claim が空配列の場合、`dbAccess.errors` に「nexus_db_access claim が空配列です」が記録される
+- [ ] claim の parse 失敗時、`dbAccess.errors` に適切なエラーメッセージが記録される
+
+### 10.2 権限判定ロジックの確認
+
+- [ ] `permissionUtils.ts` の `getScreenPermissionFromSession` が正しく動作する
+- [ ] `useScreenPermission` Hook が正しく動作する
+- [ ] `SCREEN_PERMISSIONS` マッピングが正しく定義されている
+- [ ] 未認証（`status === 'loading'` または `!session`）の場合、`canView: false` が返される
+- [ ] 権限情報の取得エラーがある場合、`canView: false` と適切な `reason` が返される
+- [ ] `any: true` の画面は認証済みユーザー全員がアクセス可能
+- [ ] `denyAll: true` の画面は全ユーザーに拒否される
+- [ ] `domain` 指定の画面は、該当 DomainAccount を持つ role が存在する場合のみアクセス可能
+- [ ] `integrationOnly: true` の画面は、`integration` region かつ該当 DomainAccount を持つ role が存在する場合のみアクセス可能
+
+### 10.3 メニュー表示制御の確認
+
+- [ ] `navConfig.tsx` の各メニュー項目に `screenKey` が設定されている
+- [ ] Sidebar で権限がないメニュー項目は `disabled` 表示（`opacity-50` または `opacity-75`）になる
+- [ ] Sidebar で権限がないメニュー項目の `title` 属性に拒否理由（`reason`）が表示される
+- [ ] Sidebar で親メニュー（children あり）は権限不足でも展開可能（`disabled` 属性を付けない）
+- [ ] Sidebar で子メニューは権限がない場合 `Link` ではなく `div` で表示される
+- [ ] Sidebar で子メニューのインデント（`ml-6`）が常に適用されている
+
+### 10.4 ページ表示制御の確認
+
+- [ ] `/group/contracts` ページで、権限がない場合 `Forbidden` コンポーネントが表示される
+- [ ] `/group/persons` ページで、権限がない場合 `Forbidden` コンポーネントが表示される
+- [ ] `/gojo` ページで、権限がない場合 `Forbidden` コンポーネントが表示される
+- [ ] `/funeral` ページで、権限がない場合 `Forbidden` コンポーネントが表示される
+- [ ] 認証中（`status === 'loading'`）の場合、ページでローディング表示がされる（`Forbidden` を出さない）
+- [ ] 未認証（`!session`）の場合、ページで `null` を返し、NextAuth の導線に任せる
+- [ ] 直接 URL アクセス時も、権限がない場合は `Forbidden` が表示される（メニュー抑止だけで終わらない）
+
+### 10.5 403 Forbidden UI の確認
+
+- [ ] `Forbidden` コンポーネントに「権限がありません（403）」が明示されている
+- [ ] `Forbidden` コンポーネントに対象画面名（`screenName`）が表示される
+- [ ] `Forbidden` コンポーネントに拒否理由（`reason`）が表示される（存在する場合）
+- [ ] `Forbidden` コンポーネントに「管理者に連絡してください」の案内が表示される
+- [ ] `Forbidden` コンポーネントに「ダッシュボードに戻る」の導線が表示される
+
+### 10.6 ビルドと型安全性の確認
+
+- [ ] `npm run build` が成功する
+- [ ] TypeScript の型エラーがない
+- [ ] ESLint エラーがない（設定されている場合）
+
+### 10.7 Region セレクターの確認
+
+- [ ] Region セレクター（P2-2 暫定UI）に変更が入っていない
+- [ ] Region セレクター関連のファイルに差分がない（git diff で確認）
+
+### 10.8 設計憲法準拠の確認
+
+- [ ] Frontend は認可判断をしていない（Backend claim を機械的に反映するだけ）
+- [ ] 権限制御の判定ロジックが 1箇所（`permissionUtils.ts`）に集約されている
+- [ ] エラーを握りつぶしていない（`console.log` のみ等は禁止）
+- [ ] 状態を隠していない（権限不足・未設定を UI で明示）
+
+---
+
 ## 補足
 
 - 本ロードマップは P2-3 の実装ガイドであり、設計の正は nexus-design-constitution.md である
