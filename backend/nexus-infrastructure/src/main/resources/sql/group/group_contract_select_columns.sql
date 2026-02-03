@@ -20,11 +20,19 @@ SELECT
     , CAST(NULL AS CHAR(8)) AS status_update_ymd
     , contract_search.course_cd AS course_cd
     , course.course_nm AS course_name
-    , CAST(NULL AS NUMBER(2)) AS share_num
+    , NVL(contract_info.share_num, 0) AS share_num
     , NVL(course.monthly_premium, 0) AS monthly_premium
-    , CAST(NULL AS NUMBER(7)) AS contract_gaku
-    , CAST(NULL AS NUMBER(7)) AS total_save_num
-    , CAST(NULL AS NUMBER(7)) AS total_gaku
+    , course.contract_gaku * contract_info.share_num AS contract_gaku
+    , trunc( 
+        ( 
+            NVL(status_rec.total_receipt_gaku, 0) + NVL(status_rec.dmd_discount_gaku, 0) - NVL(status_rec.total_refund_gaku, 0)
+             - NVL(status_rec.total_ope_usage_gaku, 0)
+        ) / ( 
+            NVL(course.monthly_premium, 0) * (NVL(contract_info.share_num, 0))
+        )
+    ) AS total_save_num
+    , NVL(status_rec.total_receipt_gaku, 0) + NVL(status_rec.dmd_discount_gaku, 0) - NVL(status_rec.total_refund_gaku, 0)
+     - NVL(status_rec.total_ope_usage_gaku, 0) AS total_gaku
     , contract_addr.zip_cd AS zip_cd
     , contract_addr.pref_name AS pref_name
     , contract_addr.city_town_name AS city_town_name

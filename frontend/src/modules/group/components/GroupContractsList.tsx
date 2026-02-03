@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { groupService } from '@/services/group';
 import type {
+  GroupContractSearchResponse,
   GroupContractSearchCondition,
   PaginatedGroupContractResponse,
   Region,
@@ -37,10 +38,11 @@ const normalize = (s: string | null | undefined): string | null => {
 };
 
 // 住所項目を連結（日本住所は区切り無しが自然）
-const buildAddress = (contract: { prefName?: string | null; cityTownName?: string | null; oazaTownName?: string | null; azaChomeName?: string | null; addr1?: string | null; addr2?: string | null }): string | null => {
+type AddressParts = Pick<GroupContractSearchResponse, 'prefName' | 'cityTownName' | 'oazaTownName' | 'azaChomeName' | 'addr1' | 'addr2'>;
+const buildAddress = (contract: AddressParts): string => {
   const parts = [normalize(contract.prefName), normalize(contract.cityTownName), normalize(contract.oazaTownName), normalize(contract.azaChomeName), normalize(contract.addr1), normalize(contract.addr2)];
   const joined = parts.filter((p): p is string => p !== null).join('');
-  return joined === '' ? null : joined;
+  return joined === '' ? '-' : joined;
 };
 
 export function GroupContractsList() {
@@ -298,6 +300,21 @@ export function GroupContractsList() {
                   <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
                     住所
                   </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                    口数
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                    月掛金
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                    契約金額
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                    積立回数
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                    積立金額
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -313,9 +330,9 @@ export function GroupContractsList() {
                   const entryTitle = entryName === '' ? undefined : entryName;
 
                   // 住所の連結
-                  const address = buildAddress(contract);
-                  const displayAddress = address === null ? '-' : truncateText(address, 30);
-                  const addressTitle = address === null ? undefined : address;
+                  const addressText = buildAddress(contract);
+                  const displayAddress = truncateText(addressText, 30);
+                  const addressTitle = addressText;
 
                   return (
                     <tr key={`${contract.contractNo}-${index}`} className="hover:bg-gray-50">
@@ -347,6 +364,21 @@ export function GroupContractsList() {
                       </td>
                       <td className="px-4 py-2 text-sm" title={addressTitle}>
                         {displayAddress}
+                      </td>
+                      <td className="px-4 py-2 text-right text-sm">
+                        {contract.shareNum ?? '-'}
+                      </td>
+                      <td className="px-4 py-2 text-right text-sm">
+                        {contract.monthlyPremium ?? '-'}
+                      </td>
+                      <td className="px-4 py-2 text-right text-sm">
+                        {contract.contractGaku ?? '-'}
+                      </td>
+                      <td className="px-4 py-2 text-right text-sm">
+                        {contract.totalSaveNum ?? '-'}
+                      </td>
+                      <td className="px-4 py-2 text-right text-sm">
+                        {contract.totalGaku ?? '-'}
                       </td>
                     </tr>
                   );

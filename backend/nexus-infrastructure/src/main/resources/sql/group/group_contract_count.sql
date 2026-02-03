@@ -1,5 +1,15 @@
 SELECT COUNT(1)
 FROM zgot_contract_search_key contract_search
+INNER JOIN zgot_contract_info_all contract_info 
+    ON contract_search.cmp_cd = contract_info.cmp_cd 
+    AND contract_search.contract_no = contract_info.contract_no 
+    AND contract_info.last_flg = '1' 
+    AND contract_info.delete_flg = '0' 
+INNER JOIN zgot_status_rec_all status_rec
+    ON contract_search.cmp_cd = status_rec.cmp_cd 
+    AND contract_search.contract_no = status_rec.contract_no 
+    AND status_rec.last_flg = '1' 
+    AND status_rec.delete_flg = '0' 
 LEFT JOIN zgom_cmp cmp
     ON cmp.cmp_cd = contract_search.cmp_cd
     AND cmp.delete_flg = '0'

@@ -20,11 +20,19 @@ SELECT
     , CAST(NULL AS CHAR(8)) AS status_update_ymd
     , contract_search.course_cd AS course_cd
     , course.course_nm AS course_name
-    , CAST(NULL AS NUMBER(2)) AS share_num
+    , NVL(contract_info.share_num, 0) AS share_num
     , NVL(course.monthly_premium, 0) AS monthly_premium
-    , CAST(NULL AS NUMBER(7)) AS contract_gaku
-    , CAST(NULL AS NUMBER(7)) AS total_save_num
-    , CAST(NULL AS NUMBER(7)) AS total_gaku
+    , course.contract_gaku * contract_info.share_num AS contract_gaku
+    , trunc( 
+        ( 
+            NVL(status_rec.total_receipt_gaku, 0) + NVL(status_rec.dmd_discount_gaku, 0) - NVL(status_rec.total_refund_gaku, 0)
+             - NVL(status_rec.total_ope_usage_gaku, 0)
+        ) / ( 
+            NVL(course.monthly_premium, 0) * (NVL(contract_info.share_num, 0))
+        )
+    ) AS total_save_num
+    , NVL(status_rec.total_receipt_gaku, 0) + NVL(status_rec.dmd_discount_gaku, 0) - NVL(status_rec.total_refund_gaku, 0)
+     - NVL(status_rec.total_ope_usage_gaku, 0) AS total_gaku
     , contract_addr.zip_cd AS zip_cd
     , contract_addr.pref_name AS pref_name
     , contract_addr.city_town_name AS city_town_name
@@ -62,6 +70,16 @@ SELECT
     , CAST(NULL AS CHAR(8)) AS regist_ymd
     , CAST(NULL AS CHAR(16)) AS reception_no 
 FROM zgot_contract_search_key contract_search
+INNER JOIN zgot_contract_info_all contract_info 
+    ON contract_search.cmp_cd = contract_info.cmp_cd 
+    AND contract_search.contract_no = contract_info.contract_no 
+    AND contract_info.last_flg = '1' 
+    AND contract_info.delete_flg = '0' 
+INNER JOIN zgot_status_rec_all status_rec
+    ON contract_search.cmp_cd = status_rec.cmp_cd 
+    AND contract_search.contract_no = status_rec.contract_no 
+    AND status_rec.last_flg = '1' 
+    AND status_rec.delete_flg = '0' 
 LEFT JOIN zgom_cmp cmp
     ON cmp.cmp_cd = contract_search.cmp_cd
     AND cmp.delete_flg = '0'
