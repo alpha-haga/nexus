@@ -286,6 +286,9 @@ export function GroupContractsList() {
                     契約受付日
                   </th>
                   <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                    生年月日
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
                     契約状態
                   </th>
                   <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
@@ -299,6 +302,12 @@ export function GroupContractsList() {
                   </th>
                   <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
                     住所
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                    電話番号
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                    携帯電話番号
                   </th>
                   <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
                     口数
@@ -351,6 +360,9 @@ export function GroupContractsList() {
                         {formatDate(contract.contractReceiptYmd)}
                       </td>
                       <td className="px-4 py-2 text-sm">
+                        {formatDate(contract.birthday)}
+                      </td>
+                      <td className="px-4 py-2 text-sm">
                         {contract.contractStatus || contract.contractStatusKbn || '-'}
                       </td>
                       <td className="px-4 py-2 text-sm" title={contract.courseName || contract.courseCd || undefined}>
@@ -364,6 +376,12 @@ export function GroupContractsList() {
                       </td>
                       <td className="px-4 py-2 text-sm" title={addressTitle}>
                         {displayAddress}
+                      </td>
+                      <td className="px-4 py-2 text-sm">
+                        {contract.telNo ?? '-'}
+                      </td>
+                      <td className="px-4 py-2 text-sm">
+                        {contract.mobileNo ?? '-'}
                       </td>
                       <td className="px-4 py-2 text-right text-sm">
                         {contract.shareNum ?? '-'}
