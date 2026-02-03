@@ -25,11 +25,11 @@ SELECT
     , CAST(NULL AS NUMBER(7)) AS contract_gaku
     , CAST(NULL AS NUMBER(7)) AS total_save_num
     , CAST(NULL AS NUMBER(7)) AS total_gaku
-    , CAST(NULL AS CHAR(7)) AS zip_cd
-    , CAST(NULL AS VARCHAR2(4)) AS pref_name
-    , CAST(NULL AS VARCHAR2(12)) AS city_town_name
-    , CAST(NULL AS VARCHAR2(18)) AS oaza_town_name
-    , CAST(NULL AS VARCHAR2(18)) AS aza_chome_name
+    , contract_addr.zip_cd AS zip_cd
+    , contract_addr.pref_name AS pref_name
+    , contract_addr.city_town_name AS city_town_name
+    , contract_addr.oaza_town_name AS oaza_town_name
+    , contract_addr.aza_chome_name AS aza_chome_name
     , contract_search.addr1 AS addr1
     , contract_search.addr2 AS addr2
     , contract_search.tel_no AS tel_no
@@ -83,6 +83,9 @@ LEFT JOIN zgom_staff_all entry_staff
     AND entry_staff.tekiyo_start_ymd <= :businessYmd
     AND entry_staff.tekiyo_end_ymd > :businessYmd
     AND entry_staff.delete_flg = '0'
+LEFT JOIN zgom_addr contract_addr 
+    ON contract_addr.addr_cd = contract_search.addr_cd 
+    AND contract_addr.delete_flg = '0' 
 WHERE
     (:contractReceiptYmdFrom IS NULL OR contract_search.contract_receipt_ymd >= :contractReceiptYmdFrom)
     AND (:contractReceiptYmdTo IS NULL OR contract_search.contract_receipt_ymd <= :contractReceiptYmdTo)

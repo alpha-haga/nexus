@@ -28,6 +28,21 @@ const formatDate = (ymd: string | null | undefined): string => {
   return `${ymd.substring(0, 4)}/${ymd.substring(4, 6)}/${ymd.substring(6, 8)}`;
 };
 
+// 住所連結用ユーティリティ
+// null/undefined/空文字/空白のみを除外して正規化
+const normalize = (s: string | null | undefined): string | null => {
+  if (s === null || s === undefined) return null;
+  const trimmed = s.trim();
+  return trimmed === '' ? null : trimmed;
+};
+
+// 住所項目を連結（日本住所は区切り無しが自然）
+const buildAddress = (contract: { prefName?: string | null; cityTownName?: string | null; oazaTownName?: string | null; azaChomeName?: string | null; addr1?: string | null; addr2?: string | null }): string | null => {
+  const parts = [normalize(contract.prefName), normalize(contract.cityTownName), normalize(contract.oazaTownName), normalize(contract.azaChomeName), normalize(contract.addr1), normalize(contract.addr2)];
+  const joined = parts.filter((p): p is string => p !== null).join('');
+  return joined === '' ? null : joined;
+};
+
 export function GroupContractsList() {
   const [region, setRegion] = useState<Region | null>(null);
   const [result, setResult] = useState<PaginatedGroupContractResponse | null>(null);
@@ -280,6 +295,9 @@ export function GroupContractsList() {
                   <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
                     加入担当者
                   </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                    住所
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -293,6 +311,11 @@ export function GroupContractsList() {
                   const entryName = `${contract.entryFamilyNameKanji || ''}${contract.entryFirstNameKanji || ''}`;
                   const displayEntryName = entryName === '' ? '-' : truncateText(entryName, 20);
                   const entryTitle = entryName === '' ? undefined : entryName;
+
+                  // 住所の連結
+                  const address = buildAddress(contract);
+                  const displayAddress = address === null ? '-' : truncateText(address, 30);
+                  const addressTitle = address === null ? undefined : address;
 
                   return (
                     <tr key={`${contract.contractNo}-${index}`} className="hover:bg-gray-50">
@@ -321,6 +344,9 @@ export function GroupContractsList() {
                       </td>
                       <td className="px-4 py-2 text-sm" title={entryTitle}>
                         {displayEntryName}
+                      </td>
+                      <td className="px-4 py-2 text-sm" title={addressTitle}>
+                        {displayAddress}
                       </td>
                     </tr>
                   );

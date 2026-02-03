@@ -25,11 +25,11 @@ SELECT
     , CAST(NULL AS NUMBER(7)) AS contract_gaku
     , CAST(NULL AS NUMBER(7)) AS total_save_num
     , CAST(NULL AS NUMBER(7)) AS total_gaku
-    , CAST(NULL AS CHAR(7)) AS zip_cd
-    , CAST(NULL AS VARCHAR2(4)) AS pref_name
-    , CAST(NULL AS VARCHAR2(12)) AS city_town_name
-    , CAST(NULL AS VARCHAR2(18)) AS oaza_town_name
-    , CAST(NULL AS VARCHAR2(18)) AS aza_chome_name
+    , contract_addr.zip_cd AS zip_cd
+    , contract_addr.pref_name AS pref_name
+    , contract_addr.city_town_name AS city_town_name
+    , contract_addr.oaza_town_name AS oaza_town_name
+    , contract_addr.aza_chome_name AS aza_chome_name
     , contract_search.addr1 AS addr1
     , contract_search.addr2 AS addr2
     , contract_search.tel_no AS tel_no

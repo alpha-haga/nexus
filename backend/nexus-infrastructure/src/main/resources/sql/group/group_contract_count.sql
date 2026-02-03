@@ -21,6 +21,9 @@ LEFT JOIN zgom_staff_all entry_staff
     AND entry_staff.tekiyo_start_ymd <= :businessYmd
     AND entry_staff.tekiyo_end_ymd > :businessYmd
     AND entry_staff.delete_flg = '0'
+LEFT JOIN zgom_addr contract_addr 
+    ON contract_addr.addr_cd = contract_search.addr_cd 
+    AND contract_addr.delete_flg = '0' 
 WHERE
     (:contractReceiptYmdFrom IS NULL OR contract_search.contract_receipt_ymd >= :contractReceiptYmdFrom)
     AND (:contractReceiptYmdTo IS NULL OR contract_search.contract_receipt_ymd <= :contractReceiptYmdTo)
