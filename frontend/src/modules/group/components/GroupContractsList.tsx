@@ -1,5 +1,3 @@
-// frontend/src/modules/group/components/GroupContractsList.tsx（新規作成）
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -14,6 +12,21 @@ import { GroupContractSearchForm } from './GroupContractSearchForm';
 import { RegionSelector } from './RegionSelector';
 
 type SearchState = 'not-started' | 'loading' | 'success' | 'error';
+
+// 桁あふれ処理用のユーティリティ（Wave 0-B）
+const truncateText = (text: string | null | undefined, maxLength: number): string => {
+  // null または undefined の場合のみ '-' を返す
+  if (text === null || text === undefined) return '-';
+  // 空文字 '' はそのまま返す
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength) + '...';
+};
+
+// 日付フォーマット（YYYYMMDD → YYYY/MM/DD）
+const formatDate = (ymd: string | null | undefined): string => {
+  if (!ymd || ymd.length !== 8) return ymd || '-';
+  return `${ymd.substring(0, 4)}/${ymd.substring(4, 6)}/${ymd.substring(6, 8)}`;
+};
 
 export function GroupContractsList() {
   const [region, setRegion] = useState<Region | null>(null);
@@ -261,34 +274,36 @@ export function GroupContractsList() {
                   <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
                     コース名
                   </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                    募集担当者
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {result.content.map((contract, index) => (
                   <tr key={`${contract.contractNo}-${index}`} className="hover:bg-gray-50">
                     <td className="px-4 py-2 text-sm">{contract.companyCd}</td>
-                    <td className="px-4 py-2 text-sm">
-                      {contract.companyShortName || '-'}
+                    <td className="px-4 py-2 text-sm" title={contract.companyShortName || undefined}>
+                      {truncateText(contract.companyShortName, 20)}
                     </td>
                     <td className="px-4 py-2 text-sm">{contract.contractNo}</td>
-                    <td className="px-4 py-2 text-sm">
-                      {contract.familyNameGaiji || ''}
-                      {contract.firstNameGaiji || ''}
-                      {!contract.familyNameGaiji && !contract.firstNameGaiji && '-'}
+                    <td className="px-4 py-2 text-sm" title={`${contract.familyNameGaiji || ''}${contract.firstNameGaiji || ''}`}>
+                      {truncateText(`${contract.familyNameGaiji || ''}${contract.firstNameGaiji || ''}`, 20)}
+                    </td>
+                    <td className="px-4 py-2 text-sm" title={`${contract.familyNameKana || ''}${contract.firstNameKana || ''}`}>
+                      {truncateText(`${contract.familyNameKana || ''}${contract.firstNameKana || ''}`, 20)}
                     </td>
                     <td className="px-4 py-2 text-sm">
-                      {contract.familyNameKana || ''}
-                      {contract.firstNameKana || ''}
-                      {!contract.familyNameKana && !contract.firstNameKana && '-'}
-                    </td>
-                    <td className="px-4 py-2 text-sm">
-                      {contract.contractReceiptYmd || '-'}
+                      {formatDate(contract.contractReceiptYmd)}
                     </td>
                     <td className="px-4 py-2 text-sm">
                       {contract.contractStatus || contract.contractStatusKbn || '-'}
                     </td>
-                    <td className="px-4 py-2 text-sm">
-                      {contract.courseName || contract.courseCd || '-'}
+                    <td className="px-4 py-2 text-sm" title={contract.courseName || contract.courseCd || undefined}>
+                      {truncateText(contract.courseName || contract.courseCd, 20)}
+                    </td>
+                    <td className="px-4 py-2 text-sm" title={`${contract.bosyuFamilyNameKanji || ''}${contract.bosyuFirstNameKanji || ''}`}>
+                      {truncateText(`${contract.bosyuFamilyNameKanji || ''}${contract.bosyuFirstNameKanji || ''}`, 20)}
                     </td>
                   </tr>
                 ))}

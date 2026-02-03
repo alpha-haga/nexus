@@ -8,3 +8,9 @@ LEFT JOIN zgom_course_cd_all course
     AND course.tekiyo_start_ymd <= contract_search.effective_ymd
     AND course.tekiyo_end_ymd > contract_search.effective_ymd
     AND course.delete_flg = '0'
+LEFT JOIN zgom_staff_all bosyu_staff
+    ON bosyu_staff.cmp_cd = contract_search.cmp_cd
+    AND bosyu_staff.staff_cd = contract_search.recruit_resp_bosyu_cd
+    AND bosyu_staff.tekiyo_start_ymd <= TO_CHAR(SYSDATE, 'YYYYMMDD')
+    AND bosyu_staff.tekiyo_end_ymd > TO_CHAR(SYSDATE, 'YYYYMMDD')
+    AND bosyu_staff.delete_flg = '0'

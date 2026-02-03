@@ -44,8 +44,8 @@ SELECT
     , CAST(NULL AS NUMBER(5)) AS up_point
     , CAST(NULL AS CHAR(1)) AS entry_kbn_name
     , contract_search.recruit_resp_bosyu_cd AS recruit_resp_bosyu_cd
-    , CAST(NULL AS VARCHAR2(30)) AS bosyu_family_name_kanji
-    , CAST(NULL AS VARCHAR2(30)) AS bosyu_first_name_kanji
+    , bosyu_staff.family_nm_kanji AS bosyu_family_name_kanji
+    , bosyu_staff.first_nm_kanji AS bosyu_first_name_kanji
     , contract_search.entry_resp_bosyu_cd AS entry_resp_bosyu_cd
     , CAST(NULL AS VARCHAR2(15)) AS entry_family_name_kanji
     , CAST(NULL AS VARCHAR2(15)) AS entry_first_name_kanji

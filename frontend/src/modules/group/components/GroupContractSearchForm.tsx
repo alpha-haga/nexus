@@ -1,5 +1,3 @@
-// frontend/src/modules/group/components/GroupContractSearchForm.tsx（新規作成）
-
 'use client';
 
 import { useState, FormEvent } from 'react';
@@ -21,7 +19,22 @@ export function GroupContractSearchForm({
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!disabled) {
-      onSearch(condition);
+      // 送信前に全項目をtrim（string型の値のみ対象）
+      const trimmedCondition = Object.entries(condition).reduce(
+        (acc, [key, value]) => {
+          if (typeof value === 'string') {
+            const trimmed = value.trim();
+            // trim後が空文字なら undefined、それ以外はtrim後の値
+            acc[key as keyof GroupContractSearchCondition] = trimmed === '' ? undefined : trimmed;
+          } else {
+            // string型以外（boolean/number/undefined/null）はそのまま
+            acc[key as keyof GroupContractSearchCondition] = value;
+          }
+          return acc;
+        },
+        {} as GroupContractSearchCondition
+      );
+      onSearch(trimmedCondition);
     }
   };
 
@@ -81,6 +94,7 @@ export function GroupContractSearchForm({
               setCondition({ ...condition, contractNo: e.target.value || undefined })
             }
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+            maxLength={20}
             disabled={disabled}
           />
         </div>
@@ -97,6 +111,7 @@ export function GroupContractSearchForm({
               setCondition({ ...condition, familyNmKana: e.target.value || undefined })
             }
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+            maxLength={50}
             disabled={disabled}
           />
         </div>
@@ -113,6 +128,7 @@ export function GroupContractSearchForm({
               setCondition({ ...condition, telNo: e.target.value || undefined })
             }
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+            maxLength={20}
             disabled={disabled}
           />
         </div>
@@ -129,6 +145,7 @@ export function GroupContractSearchForm({
               setCondition({ ...condition, bosyuCd: e.target.value || undefined })
             }
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+            maxLength={20}
             disabled={disabled}
           />
         </div>
@@ -145,6 +162,7 @@ export function GroupContractSearchForm({
               setCondition({ ...condition, courseCd: e.target.value || undefined })
             }
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+            maxLength={20}
             disabled={disabled}
           />
         </div>
@@ -161,6 +179,7 @@ export function GroupContractSearchForm({
               setCondition({ ...condition, contractStatusKbn: e.target.value || undefined })
             }
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+            maxLength={10}
             disabled={disabled}
           />
         </div>

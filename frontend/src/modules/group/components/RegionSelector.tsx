@@ -1,5 +1,3 @@
-// frontend/src/modules/group/components/RegionSelector.tsx（新規作成）
-
 'use client';
 
 import type { Region } from '@/types';
