@@ -277,36 +277,54 @@ export function GroupContractsList() {
                   <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
                     募集担当者
                   </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                    加入担当者
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {result.content.map((contract, index) => (
-                  <tr key={`${contract.contractNo}-${index}`} className="hover:bg-gray-50">
-                    <td className="px-4 py-2 text-sm">{contract.companyCd}</td>
-                    <td className="px-4 py-2 text-sm" title={contract.companyShortName || undefined}>
-                      {truncateText(contract.companyShortName, 20)}
-                    </td>
-                    <td className="px-4 py-2 text-sm">{contract.contractNo}</td>
-                    <td className="px-4 py-2 text-sm" title={`${contract.familyNameGaiji || ''}${contract.firstNameGaiji || ''}`}>
-                      {truncateText(`${contract.familyNameGaiji || ''}${contract.firstNameGaiji || ''}`, 20)}
-                    </td>
-                    <td className="px-4 py-2 text-sm" title={`${contract.familyNameKana || ''}${contract.firstNameKana || ''}`}>
-                      {truncateText(`${contract.familyNameKana || ''}${contract.firstNameKana || ''}`, 20)}
-                    </td>
-                    <td className="px-4 py-2 text-sm">
-                      {formatDate(contract.contractReceiptYmd)}
-                    </td>
-                    <td className="px-4 py-2 text-sm">
-                      {contract.contractStatus || contract.contractStatusKbn || '-'}
-                    </td>
-                    <td className="px-4 py-2 text-sm" title={contract.courseName || contract.courseCd || undefined}>
-                      {truncateText(contract.courseName || contract.courseCd, 20)}
-                    </td>
-                    <td className="px-4 py-2 text-sm" title={`${contract.bosyuFamilyNameKanji || ''}${contract.bosyuFirstNameKanji || ''}`}>
-                      {truncateText(`${contract.bosyuFamilyNameKanji || ''}${contract.bosyuFirstNameKanji || ''}`, 20)}
-                    </td>
-                  </tr>
-                ))}
+                {result.content.map((contract, index) => {
+                  // 募集担当者名の結合
+                  const bosyuName = `${contract.bosyuFamilyNameKanji || ''}${contract.bosyuFirstNameKanji || ''}`;
+                  const displayBosyuName = bosyuName === '' ? '-' : truncateText(bosyuName, 20);
+                  const bosyuTitle = bosyuName === '' ? undefined : bosyuName;
+
+                  // 加入担当者名の結合
+                  const entryName = `${contract.entryFamilyNameKanji || ''}${contract.entryFirstNameKanji || ''}`;
+                  const displayEntryName = entryName === '' ? '-' : truncateText(entryName, 20);
+                  const entryTitle = entryName === '' ? undefined : entryName;
+
+                  return (
+                    <tr key={`${contract.contractNo}-${index}`} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 text-sm">{contract.companyCd}</td>
+                      <td className="px-4 py-2 text-sm" title={contract.companyShortName || undefined}>
+                        {truncateText(contract.companyShortName, 20)}
+                      </td>
+                      <td className="px-4 py-2 text-sm">{contract.contractNo}</td>
+                      <td className="px-4 py-2 text-sm" title={`${contract.familyNameGaiji || ''}${contract.firstNameGaiji || ''}`}>
+                        {truncateText(`${contract.familyNameGaiji || ''}${contract.firstNameGaiji || ''}`, 20)}
+                      </td>
+                      <td className="px-4 py-2 text-sm" title={`${contract.familyNameKana || ''}${contract.firstNameKana || ''}`}>
+                        {truncateText(`${contract.familyNameKana || ''}${contract.firstNameKana || ''}`, 20)}
+                      </td>
+                      <td className="px-4 py-2 text-sm">
+                        {formatDate(contract.contractReceiptYmd)}
+                      </td>
+                      <td className="px-4 py-2 text-sm">
+                        {contract.contractStatus || contract.contractStatusKbn || '-'}
+                      </td>
+                      <td className="px-4 py-2 text-sm" title={contract.courseName || contract.courseCd || undefined}>
+                        {truncateText(contract.courseName || contract.courseCd, 20)}
+                      </td>
+                      <td className="px-4 py-2 text-sm" title={bosyuTitle}>
+                        {displayBosyuName}
+                      </td>
+                      <td className="px-4 py-2 text-sm" title={entryTitle}>
+                        {displayEntryName}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

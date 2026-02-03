@@ -9,6 +9,9 @@ import nexus.infrastructure.jdbc.query.*
 import org.springframework.context.annotation.Profile
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
+import java.time.LocalDate
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 /**
  * 法人横断契約一覧 QueryService（JDBC 実装）
@@ -19,6 +22,7 @@ import org.springframework.stereotype.Service
  * - NULL吸収目的の OR を廃止し、動的WHERE化
  * - count/search の FROM/JOIN/WHERE を構造で一致させる
  * - ソートは whitelist で安全に処理
+ * - 業務日付パラメータ化（businessYmd）: SYSDATE 直書きを廃止
  *
  * Bean競合回避:
  * - jdbc プロファイルでのみ有効化（JPA MIN は @Profile("!jdbc")）
@@ -31,6 +35,9 @@ class JdbcGroupContractQueryService(
 ) : GroupContractQueryService {
 
     private val rowMapper = GroupContractRowMapper()
+
+    // 業務日付フォーマッター（YYYYMMDD形式）
+    private val businessYmdFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
 
     // SqlQueryBuilder を構築（シングルトンとして保持）
     private val queryBuilder = SqlQueryBuilder(
@@ -62,6 +69,9 @@ class JdbcGroupContractQueryService(
             limit = size
         )
 
+        // 業務日付を取得（現時点は SYSDATE 相当）
+        val businessYmd = LocalDate.now(ZoneId.of("Asia/Tokyo")).format(businessYmdFormatter)
+
         // COUNT クエリを生成・実行
         val countQuery = queryBuilder.build(
             mode = QueryMode.COUNT,
@@ -70,7 +80,10 @@ class JdbcGroupContractQueryService(
             sortDir = null,
             page = null
         )
-        val total = jdbc.queryForObject(countQuery.sql, countQuery.params, Long::class.java) ?: 0L
+        // businessYmd パラメータを追加
+        val countParams = countQuery.params.toMutableMap()
+        countParams["businessYmd"] = businessYmd
+        val total = jdbc.queryForObject(countQuery.sql, countParams, Long::class.java) ?: 0L
 
         // SELECT クエリを生成・実行
         // 現状はソート固定（将来の動的ソート拡張に備えて sortKey/sortDir は null で固定）
@@ -81,7 +94,10 @@ class JdbcGroupContractQueryService(
             sortDir = null, // 現状はデフォルトソートを使用
             page = pageSpec
         )
-        val content = jdbc.query(searchQuery.sql, searchQuery.params, rowMapper)
+        // businessYmd パラメータを追加
+        val searchParams = searchQuery.params.toMutableMap()
+        searchParams["businessYmd"] = businessYmd
+        val content = jdbc.query(searchQuery.sql, searchParams, rowMapper)
 
         // ページ数計算
         val totalPages = if (total > 0) ((total + size - 1) / size).toInt() else 0

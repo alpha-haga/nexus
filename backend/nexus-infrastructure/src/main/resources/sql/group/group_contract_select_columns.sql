@@ -47,8 +47,8 @@ SELECT
     , bosyu_staff.family_nm_kanji AS bosyu_family_name_kanji
     , bosyu_staff.first_nm_kanji AS bosyu_first_name_kanji
     , contract_search.entry_resp_bosyu_cd AS entry_resp_bosyu_cd
-    , CAST(NULL AS VARCHAR2(15)) AS entry_family_name_kanji
-    , CAST(NULL AS VARCHAR2(15)) AS entry_first_name_kanji
+    , entry_staff.family_nm_kanji AS entry_family_name_kanji
+    , entry_staff.first_nm_kanji AS entry_first_name_kanji
     , CAST(NULL AS CHAR(6)) AS moto_supply_rank_org_cd
     , CAST(NULL AS VARCHAR2(15)) AS moto_supply_rank_org_name
     , CAST(NULL AS CHAR(6)) AS supply_rank_org_cd
