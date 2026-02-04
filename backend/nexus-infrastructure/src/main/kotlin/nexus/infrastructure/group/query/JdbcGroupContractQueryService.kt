@@ -16,10 +16,10 @@ import java.time.format.DateTimeFormatter
 /**
  * 法人横断契約一覧 QueryService（JDBC 実装）
  *
- * P2-5: SqlQueryBuilder による動的WHERE化
+ * P2-5: パフォーマンス改善対応（target/search の2段階SQL構造）
  * - Profile "jdbc" で有効化
- * - SqlQueryBuilder を使用して SQL を動的生成
- * - NULL吸収目的の OR を廃止し、動的WHERE化
+ * - COUNT: target SQL を wrap して生成
+ * - SELECT_PAGED: search SQL を wrap + where + orderBy + offset/fetch
  * - count/search の FROM/JOIN/WHERE を構造で一致させる
  * - ソートは whitelist で安全に処理
  * - 業務日付パラメータ化（businessYmd）: SYSDATE 直書きを廃止
@@ -42,19 +42,19 @@ class JdbcGroupContractQueryService(
     // SqlQueryBuilder を構築（シングルトンとして保持）
     private val queryBuilder = SqlQueryBuilder(
         sqlLoader = sqlLoader,
-        baseSqlPath = "group/group_contract_base.sql",
-        selectColumnsSqlPath = "group/group_contract_select_columns.sql",
+        targetSqlPath = "group/group_contract_target.sql",
+        searchSqlPath = "group/group_contract_search.sql",
         conditionApplier = GroupContractConditionApplier(),
         orderByBuilder = OrderByBuilder(
             allowed = mapOf(
                 // 許可されたソートキー（APIパラメータ名、camelCase）
                 // 既存SQLの列名: contract_receipt_ymd, contract_no
                 // P1-B0では「業務合意待ち」だが、既存SQLを正として採用
-                "contractReceiptYmd" to "contract_search.contract_receipt_ymd",
-                "contractNo" to "contract_search.contract_no"
+                "contractReceiptYmd" to "contract_receipt_ymd",
+                "contractNo" to "contract_no"
             ),
-            defaultOrderBy = "ORDER BY contract_search.contract_receipt_ymd DESC, contract_search.contract_no",
-            stableSecondaryOrderBy = "contract_search.contract_no ASC"
+            defaultOrderBy = "ORDER BY contract_receipt_ymd DESC, contract_no",
+            stableSecondaryOrderBy = "contract_no ASC"
         )
     )
 
@@ -72,7 +72,7 @@ class JdbcGroupContractQueryService(
         // 業務日付を取得（現時点は SYSDATE 相当）
         val businessYmd = LocalDate.now(ZoneId.of("Asia/Tokyo")).format(businessYmdFormatter)
 
-        // COUNT クエリを生成・実行
+        // Step 1: COUNT クエリを生成・実行
         val countQuery = queryBuilder.build(
             mode = QueryMode.COUNT,
             condition = condition,
@@ -85,7 +85,7 @@ class JdbcGroupContractQueryService(
         countParams["businessYmd"] = businessYmd
         val total = jdbc.queryForObject(countQuery.sql, countParams, Long::class.java) ?: 0L
 
-        // SELECT クエリを生成・実行
+        // Step 2: SELECT_PAGED クエリを生成・実行
         // 現状はソート固定（将来の動的ソート拡張に備えて sortKey/sortDir は null で固定）
         val searchQuery = queryBuilder.build(
             mode = QueryMode.SELECT_PAGED,

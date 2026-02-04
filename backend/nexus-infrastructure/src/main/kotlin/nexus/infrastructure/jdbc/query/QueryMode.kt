@@ -6,9 +6,11 @@ package nexus.infrastructure.jdbc.query
  * - COUNT: 件数取得のみ
  * - SELECT_ALL: 全件取得（ページングなし）
  * - SELECT_PAGED: ページング付き取得
+ * - RAW: SQLをそのまま返す（加工禁止）
  */
 enum class QueryMode {
     COUNT,
     SELECT_ALL,
-    SELECT_PAGED
+    SELECT_PAGED,
+    RAW
 }

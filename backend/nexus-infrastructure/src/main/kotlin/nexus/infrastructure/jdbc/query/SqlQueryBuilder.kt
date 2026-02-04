@@ -5,20 +5,24 @@ import nexus.infrastructure.jdbc.SqlLoader
 /**
  * SQL クエリ構築ビルダー
  *
- * base SQL（FROM/JOIN）と WHERE 句を構造で一致させ、
- * count/search の条件不一致事故を防ぐ。
+ * P2-5: target/search の2段階SQL構造に対応
+ * - COUNT: target SQL を wrap して生成
+ * - SELECT_*: search SQL を wrap + where + orderBy + offset/fetch
+ * - RAW: SQL をそのまま返す（加工禁止）
  *
  * @param C 検索条件の型
  * @param sqlLoader SQL ローダー
- * @param baseSqlPath base SQL のパス（FROM/JOIN + alias を含む想定、例: "group/group_contract_base.sql"）
- * @param selectColumnsSqlPath SELECT 列定義 SQL のパス（例: "group/group_contract_select_columns.sql"）
+ * @param targetSqlPath target SQL のパス（COUNT用、例: "group/group_contract_target.sql"）
+ * @param searchSqlPath search SQL のパス（SELECT_*用、例: "group/group_contract_search.sql"）
+ * @param rawSqlPath raw SQL のパス（RAW用、オプショナル）
  * @param conditionApplier 検索条件を WHERE 句に適用する関数
  * @param orderByBuilder ORDER BY 句構築ビルダー
  */
 class SqlQueryBuilder<C>(
     private val sqlLoader: SqlLoader,
-    private val baseSqlPath: String,
-    private val selectColumnsSqlPath: String,
+    private val targetSqlPath: String,
+    private val searchSqlPath: String,
+    private val rawSqlPath: String? = null,
     private val conditionApplier: ConditionApplier<C>,
     private val orderByBuilder: OrderByBuilder
 ) {
@@ -32,6 +36,7 @@ class SqlQueryBuilder<C>(
      * @param page ページネーション仕様（SELECT_PAGED の場合は必須）
      * @return 構築されたクエリ
      * @throws IllegalArgumentException SELECT_PAGED で page が null の場合
+     * @throws IllegalArgumentException RAW で rawSqlPath が null の場合
      */
     fun build(
         mode: QueryMode,
@@ -40,10 +45,6 @@ class SqlQueryBuilder<C>(
         sortDir: String?,
         page: PageSpec?
     ): BuiltQuery {
-        // base SQL と SELECT 列を読み込み
-        val baseSql = sqlLoader.load(baseSqlPath)
-        val selectCols = sqlLoader.load(selectColumnsSqlPath)
-
         // WHERE 句を構築
         val where = WhereBuilder()
         conditionApplier.apply(condition, where)
@@ -52,35 +53,35 @@ class SqlQueryBuilder<C>(
         // パラメータを取得
         val params = where.params().toMutableMap()
 
-        // ORDER BY 句を生成（SELECT_ALL と SELECT_PAGED で使用）
-        // COUNT では不要なので生成しない
-        val orderBy = if (mode != QueryMode.COUNT) {
-            orderByBuilder.build(sortKey, sortDir)
-        } else {
-            null
-        }
-
         // モードに応じて SQL を構築
-        // 注意: baseSql は FROM/JOIN + エイリアスを含む想定のため、subquery wrap は行わない。
-        // これにより ORDER BY が baseSql 内のエイリアス（例: contract_search.xxx）を参照しても壊れない。
-        // count/search の一致は「同一 baseSql + 同一 whereSql を用いる」ことで担保される。
         val sql = when (mode) {
             QueryMode.COUNT -> {
-                // COUNT: SELECT COUNT(1) + base + where（wrap なし）
-                "SELECT COUNT(1)\n$baseSql\n$whereSql"
+                // COUNT: target SQL を wrap して生成（ORDER BY / OFFSET-FETCH は付けない）
+                val targetSql = sqlLoader.load(targetSqlPath)
+                "SELECT COUNT(1) FROM (\n$targetSql\n$whereSql\n) t"
             }
 
             QueryMode.SELECT_ALL -> {
-                // SELECT_ALL: SELECT ... + base + where + ORDER BY（wrap なし）
-                "$selectCols\n$baseSql\n$whereSql\n$orderBy"
+                // SELECT_ALL: search SQL を wrap + where + orderBy
+                val searchSql = sqlLoader.load(searchSqlPath)
+                val orderBy = orderByBuilder.build(sortKey, sortDir)
+                "SELECT * FROM (\n$searchSql\n) s\n$whereSql\n$orderBy"
             }
 
             QueryMode.SELECT_PAGED -> {
-                // SELECT_PAGED: SELECT_ALL + OFFSET ... FETCH ...
+                // SELECT_PAGED: search SQL を wrap + where + orderBy + offset/fetch
                 require(page != null) { "page must be specified for SELECT_PAGED mode" }
+                val searchSql = sqlLoader.load(searchSqlPath)
+                val orderBy = orderByBuilder.build(sortKey, sortDir)
                 params["offset"] = page.offset
                 params["limit"] = page.limit
-                "$selectCols\n$baseSql\n$whereSql\n$orderBy\nOFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY"
+                "SELECT * FROM (\n$searchSql\n) s\n$whereSql\n$orderBy\nOFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY"
+            }
+
+            QueryMode.RAW -> {
+                // RAW: SQL をそのまま返す（where/order/offset 付与禁止）
+                require(rawSqlPath != null) { "rawSqlPath must be specified for RAW mode" }
+                sqlLoader.load(rawSqlPath)
             }
         }
 
