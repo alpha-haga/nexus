@@ -33,10 +33,16 @@ class GroupContractConditionApplier : ConditionApplier<GroupContractSearchCondit
         }
 
         // 電話番号（中間一致）
-        // 旧SQL（group_contract_search.sql, group_contract_count.sql）に合わせて
-        // contract_search.search_tel_no を使用（旧SQLを正とする）
-        where.andIfNotNull("telNo", condition.telNo) { paramName ->
-            "search_tel_no LIKE '%' || :$paramName || '%'"
+        // 電話番号（tel_no）または携帯番号（mobile_no）のいずれかにマッチしたらヒット（OR条件）
+        if (condition.telNo != null) {
+            where.orGroup {
+                // パラメータは1回だけ追加
+                orIfNotNull("telNo", condition.telNo) { paramName ->
+                    "tel_no LIKE '%' || :$paramName || '%'"
+                }
+                // 2つ目の条件は同じパラメータを使用（orRawで追加）
+                orRaw("mobile_no LIKE '%' || :telNo || '%'")
+            }
         }
 
         // 募集責任者コード（完全一致）

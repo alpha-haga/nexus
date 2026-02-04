@@ -23,8 +23,8 @@ FROM
             , contract_search.recruit_resp_bosyu_cd AS recruit_resp_bosyu_cd
             , contract_search.entry_resp_bosyu_cd AS entry_resp_bosyu_cd
             , course.course_nm AS course_name
-            , course.monthly_premium
-            , course.contract_gaku
+            , course.monthly_premium AS monthly_premium
+            , course.contract_gaku AS contract_gaku
             , contract_addr.zip_cd AS zip_cd
             , contract_addr.pref_name AS pref_name
             , contract_addr.city_town_name AS city_town_name

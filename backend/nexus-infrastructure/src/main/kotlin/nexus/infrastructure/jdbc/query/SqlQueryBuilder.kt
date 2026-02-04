@@ -58,7 +58,7 @@ class SqlQueryBuilder<C>(
             QueryMode.COUNT -> {
                 // COUNT: target SQL を wrap して生成（ORDER BY / OFFSET-FETCH は付けない）
                 val targetSql = sqlLoader.load(targetSqlPath)
-                "SELECT COUNT(1) FROM (\n$targetSql\n$whereSql\n) t"
+                "SELECT COUNT(1) FROM (\n$targetSql\n$whereSql\n)"
             }
 
             QueryMode.SELECT_ALL -> {

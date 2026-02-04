@@ -94,6 +94,18 @@ class WhereBuilder {
             }
         }
 
+        /**
+         * 生の SQL 断片を OR 条件として追加
+         *
+         * **注意**: 必要最小限の使用に留める。通常は orIfNotNull を使用すること。
+         * パラメータは既に追加済みの場合に使用する。
+         *
+         * @param sqlFragment SQL 断片（例: "col = :param"）
+         */
+        fun orRaw(sqlFragment: String) {
+            orConditions.add(sqlFragment)
+        }
+
         internal fun build(): List<String> = orConditions.toList()
 
         internal fun params(): Map<String, Any?> = orParams.toMap()
