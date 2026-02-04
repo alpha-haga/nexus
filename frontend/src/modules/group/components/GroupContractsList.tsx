@@ -324,6 +324,12 @@ export function GroupContractsList() {
                   <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
                     積立金額
                   </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                    元請支給ランク組織コード
+                  </th>
+                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                    元請支給ランク組織名
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -397,6 +403,12 @@ export function GroupContractsList() {
                       </td>
                       <td className="px-4 py-2 text-right text-sm">
                         {contract.totalGaku ?? '-'}
+                      </td>
+                      <td className="px-4 py-2 text-sm">
+                        {contract.motoSupplyRankOrgCd ?? '-'}
+                      </td>
+                      <td className="px-4 py-2 text-sm" title={contract.motoSupplyRankOrgName || undefined}>
+                        {truncateText(contract.motoSupplyRankOrgName, 20)}
                       </td>
                     </tr>
                   );
