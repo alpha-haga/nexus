@@ -99,16 +99,35 @@ export function GroupContractSearchForm({
           />
         </div>
 
-        {/* 姓カナ */}
+        {/* 契約者氏名 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            姓（カナ）
+            契約者氏名
           </label>
           <input
             type="text"
-            value={condition.familyNmKana || ''}
+            placeholder="山田 / ヤマダ など"
+            value={condition.contractorName || ''}
             onChange={(e) =>
-              setCondition({ ...condition, familyNmKana: e.target.value || undefined })
+              setCondition({ ...condition, contractorName: e.target.value || undefined })
+            }
+            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+            maxLength={50}
+            disabled={disabled}
+          />
+        </div>
+
+        {/* 担当者氏名 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            担当者氏名
+          </label>
+          <input
+            type="text"
+            placeholder="佐藤 / サトウ など"
+            value={condition.staffName || ''}
+            onChange={(e) =>
+              setCondition({ ...condition, staffName: e.target.value || undefined })
             }
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
             maxLength={50}
@@ -163,6 +182,24 @@ export function GroupContractSearchForm({
             }
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
             maxLength={20}
+            disabled={disabled}
+          />
+        </div>
+
+        {/* コース名 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            コース名
+          </label>
+          <input
+            type="text"
+            placeholder="例）○○コース"
+            value={condition.courseName || ''}
+            onChange={(e) =>
+              setCondition({ ...condition, courseName: e.target.value || undefined })
+            }
+            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+            maxLength={50}
             disabled={disabled}
           />
         </div>

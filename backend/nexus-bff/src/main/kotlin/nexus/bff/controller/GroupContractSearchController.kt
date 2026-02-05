@@ -32,10 +32,12 @@ class GroupContractSearchController(
         @RequestParam(required = false) contractReceiptYmdFrom: String?,
         @RequestParam(required = false) contractReceiptYmdTo: String?,
         @RequestParam(required = false) contractNo: String?,
-        @RequestParam(required = false) familyNmKana: String?,
+        @RequestParam(required = false) contractorName: String?,
         @RequestParam(required = false) telNo: String?,
+        @RequestParam(required = false) staffName: String?,
         @RequestParam(required = false) bosyuCd: String?,
         @RequestParam(required = false) courseCd: String?,
+        @RequestParam(required = false) courseName: String?,
         @RequestParam(required = false) contractStatusKbn: String?,
         @RequestParam(defaultValue = "0") page: Int,
         @RequestParam(defaultValue = "20") size: Int
@@ -50,10 +52,12 @@ class GroupContractSearchController(
             contractReceiptYmdFrom = contractReceiptYmdFrom,
             contractReceiptYmdTo = contractReceiptYmdTo,
             contractNo = contractNo,
-            familyNmKana = familyNmKana,
+            contractorName = contractorName,
             telNo = telNo,
+            staffName = staffName,
             bosyuCd = bosyuCd,
             courseCd = courseCd,
+            courseName = courseName,
             contractStatusKbn = contractStatusKbn
         )
 

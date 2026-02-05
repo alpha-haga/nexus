@@ -202,10 +202,12 @@ export interface GroupContractSearchCondition {
   contractReceiptYmdFrom?: string;
   contractReceiptYmdTo?: string;
   contractNo?: string;
-  familyNmKana?: string;
+  contractorName?: string;
   telNo?: string;
+  staffName?: string;
   bosyuCd?: string;
   courseCd?: string;
+  courseName?: string;
   contractStatusKbn?: string;
 }
 

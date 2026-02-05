@@ -27,9 +27,36 @@ class GroupContractConditionApplier : ConditionApplier<GroupContractSearchCondit
             "contract_no LIKE :$paramName || '%'"
         }
 
-        // 家族名かな（中間一致）
-        where.andIfNotNull("familyNmKana", condition.familyNmKana) { paramName ->
-            "family_name_kana LIKE '%' || :$paramName || '%'"
+        // 契約者氏名（中間一致）
+        // family_name_gaiji, first_name_gaiji, family_name_kana, first_name_kana のいずれかに一致（OR条件）
+        if (condition.contractorName != null) {
+            where.orGroup {
+                orIfNotNull("contractorName", condition.contractorName) { paramName ->
+                    "family_name_gaiji LIKE '%' || :$paramName || '%'"
+                }
+                orRaw("first_name_gaiji LIKE '%' || :contractorName || '%'")
+                orRaw("family_name_kana LIKE '%' || :contractorName || '%'")
+                orRaw("first_name_kana LIKE '%' || :contractorName || '%'")
+            }
+        }
+
+        // 担当者氏名（中間一致）
+        // 募集担当（bosyu_family_name_kanji/bosyu_first_name_kanji/bosyu_family_name_kana/bosyu_first_name_kana）
+        // または登録担当（entry_family_name_kanji/entry_first_name_kanji/entry_family_name_kana/entry_first_name_kana）
+        // のいずれかに一致（OR条件）
+        if (condition.staffName != null) {
+            where.orGroup {
+                orIfNotNull("staffName", condition.staffName) { paramName ->
+                    "bosyu_family_name_kanji LIKE '%' || :$paramName || '%'"
+                }
+                orRaw("bosyu_first_name_kanji LIKE '%' || :staffName || '%'")
+                orRaw("bosyu_family_name_kana LIKE '%' || :staffName || '%'")
+                orRaw("bosyu_first_name_kana LIKE '%' || :staffName || '%'")
+                orRaw("entry_family_name_kanji LIKE '%' || :staffName || '%'")
+                orRaw("entry_first_name_kanji LIKE '%' || :staffName || '%'")
+                orRaw("entry_family_name_kana LIKE '%' || :staffName || '%'")
+                orRaw("entry_first_name_kana LIKE '%' || :staffName || '%'")
+            }
         }
 
         // 電話番号（中間一致）
@@ -53,6 +80,11 @@ class GroupContractConditionApplier : ConditionApplier<GroupContractSearchCondit
         // コースコード（完全一致）
         where.andIfNotNull("courseCd", condition.courseCd) { paramName ->
             "course_cd = :$paramName"
+        }
+        
+        // コース名（中間一致）
+        where.andIfNotNull("courseName", condition.courseName) { paramName ->
+            "course_name LIKE '%' || :$paramName || '%'"
         }
 
         // 契約状態区分（完全一致）

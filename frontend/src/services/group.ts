@@ -33,8 +33,11 @@ export const groupService = {
     if (params.contractNo) {
       queryParams.append('contractNo', params.contractNo);
     }
-    if (params.familyNmKana) {
-      queryParams.append('familyNmKana', params.familyNmKana);
+    if (params.contractorName) {
+      queryParams.append('contractorName', params.contractorName);
+    }
+    if (params.staffName) {
+      queryParams.append('staffName', params.staffName);
     }
     if (params.telNo) {
       queryParams.append('telNo', params.telNo);
@@ -44,6 +47,9 @@ export const groupService = {
     }
     if (params.courseCd) {
       queryParams.append('courseCd', params.courseCd);
+    }
+    if (params.courseName) {
+      queryParams.append('courseName', params.courseName);
     }
     if (params.contractStatusKbn) {
       queryParams.append('contractStatusKbn', params.contractStatusKbn);
