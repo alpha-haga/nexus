@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController
  */
 @Profile("jdbc")
 @RestController
-@RequestMapping("/api/group/companies")
+@RequestMapping("/api/v1/group/companies")
 class GroupCompaniesController(
     private val companyQueryService: CompanyQueryService
 ) {
