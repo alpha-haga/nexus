@@ -25,14 +25,14 @@ P1-B1 は以下を目的として実施した：
 
 ## 3. 実施内容（事実のみ）
 
-### 3.1 Step 1: 法人名（company_short_name）JOIN復活
+### 3.1 Step 1: 法人名（cmp_short_name）JOIN復活
 
 - JOIN先: `zgom_cmp` テーブル
 - JOIN条件: `cmp.cmp_cd = contract_search.cmp_cd AND cmp.delete_flg = '0'`
-- 復活項目: `company_short_name`（`cmp.cmp_short_nm` から取得）
-- SQL修正: `CAST(NULL AS VARCHAR2(20)) AS company_short_name` → `cmp.cmp_short_nm AS company_short_name`
-- DTO確認: 変更不要（既存の `companyShortName: String?` で対応可能）
-- RowMapper確認: 変更不要（既存の `rs.getString("company_short_name")` で対応可能）
+- 復活項目: `cmp_short_name`（`cmp.cmp_short_nm` から取得）
+- SQL修正: `CAST(NULL AS VARCHAR2(20)) AS cmp_short_name` → `cmp.cmp_short_nm AS cmp_short_name`
+- DTO確認: 変更不要（既存の `cmpShortName: String?` で対応可能）
+- RowMapper確認: 変更不要（既存の `rs.getString("cmp_short_name")` で対応可能）
 
 ### 3.2 Step 2: コース名・月額保険料（course_name, monthly_premium）JOIN復活
 
@@ -64,7 +64,7 @@ P1-B1 は以下を目的として実施した：
 
 ### 4.1 JOIN復活項目の取得確認
 
-- `companyShortName`: 正常に取得できていることを確認
+- `cmpShortName`: 正常に取得できていることを確認
 - `courseName`: 正常に取得できていることを確認
 - `monthlyPremium`: 正常に取得できていることを確認（0または正の値）
 
@@ -113,7 +113,7 @@ P1-B1 は以下を目的として実施した：
 
 以下の条件を満たすため、P1-B1（Step 1 & Step 2）は完了と判断できる：
 
-- ✅ P1-B0 の MUST が 200 で返る（`companyShortName`, `courseName`, `monthlyPremium` が取得できている）
+- ✅ P1-B0 の MUST が 200 で返る（`cmpShortName`, `courseName`, `monthlyPremium` が取得できている）
 - ✅ 400/403/404 の境界が明確（`GlobalExceptionHandler` により適切にハンドリング）
 - ✅ 回帰が取れている（既存機能が壊れていないことを確認）
 - ✅ SQL → DTO → Mapper → API の順で実装が完了している
@@ -134,7 +134,7 @@ P1-B1 は以下を目的として実施した：
 - 既存機能の回帰テストが完了している
 - SQL修正内容:
   - `group_contract_search.sql`: `zgom_cmp` と `zgom_course_cd_all` への LEFT JOIN を追加
-  - `company_short_name`, `course_name`, `monthly_premium` が実列から取得可能
+  - `cmp_short_name`, `course_name`, `monthly_premium` が実列から取得可能
 
 ---
 

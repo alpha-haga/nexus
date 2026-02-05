@@ -108,8 +108,8 @@ FROM
     )
 )
 SELECT
-    base.cmp_cd AS company_cd
-    , cmp.cmp_short_nm AS company_short_name
+    base.cmp_cd AS cmp_cd
+    , cmp.cmp_short_nm AS cmp_short_name
     , base.contract_no AS contract_no
     , base.family_no AS family_no
     , base.house_no AS house_no

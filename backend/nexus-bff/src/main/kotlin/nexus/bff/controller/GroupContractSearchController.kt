@@ -35,6 +35,7 @@ class GroupContractSearchController(
         @RequestParam(required = false) contractorName: String?,
         @RequestParam(required = false) telNo: String?,
         @RequestParam(required = false) staffName: String?,
+        @RequestParam(required = false) cmpCds: List<String>?,
         @RequestParam(required = false) bosyuCd: String?,
         @RequestParam(required = false) courseCd: String?,
         @RequestParam(required = false) courseName: String?,
@@ -47,6 +48,9 @@ class GroupContractSearchController(
         if (size <= 0) throw ValidationException("size", "size must be > 0")
         if (size > 100) throw ValidationException("size", "size must be <= 100")
 
+        // cmpCds の衛生処理（空配列/空文字のみの場合は null に正規化）
+        val normalizedCmpCds = cmpCds?.filter { it.isNotBlank() }?.takeIf { it.isNotEmpty() }
+
         // 検索条件を構築（全て nullable、指定されたもののみ WHERE に含める）
         val condition = GroupContractSearchCondition(
             contractReceiptYmdFrom = contractReceiptYmdFrom,
@@ -55,6 +59,7 @@ class GroupContractSearchController(
             contractorName = contractorName,
             telNo = telNo,
             staffName = staffName,
+            cmpCds = normalizedCmpCds,
             bosyuCd = bosyuCd,
             courseCd = courseCd,
             courseName = courseName,
@@ -84,8 +89,8 @@ data class PaginatedGroupContractResponse(
 
 data class GroupContractSearchResponse(
     // 基本情報
-    val companyCd: String,
-    val companyShortName: String?,
+    val cmpCd: String,
+    val cmpShortName: String?,
     val contractNo: String,
     val familyNo: String,
     val houseNo: String?,
@@ -175,8 +180,8 @@ private fun PaginatedResult<GroupContractSearchDto>.toResponse(): PaginatedGroup
 
 private fun GroupContractSearchDto.toResponse(): GroupContractSearchResponse =
     GroupContractSearchResponse(
-        companyCd = companyCd,
-        companyShortName = companyShortName,
+        cmpCd = cmpCd,
+        cmpShortName = cmpShortName,
         contractNo = contractNo,
         familyNo = familyNo,
         houseNo = houseNo,

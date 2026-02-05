@@ -48,8 +48,8 @@
 
 | 表示名 | APIキー | SQL列名 | 型 | null可否 | 現状 | MUST/SHOULD/WON'T | 備考 |
 |--------|---------|---------|-----|----------|------|-------------------|------|
-| 法人コード | companyCd | company_cd | String | 不可 | 取得可能 | MUST | 基本識別情報 |
-| 法人名（略称） | companyShortName | company_short_name | String? | 可 | CAST(NULL) | MUST | JOIN復活候補（Step1） |
+| 法人コード | cmpCd | cmp_cd | String | 不可 | 取得可能 | MUST | 基本識別情報 |
+| 法人名（略称） | cmpShortName | cmp_short_name | String? | 可 | CAST(NULL) | MUST | JOIN復活候補（Step1） |
 | 契約番号 | contractNo | contract_no | String | 不可 | 取得可能 | MUST | 基本識別情報、検索条件 |
 | 家族番号 | familyNo | family_no | String | 不可 | 取得可能 | SHOULD | 基本識別情報 |
 | 世帯番号 | houseNo | house_no | String? | 可 | 取得可能 | SHOULD | 基本識別情報 |
@@ -119,7 +119,7 @@
 既存SQL（`group_contract_search.sql`）に `CAST(NULL AS ...)` として定義されている項目は、JOIN 復活の候補として以下に列挙する。
 
 **候補項目（概念レベル）**:
-- `company_short_name` (VARCHAR2(20)) - 法人名表示
+- `cmp_short_name` (VARCHAR2(20)) - 法人名表示
 - `contract_status_kbn` (CHAR(1)) - 契約状態区分（既存検索条件で使用、現状無効）
 - `dmd_stop_rason_kbn` (CHAR(1)) - 請求停止理由区分
 - `cancel_reason_kbn` (CHAR(1)) - 解約理由区分
@@ -205,7 +205,7 @@
 以下の検索条件は既存実装にはないが、業務要件として追加の可能性がある。
 
 **追加候補（概念レベル）**:
-- 法人コード検索（`companyCd`）
+- 法人コード検索（`cmpCd`）
 - 氏名（漢字）検索（`familyNameGaiji`, `firstNameGaiji`）
 - 氏名（カナ）検索（`familyNameKana`, `firstNameKana`）
 - 住所検索（`addr1`, `addr2`, `zipCd` 等）
@@ -303,7 +303,7 @@
 
 **Step 1（最小・最軽量）**
 - JOIN先: 業務合意待ち（概念レベル: 法人マスタ想定）
-- 復活する項目: `company_short_name`（法人名表示）
+- 復活する項目: `cmp_short_name`（法人名表示）
 - 理由: 基本識別情報として必須度が高い、単一テーブルJOIN想定で複雑度が低い
 
 **Step 2**

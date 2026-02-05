@@ -16,10 +16,10 @@ class GroupContractRowMapper : RowMapper<GroupContractSearchDto> {
     override fun mapRow(rs: ResultSet, rowNum: Int): GroupContractSearchDto =
         GroupContractSearchDto(
             // 基本情報
-            companyCd = requireNotNull(rs.getString("company_cd")) {
-                "company_cd is null (row=$rowNum)"
+            cmpCd = requireNotNull(rs.getString("cmp_cd")) {
+                "cmp_cd is null (row=$rowNum)"
             },
-            companyShortName = rs.getString("company_short_name"),
+            cmpShortName = rs.getString("cmp_short_name"),
             contractNo = requireNotNull(rs.getString("contract_no")) {
                 "contract_no is null (row=$rowNum)"
             },

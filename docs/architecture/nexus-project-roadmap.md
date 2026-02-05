@@ -336,7 +336,7 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 - 各段階で回帰テストを実施
 
 **実施内容**:
-- Step 1: `company_short_name`（法人名）のJOIN復活（`zgom_cmp` テーブル）
+- Step 1: `cmp_short_name`（法人名）のJOIN復活（`zgom_cmp` テーブル）
 - Step 2: `course_name`, `monthly_premium`（コース名・月額保険料）のJOIN復活（`zgom_course_cd_all` テーブル）
 - `GlobalExceptionHandler` 追加（`nexus-bff` モジュール）
 

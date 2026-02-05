@@ -12,6 +12,12 @@ import nexus.infrastructure.jdbc.query.WhereBuilder
  */
 class GroupContractConditionApplier : ConditionApplier<GroupContractSearchCondition> {
     override fun apply(condition: GroupContractSearchCondition, where: WhereBuilder) {
+        // 法人コード（IN条件）
+        // cmpCds が null または空の場合は条件を付けない（全法人扱い）
+        where.andIfNotNull("cmpCds", condition.cmpCds?.takeIf { it.isNotEmpty() }) { paramName ->
+            "cmp_cd IN (:$paramName)"
+        }
+
         // 契約受付年月日範囲（開始）
         where.andIfNotNull("contractReceiptYmdFrom", condition.contractReceiptYmdFrom) { paramName ->
             "contract_receipt_ymd >= :$paramName"

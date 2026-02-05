@@ -49,6 +49,16 @@ export interface PaginatedResponse<T> {
 export type Region = 'INTEGRATION' | 'SAITAMA' | 'FUKUSHIMA' | 'TOCHIGI' | null;
 
 // ============================================
+// Company Types
+// ============================================
+
+export interface Company {
+  cmpCd: string;
+  cmpShortNm: string;
+  regionCd?: string | null;
+}
+
+// ============================================
 // Person Types
 // ============================================
 
@@ -205,6 +215,7 @@ export interface GroupContractSearchCondition {
   contractorName?: string;
   telNo?: string;
   staffName?: string;
+  cmpCds?: string[];
   bosyuCd?: string;
   courseCd?: string;
   courseName?: string;
@@ -213,8 +224,8 @@ export interface GroupContractSearchCondition {
 
 export interface GroupContractSearchResponse {
   // 基本情報
-  companyCd: string;
-  companyShortName: string | null;
+  cmpCd: string;
+  cmpShortName: string | null;
   contractNo: string;
   familyNo: string;
   houseNo: string | null;

@@ -16,7 +16,7 @@
 
 **P2-4 で成立した機能は成立済み（再実装禁止）**:
 - P1-B0 最低限の一覧表示項目は P2-4 で実装済み
-- P1-B1 で復活した JOIN（`company_short_name`, `course_name`, `monthly_premium`）は維持
+- P1-B1 で復活した JOIN（`cmp_short_name`, `course_name`, `monthly_premium`）は維持
 - 認証/認可/権限制御/表示制御は P2-3 で成立済み
 
 **設計憲法の再確認**:

@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
-import type { GroupContractSearchCondition } from '@/types';
+import { useState, useEffect, FormEvent } from 'react';
+import { groupService } from '@/services/group';
+import type { GroupContractSearchCondition, Company } from '@/types';
+import { CompanySelector } from './CompanySelector';
 
 interface GroupContractSearchFormProps {
   onSearch: (condition: GroupContractSearchCondition) => void;
@@ -9,43 +11,120 @@ interface GroupContractSearchFormProps {
   disabled?: boolean;
 }
 
+/**
+ * trim 対象は string フィールドのみ。
+ * この検索条件では「配列は cmpCds だけ」なので、そこだけ除外する。
+ */
+type StringConditionKeys = Exclude<keyof GroupContractSearchCondition, 'cmpCds'>;
+
+const TRIM_KEYS: readonly StringConditionKeys[] = [
+  'contractReceiptYmdFrom',
+  'contractReceiptYmdTo',
+  'contractNo',
+  'contractorName',
+  'staffName',
+  'telNo',
+  'bosyuCd',
+  'courseCd',
+  'courseName',
+  'contractStatusKbn',
+] as const;
+
+const trimStringField = (obj: GroupContractSearchCondition, key: StringConditionKeys) => {
+  const v = obj[key];
+  if (typeof v === 'string') {
+    const t = v.trim();
+    obj[key] = t === '' ? undefined : t;
+  }
+};
+
 export function GroupContractSearchForm({
   onSearch,
   loading = false,
   disabled = false,
 }: GroupContractSearchFormProps) {
   const [condition, setCondition] = useState<GroupContractSearchCondition>({});
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [companiesLoading, setCompaniesLoading] = useState(false);
+  const [companiesError, setCompaniesError] = useState<string | null>(null);
+  const [selectedCmpCds, setSelectedCmpCds] = useState<Set<string> | null>(null);
+
+  // 法人一覧を取得
+  useEffect(() => {
+    setCompaniesLoading(true);
+    setCompaniesError(null);
+    groupService
+      .getCompanies()
+      .then((data) => {
+        setCompanies(data);
+        setCompaniesLoading(false);
+      })
+      .catch((err: unknown) => {
+        let errorMessage = '法人一覧の取得に失敗しました';
+      
+        if (err && typeof err === 'object') {
+          // ApiError 等、Error を継承していないが message を持つケース
+          if ('message' in err && typeof (err as any).message === 'string') {
+            errorMessage = (err as any).message;
+          } else if (err instanceof Error) {
+            errorMessage = err.message;
+          }
+        }
+      
+        setCompaniesError(errorMessage);
+        setCompaniesLoading(false);
+      });
+  }, []);
+
+  // selectedCmpCds変更時にconditionを更新
+  useEffect(() => {
+    setCondition((prev) => ({
+      ...prev,
+      cmpCds: selectedCmpCds === null ? undefined : Array.from(selectedCmpCds),
+    }));
+  }, [selectedCmpCds]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!disabled) {
-      // 送信前に全項目をtrim（string型の値のみ対象）
-      const trimmedCondition = Object.entries(condition).reduce(
-        (acc, [key, value]) => {
-          if (typeof value === 'string') {
-            const trimmed = value.trim();
-            // trim後が空文字なら undefined、それ以外はtrim後の値
-            acc[key as keyof GroupContractSearchCondition] = trimmed === '' ? undefined : trimmed;
-          } else {
-            // string型以外（boolean/number/undefined/null）はそのまま
-            acc[key as keyof GroupContractSearchCondition] = value;
-          }
-          return acc;
-        },
-        {} as GroupContractSearchCondition
-      );
-      onSearch(trimmedCondition);
+    if (disabled) return;
+
+    const trimmedCondition: GroupContractSearchCondition = { ...condition };
+
+    // string フィールドのみ trim（cmpCds は対象外）
+    for (const key of TRIM_KEYS) {
+      trimStringField(trimmedCondition, key);
     }
+
+    // cmpCds は配列なので trim しない
+    // 空配列を送らない方針なら、ここで undefined に正規化
+    if (Array.isArray(trimmedCondition.cmpCds) && trimmedCondition.cmpCds.length === 0) {
+      trimmedCondition.cmpCds = undefined;
+    }
+
+    onSearch(trimmedCondition);
   };
 
   const handleReset = () => {
     setCondition({});
+    setSelectedCmpCds(null);
     // Reset は検索を実行しない（初期検索禁止・明示的検索のみ）
   };
 
   return (
     <form onSubmit={handleSubmit} className="card p-4 space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* 法人 */}
+        <div>
+          <CompanySelector
+            companies={companies}
+            selectedCmpCds={selectedCmpCds}
+            onChange={setSelectedCmpCds}
+            loading={companiesLoading}
+            error={companiesError}
+            disabled={disabled}
+          />
+        </div>
+
         {/* 契約受付日（開始） */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -90,9 +169,7 @@ export function GroupContractSearchForm({
           <input
             type="text"
             value={condition.contractNo || ''}
-            onChange={(e) =>
-              setCondition({ ...condition, contractNo: e.target.value || undefined })
-            }
+            onChange={(e) => setCondition({ ...condition, contractNo: e.target.value || undefined })}
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
             maxLength={20}
             disabled={disabled}
@@ -126,9 +203,7 @@ export function GroupContractSearchForm({
             type="text"
             placeholder="佐藤 / サトウ など"
             value={condition.staffName || ''}
-            onChange={(e) =>
-              setCondition({ ...condition, staffName: e.target.value || undefined })
-            }
+            onChange={(e) => setCondition({ ...condition, staffName: e.target.value || undefined })}
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
             maxLength={50}
             disabled={disabled}
@@ -143,9 +218,7 @@ export function GroupContractSearchForm({
           <input
             type="text"
             value={condition.telNo || ''}
-            onChange={(e) =>
-              setCondition({ ...condition, telNo: e.target.value || undefined })
-            }
+            onChange={(e) => setCondition({ ...condition, telNo: e.target.value || undefined })}
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
             maxLength={20}
             disabled={disabled}
@@ -160,9 +233,7 @@ export function GroupContractSearchForm({
           <input
             type="text"
             value={condition.bosyuCd || ''}
-            onChange={(e) =>
-              setCondition({ ...condition, bosyuCd: e.target.value || undefined })
-            }
+            onChange={(e) => setCondition({ ...condition, bosyuCd: e.target.value || undefined })}
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
             maxLength={20}
             disabled={disabled}
@@ -177,9 +248,7 @@ export function GroupContractSearchForm({
           <input
             type="text"
             value={condition.courseCd || ''}
-            onChange={(e) =>
-              setCondition({ ...condition, courseCd: e.target.value || undefined })
-            }
+            onChange={(e) => setCondition({ ...condition, courseCd: e.target.value || undefined })}
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
             maxLength={20}
             disabled={disabled}
@@ -195,9 +264,7 @@ export function GroupContractSearchForm({
             type="text"
             placeholder="例）○○コース"
             value={condition.courseName || ''}
-            onChange={(e) =>
-              setCondition({ ...condition, courseName: e.target.value || undefined })
-            }
+            onChange={(e) => setCondition({ ...condition, courseName: e.target.value || undefined })}
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
             maxLength={50}
             disabled={disabled}

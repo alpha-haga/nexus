@@ -2,6 +2,7 @@
 
 import { apiClient } from './api';
 import type {
+  Company,
   GroupContractSearchCondition,
   PaginatedGroupContractResponse,
   Region,
@@ -14,6 +15,18 @@ export interface SearchGroupContractsParams extends GroupContractSearchCondition
 }
 
 export const groupService = {
+  /**
+   * 法人マスタ一覧取得
+   * Backend: GET /api/group/companies
+   * 統合DBのため Region は INTEGRATION を指定
+   */
+  async getCompanies(): Promise<Company[]> {
+    return apiClient.get<Company[]>(
+      '/group/companies',
+      'INTEGRATION'
+    );
+  },
+
   /**
    * 法人横断契約検索
    * Backend: GET /api/v1/group/contracts/search
@@ -38,6 +51,12 @@ export const groupService = {
     }
     if (params.staffName) {
       queryParams.append('staffName', params.staffName);
+    }
+    if (params.cmpCds && params.cmpCds.length > 0) {
+      // 配列を複数のクエリパラメータとして追加
+      params.cmpCds.forEach((cd) => {
+        queryParams.append('cmpCds', cd);
+      });
     }
     if (params.telNo) {
       queryParams.append('telNo', params.telNo);

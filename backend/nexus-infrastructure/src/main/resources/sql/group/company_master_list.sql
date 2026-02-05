@@ -1,8 +1,8 @@
 SELECT
-    cmp.cmp_cd
-    , cmp.cmp_nm
-    , cmp.cmp_short_nm
-    , cmp.region_cd 
+    cmp.cmp_cd as cmp_cd
+    , cmp.cmp_nm as cmp_nm
+    , cmp.cmp_short_nm as cmp_short_nm
+    , cmp.region_cd as region_cd
 FROM
     zgom_cmp cmp 
 WHERE

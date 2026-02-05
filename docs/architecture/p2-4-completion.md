@@ -47,7 +47,7 @@ P2-4 の Done 条件（[p2-4-search-condition-expansion-roadmap.md](./p2-4-searc
 
 - [x] 表示項目・空値表現・桁あふれが固定されている
   - **根拠**: 
-    - 表示項目: P1-B0 の MUST 項目（companyCd, companyShortName, contractNo, familyNameGaiji, firstNameGaiji, familyNameKana, firstNameKana, contractReceiptYmd, contractStatus, courseName）が表示されている
+    - 表示項目: P1-B0 の MUST 項目（cmpCd, cmpShortName, contractNo, familyNameGaiji, firstNameGaiji, familyNameKana, firstNameKana, contractReceiptYmd, contractStatus, courseName）が表示されている
     - 空値表現: `|| '-'` で実装済み
     - 桁あふれ: 未実装（P2-5 で改善予定）
   - **実装箇所**: `frontend/src/modules/group/components/GroupContractsList.tsx`
@@ -145,7 +145,7 @@ P2-4 の Done 条件（[p2-4-search-condition-expansion-roadmap.md](./p2-4-searc
   - **検証方法**: 検索・ページネーション・ソートが正しく動作することを確認
 
 - [x] P1-B1/B2 で実装した JOIN が壊れていない
-  - **検証方法**: JOIN で取得した項目（companyShortName, courseName 等）が正しく表示されることを確認
+  - **検証方法**: JOIN で取得した項目（cmpShortName, courseName 等）が正しく表示されることを確認
 
 ### 3.3 設計憲法準拠確認
 

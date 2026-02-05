@@ -12,8 +12,8 @@ import java.time.LocalDate
  */
 data class GroupContractSearchDto(
     // 基本情報
-    val companyCd: String,                    // company_cd
-    val companyShortName: String?,            // company_short_name
+    val cmpCd: String,                        // cmp_cd
+    val cmpShortName: String?,                // cmp_short_name
     val contractNo: String,                   // contract_no
     val familyNo: String,                     // family_no
     val houseNo: String?,                     // house_no

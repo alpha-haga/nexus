@@ -1,7 +1,5 @@
 package nexus.group.query
 
-import java.time.LocalDate
-
 /**
  * 法人横断契約検索条件
  *
@@ -11,6 +9,9 @@ import java.time.LocalDate
  * 命名ルール: SQL bind parameter に合わせて lowerCamelCase
  */
 data class GroupContractSearchCondition(
+    // 法人コード（IN条件、複数指定可能）
+    val cmpCds: List<String>? = null,
+    
     // 契約受付年月日範囲
     val contractReceiptYmdFrom: String? = null,   // YYYYMMDD形式、null で条件除外
     val contractReceiptYmdTo: String? = null,     // YYYYMMDD形式、null で条件除外

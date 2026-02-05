@@ -46,8 +46,8 @@ P1-B0 最低限を土台として、実務に合わせた一覧表示項目を�
 
 | 表示名 | APIキー | SQL列名 | 型 | null可否 | データ定義（意味/単位/例） | P1-B0分類 | P2-5分類 | データソース | 表示形式 | 備考 |
 |--------|---------|---------|-----|----------|---------------------------|-----------|----------|--------------|----------|------|
-| 法人コード | companyCd | company_cd | String | 不可 | 法人識別コード（例: "001"） | MUST | MUST（P2-4完了） | 現状SQLで取得可 | 文字列そのまま | 基本識別情報 |
-| 法人名（略称） | companyShortName | company_short_name | String? | 可 | 法人名の略称（例: "ムサシノ"） | MUST | MUST（P2-4完了） | JOIN必要（zgom_cmp） | 文字列そのまま | P1-B1でJOIN復活済み |
+| 法人コード | cmpCd | cmp_cd | String | 不可 | 法人識別コード（例: "001"） | MUST | MUST（P2-4完了） | 現状SQLで取得可 | 文字列そのまま | 基本識別情報 |
+| 法人名（略称） | cmpShortName | cmp_short_name | String? | 可 | 法人名の略称（例: "ムサシノ"） | MUST | MUST（P2-4完了） | JOIN必要（zgom_cmp） | 文字列そのまま | P1-B1でJOIN復活済み |
 | 契約番号 | contractNo | contract_no | String | 不可 | 契約番号（例: "12345678"） | MUST | MUST（P2-4完了） | 現状SQLで取得可 | 文字列そのまま | 基本識別情報、検索条件 |
 | 家族番号 | familyNo | family_no | String | 不可 | 家族番号（例: "12345"） | SHOULD | SHOULD | 現状SQLで取得可 | 文字列そのまま | 基本識別情報 |
 | 世帯番号 | houseNo | house_no | String? | 可 | 世帯番号（例: "01"） | SHOULD | SHOULD | 現状SQLで取得可 | 文字列そのまま | 基本識別情報 |

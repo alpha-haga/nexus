@@ -351,9 +351,9 @@ export function GroupContractsList() {
 
                   return (
                     <tr key={`${contract.contractNo}-${index}`} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 text-sm">{contract.companyCd}</td>
-                      <td className="px-4 py-2 text-sm" title={contract.companyShortName || undefined}>
-                        {truncateText(contract.companyShortName, 20)}
+                      <td className="px-4 py-2 text-sm">{contract.cmpCd}</td>
+                      <td className="px-4 py-2 text-sm" title={contract.cmpShortName || undefined}>
+                        {truncateText(contract.cmpShortName, 20)}
                       </td>
                       <td className="px-4 py-2 text-sm">{contract.contractNo}</td>
                       <td className="px-4 py-2 text-sm" title={`${contract.familyNameGaiji || ''}${contract.firstNameGaiji || ''}`}>

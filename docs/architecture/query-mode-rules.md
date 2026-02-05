@@ -106,7 +106,7 @@ SELECT * FROM (
         -- 表示専用JOINすべて含む
     )
     SELECT
-        base.cmp_cd AS company_cd
+        base.cmp_cd AS cmp_cd
         , base.contract_no AS contract_no
         , base.contract_receipt_ymd AS contract_receipt_ymd
         , base.family_name_kana AS family_name_kana
