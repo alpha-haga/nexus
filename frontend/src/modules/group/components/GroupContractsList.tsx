@@ -25,8 +25,20 @@ const truncateText = (text: string | null | undefined, maxLength: number): strin
 
 // 日付フォーマット（YYYYMMDD → YYYY/MM/DD）
 const formatDate = (ymd: string | null | undefined): string => {
-  if (!ymd || ymd.length !== 8) return ymd || '-';
+  if (!ymd || ymd.length !== 8) return '-';
   return `${ymd.substring(0, 4)}/${ymd.substring(4, 6)}/${ymd.substring(6, 8)}`;
+};
+
+// 金額フォーマット（カンマ区切り、単位: 円）
+const formatAmount = (amount: number | null | undefined): string => {
+  if (amount === null || amount === undefined) return '-';
+  return `${Intl.NumberFormat('ja-JP').format(amount)}円`;
+};
+
+// 数値フォーマット（回数・口数、null は '-'）
+const formatNumber = (num: number | null | undefined): string => {
+  if (num === null || num === undefined) return '-';
+  return num.toString();
 };
 
 // 住所連結用ユーティリティ
@@ -369,7 +381,7 @@ export function GroupContractsList() {
                         {formatDate(contract.birthday)}
                       </td>
                       <td className="px-4 py-2 text-sm">
-                        {contract.contractStatus || contract.contractStatusKbn || '-'}
+                        {contract.contractStatus ?? '-'}
                       </td>
                       <td className="px-4 py-2 text-sm" title={contract.courseName || contract.courseCd || undefined}>
                         {truncateText(contract.courseName || contract.courseCd, 20)}
@@ -390,19 +402,19 @@ export function GroupContractsList() {
                         {contract.mobileNo ?? '-'}
                       </td>
                       <td className="px-4 py-2 text-right text-sm">
-                        {contract.shareNum ?? '-'}
+                        {formatNumber(contract.shareNum)}
                       </td>
                       <td className="px-4 py-2 text-right text-sm">
-                        {contract.monthlyPremium ?? '-'}
+                        {formatAmount(contract.monthlyPremium)}
                       </td>
                       <td className="px-4 py-2 text-right text-sm">
-                        {contract.contractGaku ?? '-'}
+                        {formatAmount(contract.contractGaku)}
                       </td>
                       <td className="px-4 py-2 text-right text-sm">
-                        {contract.totalSaveNum ?? '-'}
+                        {formatNumber(contract.totalSaveNum)}
                       </td>
                       <td className="px-4 py-2 text-right text-sm">
-                        {contract.totalGaku ?? '-'}
+                        {formatAmount(contract.totalGaku)}
                       </td>
                       <td className="px-4 py-2 text-sm">
                         {contract.motoSupplyRankOrgCd ?? '-'}
