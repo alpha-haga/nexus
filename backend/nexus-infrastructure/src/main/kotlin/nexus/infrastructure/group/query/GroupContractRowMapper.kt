@@ -11,6 +11,7 @@ import java.sql.ResultSet
  * - 命名ルール: SQL alias は lower_snake_case
  * - 変換は RowMapper で明示的に行う（自動マッピング禁止）
  * - 取得できない項目（CAST(NULL AS ...)）は nullable として扱う
+ * - フィールド順: SQL SELECT 順に準拠
  */
 class GroupContractRowMapper : RowMapper<GroupContractSearchDto> {
     override fun mapRow(rs: ResultSet, rowNum: Int): GroupContractSearchDto =
@@ -34,12 +35,23 @@ class GroupContractRowMapper : RowMapper<GroupContractSearchDto> {
             contractReceiptYmd = rs.getString("contract_receipt_ymd"),
             birthday = rs.getString("birthday"),
             
-            // 契約状態
+            // 契約状態（SQL SELECT 順）
             contractStatusKbn = rs.getString("contract_status_kbn"),
+            contractStatusName = rs.getString("contract_status_name"),
             dmdStopRasonKbn = rs.getString("dmd_stop_rason_kbn"),
+            dmdStopRasonName = rs.getString("dmd_stop_rason_name"),
             cancelReasonKbn = rs.getString("cancel_reason_kbn"),
-            cancelStatusKbn = rs.getString("cancel_status_kbn"),
+            cancelReasonName = rs.getString("cancel_reason_name"),
             zashuReasonKbn = rs.getString("zashu_reason_kbn"),
+            zashuReasonName = rs.getString("zashu_reason_name"),
+            anspApproveKbn = rs.getString("ansp_approve_kbn"),
+            anspApproveName = rs.getString("ansp_approve_name"),
+            torikeshiReasonKbn = rs.getString("torikeshi_reason_kbn"),
+            torikeshiReasonName = rs.getString("torikeshi_reason_name"),
+            ecApproveKbn = rs.getString("ec_approve_kbn"),
+            ecApproveName = rs.getString("ec_approve_name"),
+            cancelStatusKbn = rs.getString("cancel_status_kbn"),
+            cancelStatusName = rs.getString("cancel_status_name"),
             contractStatus = rs.getString("contract_status"),
             taskName = rs.getString("task_name"),
             statusUpdateYmd = rs.getString("status_update_ymd"),

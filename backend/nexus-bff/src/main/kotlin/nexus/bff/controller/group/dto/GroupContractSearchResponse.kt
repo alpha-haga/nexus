@@ -4,6 +4,7 @@ package nexus.bff.controller.group.dto
  * 法人横断契約検索API レスポンスDTO（個別契約）
  *
  * frontend がそのまま使える名前で定義
+ * フィールド順: SQL SELECT 順に準拠
  */
 data class GroupContractSearchResponse(
     // 基本情報
@@ -19,12 +20,23 @@ data class GroupContractSearchResponse(
     val contractReceiptYmd: String?,
     val birthday: String?,
     
-    // 契約状態
+    // 契約状態（SQL SELECT 順）
     val contractStatusKbn: String?,
+    val contractStatusName: String?,
     val dmdStopRasonKbn: String?,
+    val dmdStopRasonName: String?,
     val cancelReasonKbn: String?,
-    val cancelStatusKbn: String?,
+    val cancelReasonName: String?,
     val zashuReasonKbn: String?,
+    val zashuReasonName: String?,
+    val anspApproveKbn: String?,
+    val anspApproveName: String?,
+    val torikeshiReasonKbn: String?,
+    val torikeshiReasonName: String?,
+    val ecApproveKbn: String?,
+    val ecApproveName: String?,
+    val cancelStatusKbn: String?,
+    val cancelStatusName: String?,
     val contractStatus: String?,
     val taskName: String?,
     val statusUpdateYmd: String?,

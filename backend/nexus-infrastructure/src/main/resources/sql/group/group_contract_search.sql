@@ -119,25 +119,36 @@ SELECT
     , base.first_name_kana AS first_name_kana
     , base.contract_receipt_ymd AS contract_receipt_ymd
     , base.birthday AS birthday
-    , CAST(NULL AS CHAR(1)) AS contract_status_kbn
-    , CAST(NULL AS CHAR(1)) AS dmd_stop_rason_kbn
-    , CAST(NULL AS CHAR(1)) AS cancel_reason_kbn
-    , CAST(NULL AS CHAR(1)) AS cancel_status_kbn
-    , CAST(NULL AS CHAR(1)) AS zashu_reason_kbn
-    , CAST(NULL AS VARCHAR2(1)) AS contract_status
+    , status_rec.contract_status_kbn AS contract_status_kbn
+    , cd0018.cd_nm1_kanji AS contract_status_name
+    , status_rec.dmd_stop_reason_kbn AS dmd_stop_rason_kbn
+    , cd0019.cd_nm1_kanji AS dmd_stop_rason_name
+    , status_rec.cancel_reason_kbn AS cancel_reason_kbn
+    , cd0020.cd_nm1_kanji AS cancel_reason_name
+    , status_rec.zashu_reason_kbn AS zashu_reason_kbn
+    , cd0021.cd_nm1_kanji AS zashu_reason_name
+    , status_rec.ansp_approve_kbn AS ansp_approve_kbn
+    , cd0150.cd_nm1_kanji AS ansp_approve_name
+    , status_rec.torikeshi_reason_kbn AS torikeshi_reason_kbn
+    , cd0151.cd_nm1_kanji AS torikeshi_reason_name
+    , ec_entry_info.approve_kbn AS ec_approve_kbn
+    , cd0168.cd_nm1_kanji AS ec_approve_name
+    , status_rec.cancel_status_kbn AS cancel_status_kbn
+    , cd0152.cd_nm1_kanji AS cancel_status_name
+    , CAST(NULL AS VARCHAR2(10)) AS contract_status
     , CAST(NULL AS VARCHAR2(30)) AS task_name
-    , CAST(NULL AS CHAR(8)) AS status_update_ymd
+    , status_rec.status_update_ymd AS status_update_ymd
     , base.course_cd AS course_cd
     , base.course_name AS course_name
-    , NVL(contract_info.share_num, 0) AS share_num
-    , NVL(base.monthly_premium, 0) AS monthly_premium
-    , base.contract_gaku * contract_info.share_num AS contract_gaku
+    , contract_info.share_num AS share_num
+    , base.monthly_premium AS monthly_premium
+    , NVL(base.contract_gaku, 0) * NVL(contract_info.share_num, 0) AS contract_gaku
     , trunc( 
         ( 
             NVL(status_rec.total_receipt_gaku, 0) + NVL(status_rec.dmd_discount_gaku, 0) - NVL(status_rec.total_refund_gaku, 0)
              - NVL(status_rec.total_ope_usage_gaku, 0)
         ) / ( 
-            NVL(base.monthly_premium, 0) * (NVL(contract_info.share_num, 0))
+            NULLIF(base.monthly_premium * contract_info.share_num, 0)
         )
     ) AS total_save_num
     , NVL(status_rec.total_receipt_gaku, 0) + NVL(status_rec.dmd_discount_gaku, 0) - NVL(status_rec.total_refund_gaku, 0)
@@ -195,6 +206,51 @@ INNER JOIN zgot_status_rec_all status_rec
     AND base.contract_no = status_rec.contract_no 
     AND status_rec.last_flg = '1' 
     AND status_rec.delete_flg = '0' 
+LEFT JOIN zgot_ec_entry_info_all ec_entry_info
+    ON base.cmp_cd = ec_entry_info.cmp_cd 
+    AND base.contract_no = ec_entry_info.contract_no 
+    AND ec_entry_info.last_flg = '1' 
+    AND ec_entry_info.delete_flg = '0' 
 LEFT JOIN zgom_cmp cmp
     ON cmp.cmp_cd = base.cmp_cd
     AND cmp.delete_flg = '0'
+LEFT JOIN zgom_general_cd_all cd0018 
+    ON status_rec.cmp_cd = cd0018.cmp_cd 
+    AND status_rec.contract_status_kbn = cd0018.general_cd_level1 
+    AND cd0018.general_cd_id = '0018' 
+    AND cd0018.delete_flg = '0' 
+LEFT JOIN zgom_general_cd_all cd0019 
+    ON status_rec.cmp_cd = cd0019.cmp_cd 
+    AND status_rec.dmd_stop_reason_kbn = cd0019.general_cd_level1 
+    AND cd0019.general_cd_id = '0019' 
+    AND cd0019.delete_flg = '0'
+LEFT JOIN zgom_general_cd_all cd0020 
+    ON status_rec.cmp_cd = cd0020.cmp_cd 
+    AND status_rec.cancel_reason_kbn = cd0020.general_cd_level1 
+    AND cd0020.general_cd_id = '0020' 
+    AND cd0020.delete_flg = '0'
+LEFT JOIN zgom_general_cd_all cd0021 
+    ON status_rec.cmp_cd = cd0021.cmp_cd 
+    AND status_rec.zashu_reason_kbn = cd0021.general_cd_level1 
+    AND cd0021.general_cd_id = '0021' 
+    AND cd0021.delete_flg = '0'
+LEFT JOIN zgom_general_cd_all cd0150 
+    ON status_rec.cmp_cd = cd0150.cmp_cd 
+    AND status_rec.ansp_approve_kbn = cd0150.general_cd_level1 
+    AND cd0150.general_cd_id = '0150' 
+    AND cd0150.delete_flg = '0'
+LEFT JOIN zgom_general_cd_all cd0151 
+    ON status_rec.cmp_cd = cd0151.cmp_cd 
+    AND status_rec.torikeshi_reason_kbn = cd0151.general_cd_level1 
+    AND cd0151.general_cd_id = '0151' 
+    AND cd0151.delete_flg = '0'
+LEFT JOIN zgom_general_cd_all cd0152 
+    ON status_rec.cmp_cd = cd0152.cmp_cd 
+    AND status_rec.cancel_status_kbn = cd0152.general_cd_level1 
+    AND cd0152.general_cd_id = '0152' 
+    AND cd0152.delete_flg = '0'
+LEFT JOIN zgom_general_cd_all cd0168 
+    ON ec_entry_info.cmp_cd = cd0168.cmp_cd 
+    AND ec_entry_info.approve_kbn = cd0168.general_cd_level1 
+    AND cd0168.general_cd_id = '0168' 
+    AND cd0168.delete_flg = '0'
