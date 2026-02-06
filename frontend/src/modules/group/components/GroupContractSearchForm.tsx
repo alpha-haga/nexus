@@ -7,8 +7,12 @@ import { CompanySelector } from './CompanySelector';
 
 interface GroupContractSearchFormProps {
   onSearch: (condition: GroupContractSearchCondition) => void;
+  value: GroupContractSearchCondition;
+  onChange: (next: GroupContractSearchCondition) => void;
   loading?: boolean;
   disabled?: boolean;
+  variant?: 'basic' | 'full';
+  showActions?: boolean;
 }
 
 /**
@@ -40,14 +44,16 @@ const trimStringField = (obj: GroupContractSearchCondition, key: StringCondition
 
 export function GroupContractSearchForm({
   onSearch,
+  value,
+  onChange,
   loading = false,
   disabled = false,
+  variant = 'full',
+  showActions = true,
 }: GroupContractSearchFormProps) {
-  const [condition, setCondition] = useState<GroupContractSearchCondition>({});
   const [companies, setCompanies] = useState<Company[]>([]);
   const [companiesLoading, setCompaniesLoading] = useState(false);
   const [companiesError, setCompaniesError] = useState<string | null>(null);
-  const [selectedCmpCds, setSelectedCmpCds] = useState<Set<string> | null>(null);
 
   // 法人一覧を取得
   useEffect(() => {
@@ -76,19 +82,21 @@ export function GroupContractSearchForm({
       });
   }, []);
 
-  // selectedCmpCds変更時にconditionを更新
-  useEffect(() => {
-    setCondition((prev) => ({
-      ...prev,
-      cmpCds: selectedCmpCds === null ? undefined : Array.from(selectedCmpCds),
-    }));
-  }, [selectedCmpCds]);
+  // selectedCmpCdsをvalueから取得
+  const selectedCmpCds = value.cmpCds ? new Set(value.cmpCds) : null;
+
+  const handleCmpCdsChange = (newCmpCds: Set<string> | null) => {
+    onChange({
+      ...value,
+      cmpCds: newCmpCds === null ? undefined : Array.from(newCmpCds),
+    });
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (disabled) return;
 
-    const trimmedCondition: GroupContractSearchCondition = { ...condition };
+    const trimmedCondition: GroupContractSearchCondition = { ...value };
 
     // string フィールドのみ trim（cmpCds は対象外）
     for (const key of TRIM_KEYS) {
@@ -105,58 +113,23 @@ export function GroupContractSearchForm({
   };
 
   const handleReset = () => {
-    setCondition({});
-    setSelectedCmpCds(null);
+    onChange({});
     // Reset は検索を実行しない（初期検索禁止・明示的検索のみ）
   };
 
+  const isBasic = variant === 'basic';
+
   return (
-    <form onSubmit={handleSubmit} className="card p-4 space-y-4">
+    <form onSubmit={handleSubmit} className={variant === 'basic' ? 'space-y-4' : 'card p-4 space-y-4'}>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* 法人 */}
         <div>
           <CompanySelector
             companies={companies}
             selectedCmpCds={selectedCmpCds}
-            onChange={setSelectedCmpCds}
+            onChange={handleCmpCdsChange}
             loading={companiesLoading}
             error={companiesError}
-            disabled={disabled}
-          />
-        </div>
-
-        {/* 契約受付日（開始） */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            契約受付日（開始）
-          </label>
-          <input
-            type="text"
-            placeholder="YYYYMMDD"
-            value={condition.contractReceiptYmdFrom || ''}
-            onChange={(e) =>
-              setCondition({ ...condition, contractReceiptYmdFrom: e.target.value || undefined })
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
-            maxLength={8}
-            disabled={disabled}
-          />
-        </div>
-
-        {/* 契約受付日（終了） */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            契約受付日（終了）
-          </label>
-          <input
-            type="text"
-            placeholder="YYYYMMDD"
-            value={condition.contractReceiptYmdTo || ''}
-            onChange={(e) =>
-              setCondition({ ...condition, contractReceiptYmdTo: e.target.value || undefined })
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
-            maxLength={8}
             disabled={disabled}
           />
         </div>
@@ -168,8 +141,8 @@ export function GroupContractSearchForm({
           </label>
           <input
             type="text"
-            value={condition.contractNo || ''}
-            onChange={(e) => setCondition({ ...condition, contractNo: e.target.value || undefined })}
+            value={value.contractNo || ''}
+            onChange={(e) => onChange({ ...value, contractNo: e.target.value || undefined })}
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
             maxLength={20}
             disabled={disabled}
@@ -184,26 +157,10 @@ export function GroupContractSearchForm({
           <input
             type="text"
             placeholder="山田 / ヤマダ など"
-            value={condition.contractorName || ''}
+            value={value.contractorName || ''}
             onChange={(e) =>
-              setCondition({ ...condition, contractorName: e.target.value || undefined })
+              onChange({ ...value, contractorName: e.target.value || undefined })
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
-            maxLength={50}
-            disabled={disabled}
-          />
-        </div>
-
-        {/* 担当者氏名 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            担当者氏名
-          </label>
-          <input
-            type="text"
-            placeholder="佐藤 / サトウ など"
-            value={condition.staffName || ''}
-            onChange={(e) => setCondition({ ...condition, staffName: e.target.value || undefined })}
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
             maxLength={50}
             disabled={disabled}
@@ -217,95 +174,154 @@ export function GroupContractSearchForm({
           </label>
           <input
             type="text"
-            value={condition.telNo || ''}
-            onChange={(e) => setCondition({ ...condition, telNo: e.target.value || undefined })}
+            value={value.telNo || ''}
+            onChange={(e) => onChange({ ...value, telNo: e.target.value || undefined })}
             className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
             maxLength={20}
             disabled={disabled}
           />
         </div>
 
-        {/* 募集コード */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            募集コード
-          </label>
-          <input
-            type="text"
-            value={condition.bosyuCd || ''}
-            onChange={(e) => setCondition({ ...condition, bosyuCd: e.target.value || undefined })}
-            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
-            maxLength={20}
-            disabled={disabled}
-          />
-        </div>
+        {/* 以下は full のときのみ表示 */}
+        {!isBasic && (
+          <>
+            {/* 契約状態区分 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                契約状態区分
+              </label>
+              <input
+                type="text"
+                value={value.contractStatusKbn || ''}
+                onChange={(e) =>
+                  onChange({ ...value, contractStatusKbn: e.target.value || undefined })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+                maxLength={10}
+                disabled={disabled}
+              />
+            </div>
 
-        {/* コースコード */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            コースコード
-          </label>
-          <input
-            type="text"
-            value={condition.courseCd || ''}
-            onChange={(e) => setCondition({ ...condition, courseCd: e.target.value || undefined })}
-            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
-            maxLength={20}
-            disabled={disabled}
-          />
-        </div>
+            {/* 契約受付日（開始） */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                契約受付日（開始）
+              </label>
+              <input
+                type="text"
+                placeholder="YYYYMMDD"
+                value={value.contractReceiptYmdFrom || ''}
+                onChange={(e) =>
+                  onChange({ ...value, contractReceiptYmdFrom: e.target.value || undefined })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+                maxLength={8}
+                disabled={disabled}
+              />
+            </div>
 
-        {/* コース名 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            コース名
-          </label>
-          <input
-            type="text"
-            placeholder="例）○○コース"
-            value={condition.courseName || ''}
-            onChange={(e) => setCondition({ ...condition, courseName: e.target.value || undefined })}
-            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
-            maxLength={50}
-            disabled={disabled}
-          />
-        </div>
+            {/* 契約受付日（終了） */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                契約受付日（終了）
+              </label>
+              <input
+                type="text"
+                placeholder="YYYYMMDD"
+                value={value.contractReceiptYmdTo || ''}
+                onChange={(e) =>
+                  onChange({ ...value, contractReceiptYmdTo: e.target.value || undefined })
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+                maxLength={8}
+                disabled={disabled}
+              />
+            </div>
 
-        {/* 契約状態区分 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            契約状態区分
-          </label>
-          <input
-            type="text"
-            value={condition.contractStatusKbn || ''}
-            onChange={(e) =>
-              setCondition({ ...condition, contractStatusKbn: e.target.value || undefined })
-            }
-            className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
-            maxLength={10}
-            disabled={disabled}
-          />
-        </div>
+            {/* 募集コード */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                募集コード
+              </label>
+              <input
+                type="text"
+                value={value.bosyuCd || ''}
+                onChange={(e) => onChange({ ...value, bosyuCd: e.target.value || undefined })}
+                className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+                maxLength={20}
+                disabled={disabled}
+              />
+            </div>
+
+            {/* 担当者氏名 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                担当者氏名
+              </label>
+              <input
+                type="text"
+                placeholder="佐藤 / サトウ など"
+                value={value.staffName || ''}
+                onChange={(e) => onChange({ ...value, staffName: e.target.value || undefined })}
+                className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+                maxLength={50}
+                disabled={disabled}
+              />
+            </div>
+
+            {/* コースコード */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                コースコード
+              </label>
+              <input
+                type="text"
+                value={value.courseCd || ''}
+                onChange={(e) => onChange({ ...value, courseCd: e.target.value || undefined })}
+                className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+                maxLength={20}
+                disabled={disabled}
+              />
+            </div>
+
+            {/* コース名 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                コース名
+              </label>
+              <input
+                type="text"
+                placeholder="例）○○コース"
+                value={value.courseName || ''}
+                onChange={(e) => onChange({ ...value, courseName: e.target.value || undefined })}
+                className="w-full px-3 py-2 border border-gray-300 rounded disabled:opacity-50 disabled:bg-gray-100"
+                maxLength={50}
+                disabled={disabled}
+              />
+            </div>
+          </>
+        )}
       </div>
 
-      <div className="flex gap-2 pt-2">
-        <button
-          type="submit"
-          disabled={loading || disabled}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? '検索中...' : '検索'}
-        </button>
-        <button
-          type="button"
-          onClick={handleReset}
-          disabled={loading || disabled}
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          リセット
-        </button>
-      </div>
+      {showActions && (
+        <div className="flex gap-2 pt-2">
+          <button
+            type="submit"
+            disabled={loading || disabled}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? '検索中...' : '検索'}
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            disabled={loading || disabled}
+            className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            リセット
+          </button>
+        </div>
+      )}
     </form>
   );
 }

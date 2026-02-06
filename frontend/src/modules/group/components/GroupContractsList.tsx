@@ -13,6 +13,8 @@ import { GroupContractSearchForm } from './GroupContractSearchForm';
 import { RegionSelector } from './RegionSelector';
 
 type SearchState = 'not-started' | 'loading' | 'success' | 'error';
+type ColumnPreset = 'standard' | 'contact' | 'staff';
+type ColumnKey = 'cmpShortName' | 'contractNo' | 'familyNameGaiji' | 'contractReceiptYmd' | 'birthday' | 'contractStatus' | 'courseName' | 'bosyuStaff' | 'entryStaff' | 'address' | 'telNo' | 'mobileNo' | 'shareNum' | 'monthlyPremium' | 'contractGaku' | 'totalSaveNum' | 'totalGaku' | 'motoSupplyRankOrgCd' | 'motoSupplyRankOrgName';
 
 // 桁あふれ処理用のユーティリティ（Wave 0-B）
 const truncateText = (text: string | null | undefined, maxLength: number): string => {
@@ -57,6 +59,105 @@ const buildAddress = (contract: AddressParts): string => {
   return joined === '' ? '-' : joined;
 };
 
+// 列表示プリセット定義
+const COLUMN_PRESETS: Record<ColumnPreset, Set<ColumnKey>> = {
+  standard: new Set<ColumnKey>([
+    'cmpShortName', 'contractNo', 'familyNameGaiji',
+    'contractReceiptYmd', 'birthday', 'contractStatus', 'courseName',
+    'bosyuStaff', 'entryStaff', 'address', 'telNo', 'mobileNo',
+    'shareNum', 'monthlyPremium', 'contractGaku', 'totalSaveNum', 'totalGaku',
+    'motoSupplyRankOrgCd', 'motoSupplyRankOrgName'
+  ]),
+  contact: new Set<ColumnKey>([
+    'cmpShortName', 'contractNo', 'familyNameGaiji',
+    'contractReceiptYmd', 'contractStatus', 'address', 'telNo', 'mobileNo'
+  ]),
+  staff: new Set<ColumnKey>([
+    'cmpShortName', 'contractNo', 'familyNameGaiji',
+    'contractReceiptYmd', 'contractStatus', 'bosyuStaff', 'entryStaff'
+  ])
+};
+
+// 適用中フィルタサマリを生成（選択されている条件のみ表示）
+const buildFilterSummary = (condition: GroupContractSearchCondition): string[] => {
+  const items: string[] = [];
+  
+  // 法人（選択件数）- 入力がある場合のみ
+  if (condition.cmpCds && condition.cmpCds.length > 0) {
+    items.push(`法人:${condition.cmpCds.length}件`);
+  }
+  
+  // 契約番号 - 入力がある場合のみ
+  if (condition.contractNo) {
+    items.push(`契約番号:${condition.contractNo}`);
+  }
+  
+  // 契約者氏名 - 入力がある場合のみ
+  if (condition.contractorName) {
+    items.push(`契約者氏名:${condition.contractorName}`);
+  }
+  
+  // 電話番号 - 入力がある場合のみ
+  if (condition.telNo) {
+    items.push(`電話番号:${condition.telNo}`);
+  }
+  
+  // 契約状態区分 - 入力がある場合のみ
+  if (condition.contractStatusKbn) {
+    items.push(`契約状態区分:${condition.contractStatusKbn}`);
+  }
+  
+  // 契約受付日 - 入力がある場合のみ
+  if (condition.contractReceiptYmdFrom || condition.contractReceiptYmdTo) {
+    const dateParts: string[] = [];
+    if (condition.contractReceiptYmdFrom) {
+      dateParts.push(condition.contractReceiptYmdFrom);
+    }
+    dateParts.push('〜');
+    if (condition.contractReceiptYmdTo) {
+      dateParts.push(condition.contractReceiptYmdTo);
+    }
+    items.push(`受付日:${dateParts.join('')}`);
+  }
+  
+  // 募集コード - 入力がある場合のみ
+  if (condition.bosyuCd) {
+    items.push(`募集コード:${condition.bosyuCd}`);
+  }
+  
+  // 担当者氏名 - 入力がある場合のみ
+  if (condition.staffName) {
+    items.push(`担当者氏名:${condition.staffName}`);
+  }
+  
+  // コースコード - 入力がある場合のみ
+  if (condition.courseCd) {
+    items.push(`コースコード:${condition.courseCd}`);
+  }
+  
+  // コース名 - 入力がある場合のみ
+  if (condition.courseName) {
+    items.push(`コース名:${condition.courseName}`);
+  }
+  
+  return items;
+};
+
+// 固定列の幅とleft位置を定数で定義
+const STICKY_COLUMN_WIDTHS = {
+  cmpShortName: 120,
+  contractNo: 120,
+  familyNameGaiji: 180,
+  tel: 140,
+} as const;
+
+const STICKY_COLUMN_LEFTS = {
+  cmpShortName: 0,
+  contractNo: STICKY_COLUMN_WIDTHS.cmpShortName,
+  familyNameGaiji: STICKY_COLUMN_WIDTHS.cmpShortName + STICKY_COLUMN_WIDTHS.contractNo,
+  tel: STICKY_COLUMN_WIDTHS.cmpShortName + STICKY_COLUMN_WIDTHS.contractNo + STICKY_COLUMN_WIDTHS.familyNameGaiji,
+} as const;
+
 export function GroupContractsList() {
   const [region, setRegion] = useState<Region | null>(null);
   const [result, setResult] = useState<PaginatedGroupContractResponse | null>(null);
@@ -67,6 +168,8 @@ export function GroupContractsList() {
   const [searchCondition, setSearchCondition] = useState<GroupContractSearchCondition>({});
   const [hasSearched, setHasSearched] = useState(false);
   const [searchState, setSearchState] = useState<SearchState>('not-started');
+  const [isSearchFormOpen, setIsSearchFormOpen] = useState(false);
+  const [columnPreset, setColumnPreset] = useState<ColumnPreset>('standard');
 
   // Region変更時に状態をリセット
   useEffect(() => {
@@ -75,6 +178,8 @@ export function GroupContractsList() {
     setSearchState('not-started');
     setPage(0);
     setHasSearched(false);
+    setIsSearchFormOpen(false);
+    setSearchCondition({});
   }, [region]);
 
   const loadContracts = async (params: {
@@ -130,12 +235,17 @@ export function GroupContractsList() {
     setSearchCondition(condition);
     setPage(0); // 検索時はページをリセット
     setHasSearched(true);
+    setIsSearchFormOpen(false); // 検索後に折りたたむ
     loadContracts({
       region,
       condition,
       page: 0,
       size,
     });
+  };
+
+  const handleConditionChange = (next: GroupContractSearchCondition) => {
+    setSearchCondition(next);
   };
 
   // ページネーション変更時も検索を実行（検索実行済みの場合のみ）
@@ -197,8 +307,16 @@ export function GroupContractsList() {
     }
   };
 
+  const filterSummary = buildFilterSummary(searchCondition);
+  const visibleColumns = COLUMN_PRESETS[columnPreset];
+  
+  // 折りたたみ状態に応じたテーブル高さを計算
+  const tableMaxHeight = isSearchFormOpen
+    ? 'calc(100vh - 520px)' // 展開時はフォーム分の高さを確保
+    : 'calc(100vh - 260px)'; // 折りたたみ時は高さを抑える（ページスクロールを出さない）
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-h-0">
       {/* Region選択 */}
       <div className="card p-4">
         <RegionSelector value={region} onChange={setRegion} disabled={isLoading} />
@@ -209,12 +327,46 @@ export function GroupContractsList() {
         )}
       </div>
 
-      {/* 検索フォーム */}
-      <GroupContractSearchForm
-        onSearch={handleSearch}
-        loading={isLoading}
-        disabled={!region}
-      />
+      {/* 検索条件 */}
+      <div className="card">
+        <div>
+          <button
+            type="button"
+            onClick={() => setIsSearchFormOpen(!isSearchFormOpen)}
+            className="w-full p-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">検索条件（追加）</span>
+              {filterSummary.length > 0 ? (
+                <span className="text-xs text-gray-500">
+                  （{filterSummary.join(' / ')}）
+                </span>
+              ) : null}
+            </div>
+            <svg
+              className={`w-5 h-5 text-gray-500 transition-transform ${isSearchFormOpen ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {isSearchFormOpen && (
+            <div className="border-t border-gray-200 p-4">
+              <GroupContractSearchForm
+                variant="full"
+                value={searchCondition}
+                onChange={handleConditionChange}
+                onSearch={handleSearch}
+                loading={isLoading}
+                disabled={!region}
+                showActions={true}
+              />
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* エラー表示 */}
       {error && (
@@ -253,14 +405,24 @@ export function GroupContractsList() {
 
       {/* 検索結果: 1件以上 */}
       {!isLoading && result && result.content.length > 0 && (
-        <div className="card">
-          <div className="p-4 border-b border-gray-200">
+        <div className="card overflow-hidden flex flex-col min-h-0">
+          <div className="p-4 border-b border-gray-200 flex-shrink-0">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">検索結果</h2>
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-600">
                   全{result.totalElements}件
                 </span>
+                <select
+                  value={columnPreset}
+                  onChange={(e) => setColumnPreset(e.target.value as ColumnPreset)}
+                  className="px-3 py-1 border border-gray-300 rounded text-sm"
+                  disabled={isLoading}
+                >
+                  <option value="standard">標準</option>
+                  <option value="contact">連絡先</option>
+                  <option value="staff">担当者</option>
+                </select>
                 <select
                   value={size}
                   onChange={(e) => handleSizeChange(Number(e.target.value) as 20 | 50 | 100)}
@@ -275,71 +437,76 @@ export function GroupContractsList() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50">
+          <div className="flex-1 min-h-0 overflow-auto" style={{ maxHeight: tableMaxHeight }}>
+            <table className="w-full min-w-[1600px] border-separate border-spacing-0">
+              <thead>
                 <tr>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                    法人コード
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  {/* 固定列（DOM先頭） */}
+                  <th 
+                    className="px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-40"
+                    style={{ left: `${STICKY_COLUMN_LEFTS.cmpShortName}px`, width: `${STICKY_COLUMN_WIDTHS.cmpShortName}px` }}
+                  >
                     法人名
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th 
+                    className="px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-40"
+                    style={{ left: `${STICKY_COLUMN_LEFTS.contractNo}px`, width: `${STICKY_COLUMN_WIDTHS.contractNo}px` }}
+                  >
                     契約番号
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                    氏名（漢字）
+                  <th 
+                    className="px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-40"
+                    style={{ left: `${STICKY_COLUMN_LEFTS.familyNameGaiji}px`, width: `${STICKY_COLUMN_WIDTHS.familyNameGaiji}px` }}
+                  >
+                    契約者氏名
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                    氏名（カナ）
+                  <th 
+                    className="px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-40"
+                    style={{ left: `${STICKY_COLUMN_LEFTS.tel}px`, width: `${STICKY_COLUMN_WIDTHS.tel}px` }}
+                  >
+                    電話
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  {/* 横スクロール対象列 */}
+                  <th className={`px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-30 ${visibleColumns.has('contractReceiptYmd') ? '' : 'hidden'}`}>
                     契約受付日
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className={`px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-30 ${visibleColumns.has('birthday') ? '' : 'hidden'}`}>
                     生年月日
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className={`px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-30 ${visibleColumns.has('contractStatus') ? '' : 'hidden'}`}>
                     契約状態
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className={`px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-30 ${visibleColumns.has('courseName') ? '' : 'hidden'}`}>
                     コース名
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className={`px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-30 ${visibleColumns.has('bosyuStaff') ? '' : 'hidden'}`}>
                     募集担当者
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className={`px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-30 ${visibleColumns.has('entryStaff') ? '' : 'hidden'}`}>
                     加入担当者
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className={`px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-30 ${visibleColumns.has('address') ? '' : 'hidden'}`}>
                     住所
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                    電話番号
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
-                    携帯電話番号
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className={`px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-30 ${visibleColumns.has('shareNum') ? '' : 'hidden'}`}>
                     口数
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className={`px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-30 ${visibleColumns.has('monthlyPremium') ? '' : 'hidden'}`}>
                     月掛金
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className={`px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-30 ${visibleColumns.has('contractGaku') ? '' : 'hidden'}`}>
                     契約金額
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className={`px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-30 ${visibleColumns.has('totalSaveNum') ? '' : 'hidden'}`}>
                     積立回数
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className={`px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-30 ${visibleColumns.has('totalGaku') ? '' : 'hidden'}`}>
                     積立金額
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className={`px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-30 ${visibleColumns.has('motoSupplyRankOrgCd') ? '' : 'hidden'}`}>
                     元請支給ランク組織コード
                   </th>
-                  <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">
+                  <th className={`px-4 py-2 text-left text-sm font-medium text-gray-700 sticky top-0 bg-gray-50 z-30 ${visibleColumns.has('motoSupplyRankOrgName') ? '' : 'hidden'}`}>
                     元請支給ランク組織名
                   </th>
                 </tr>
@@ -361,65 +528,97 @@ export function GroupContractsList() {
                   const displayAddress = truncateText(addressText, 30);
                   const addressTitle = addressText;
 
+                  // 契約者氏名（漢字＋カナ）
+                  const familyNameKanji = contract.familyNameGaiji || '';
+                  const firstNameKanji = contract.firstNameGaiji || '';
+                  const familyNameKana = contract.familyNameKana || '';
+                  const firstNameKana = contract.firstNameKana || '';
+                  const nameKanji = `${familyNameKanji}${firstNameKanji}`;
+                  const nameKana = `${familyNameKana}${firstNameKana}`;
+                  const nameTitle = nameKanji && nameKana ? `${nameKanji} ${nameKana}` : nameKanji || nameKana || undefined;
+
+                  // 電話（TEL/MOBILE 2段表示）
+                  const telNo = contract.telNo || '-';
+                  const mobileNo = contract.mobileNo || '-';
+
                   return (
-                    <tr key={`${contract.contractNo}-${index}`} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 text-sm">{contract.cmpCd}</td>
-                      <td className="px-4 py-2 text-sm" title={contract.cmpShortName || undefined}>
+                    <tr key={`${contract.contractNo}-${index}`} className="group hover:bg-gray-50">
+                      {/* 固定列（DOM先頭） */}
+                      <td 
+                        className="px-4 py-2 text-sm sticky bg-white group-hover:bg-gray-50 z-20"
+                        style={{ left: `${STICKY_COLUMN_LEFTS.cmpShortName}px`, width: `${STICKY_COLUMN_WIDTHS.cmpShortName}px` }}
+                        title={contract.cmpShortName || undefined}
+                      >
                         {truncateText(contract.cmpShortName, 20)}
                       </td>
-                      <td className="px-4 py-2 text-sm">{contract.contractNo}</td>
-                      <td className="px-4 py-2 text-sm" title={`${contract.familyNameGaiji || ''}${contract.firstNameGaiji || ''}`}>
-                        {truncateText(`${contract.familyNameGaiji || ''}${contract.firstNameGaiji || ''}`, 20)}
+                      <td 
+                        className="px-4 py-2 text-sm sticky bg-white group-hover:bg-gray-50 z-20"
+                        style={{ left: `${STICKY_COLUMN_LEFTS.contractNo}px`, width: `${STICKY_COLUMN_WIDTHS.contractNo}px` }}
+                      >
+                        {contract.contractNo}
                       </td>
-                      <td className="px-4 py-2 text-sm" title={`${contract.familyNameKana || ''}${contract.firstNameKana || ''}`}>
-                        {truncateText(`${contract.familyNameKana || ''}${contract.firstNameKana || ''}`, 20)}
+                      <td 
+                        className="px-4 py-2 text-sm sticky bg-white group-hover:bg-gray-50 z-20"
+                        style={{ left: `${STICKY_COLUMN_LEFTS.familyNameGaiji}px`, width: `${STICKY_COLUMN_WIDTHS.familyNameGaiji}px` }}
+                        title={nameTitle}
+                      >
+                        <div className="leading-tight">
+                          <div>{nameKanji || '-'}</div>
+                          {nameKana && (
+                            <div className="text-xs text-gray-500 mt-0.5">{nameKana}</div>
+                          )}
+                        </div>
                       </td>
-                      <td className="px-4 py-2 text-sm">
+                      <td 
+                        className="px-4 py-2 text-sm sticky bg-white group-hover:bg-gray-50 z-20"
+                        style={{ left: `${STICKY_COLUMN_LEFTS.tel}px`, width: `${STICKY_COLUMN_WIDTHS.tel}px` }}
+                      >
+                        <div className="leading-tight text-xs">
+                          <div>{telNo}</div>
+                          <div className="mt-0.5">{mobileNo}</div>
+                        </div>
+                      </td>
+                      {/* 横スクロール対象列 */}
+                      <td className={`px-4 py-2 text-sm ${visibleColumns.has('contractReceiptYmd') ? '' : 'hidden'}`}>
                         {formatDate(contract.contractReceiptYmd)}
                       </td>
-                      <td className="px-4 py-2 text-sm">
+                      <td className={`px-4 py-2 text-sm ${visibleColumns.has('birthday') ? '' : 'hidden'}`}>
                         {formatDate(contract.birthday)}
                       </td>
-                      <td className="px-4 py-2 text-sm">
+                      <td className={`px-4 py-2 text-sm ${visibleColumns.has('contractStatus') ? '' : 'hidden'}`}>
                         {contract.contractStatus ?? '-'}
                       </td>
-                      <td className="px-4 py-2 text-sm" title={contract.courseName || contract.courseCd || undefined}>
+                      <td className={`px-4 py-2 text-sm ${visibleColumns.has('courseName') ? '' : 'hidden'}`} title={contract.courseName || contract.courseCd || undefined}>
                         {truncateText(contract.courseName || contract.courseCd, 20)}
                       </td>
-                      <td className="px-4 py-2 text-sm" title={bosyuTitle}>
+                      <td className={`px-4 py-2 text-sm ${visibleColumns.has('bosyuStaff') ? '' : 'hidden'}`} title={bosyuTitle}>
                         {displayBosyuName}
                       </td>
-                      <td className="px-4 py-2 text-sm" title={entryTitle}>
+                      <td className={`px-4 py-2 text-sm ${visibleColumns.has('entryStaff') ? '' : 'hidden'}`} title={entryTitle}>
                         {displayEntryName}
                       </td>
-                      <td className="px-4 py-2 text-sm" title={addressTitle}>
+                      <td className={`px-4 py-2 text-sm ${visibleColumns.has('address') ? '' : 'hidden'}`} title={addressTitle}>
                         {displayAddress}
                       </td>
-                      <td className="px-4 py-2 text-sm">
-                        {contract.telNo ?? '-'}
-                      </td>
-                      <td className="px-4 py-2 text-sm">
-                        {contract.mobileNo ?? '-'}
-                      </td>
-                      <td className="px-4 py-2 text-right text-sm">
+                      <td className={`px-4 py-2 text-right text-sm ${visibleColumns.has('shareNum') ? '' : 'hidden'}`}>
                         {formatNumber(contract.shareNum)}
                       </td>
-                      <td className="px-4 py-2 text-right text-sm">
+                      <td className={`px-4 py-2 text-right text-sm ${visibleColumns.has('monthlyPremium') ? '' : 'hidden'}`}>
                         {formatAmount(contract.monthlyPremium)}
                       </td>
-                      <td className="px-4 py-2 text-right text-sm">
+                      <td className={`px-4 py-2 text-right text-sm ${visibleColumns.has('contractGaku') ? '' : 'hidden'}`}>
                         {formatAmount(contract.contractGaku)}
                       </td>
-                      <td className="px-4 py-2 text-right text-sm">
+                      <td className={`px-4 py-2 text-right text-sm ${visibleColumns.has('totalSaveNum') ? '' : 'hidden'}`}>
                         {formatNumber(contract.totalSaveNum)}
                       </td>
-                      <td className="px-4 py-2 text-right text-sm">
+                      <td className={`px-4 py-2 text-right text-sm ${visibleColumns.has('totalGaku') ? '' : 'hidden'}`}>
                         {formatAmount(contract.totalGaku)}
                       </td>
-                      <td className="px-4 py-2 text-sm">
+                      <td className={`px-4 py-2 text-sm ${visibleColumns.has('motoSupplyRankOrgCd') ? '' : 'hidden'}`}>
                         {contract.motoSupplyRankOrgCd ?? '-'}
                       </td>
-                      <td className="px-4 py-2 text-sm" title={contract.motoSupplyRankOrgName || undefined}>
+                      <td className={`px-4 py-2 text-sm ${visibleColumns.has('motoSupplyRankOrgName') ? '' : 'hidden'}`} title={contract.motoSupplyRankOrgName || undefined}>
                         {truncateText(contract.motoSupplyRankOrgName, 20)}
                       </td>
                     </tr>
@@ -429,7 +628,7 @@ export function GroupContractsList() {
             </table>
           </div>
 
-          <div className="p-4 border-t border-gray-200 flex items-center justify-between">
+          <div className="p-4 border-t border-gray-200 flex items-center justify-between flex-shrink-0">
             <div className="text-sm text-gray-600">
               {result.totalElements}件中 {page * size + 1}-
               {Math.min((page + 1) * size, result.totalElements)}件を表示

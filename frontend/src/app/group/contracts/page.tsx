@@ -14,7 +14,7 @@ export default function GroupContractsPage() {
   if (status === 'loading') {
     return (
       <AppLayout>
-        <div className="max-w-7xl">
+        <div className="w-full max-w-none min-w-0">
           <div className="mb-6">
             <h1 className="text-xl font-semibold text-gray-900">法人横断契約一覧</h1>
             <p className="text-sm text-gray-500 mt-1">読み込み中...</p>
@@ -41,7 +41,7 @@ export default function GroupContractsPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-7xl">
+      <div className="w-full max-w-none min-w-0">
         <div className="mb-6">
           <h1 className="text-xl font-semibold text-gray-900">法人横断契約一覧</h1>
           <p className="text-sm text-gray-500 mt-1">
