@@ -1,6 +1,7 @@
 package nexus.bff.config
 
 import nexus.core.exception.AuthorizationException
+import nexus.core.exception.NotImplementedException
 import nexus.core.exception.ResourceNotFoundException
 import nexus.core.exception.ValidationException
 import org.springframework.http.HttpStatus
@@ -23,6 +24,25 @@ import java.time.LocalDateTime
  */
 @RestControllerAdvice
 class GlobalExceptionHandler {
+
+    @ExceptionHandler(NotImplementedException::class)
+    fun handleNotImplemented(ex: NotImplementedException): ResponseEntity<ErrorResponse> {
+        val details = mapOf(
+            "feature" to ex.feature
+        )
+
+        return ResponseEntity
+            .status(HttpStatus.NOT_IMPLEMENTED)
+            .body(
+                ErrorResponse(
+                    status = HttpStatus.NOT_IMPLEMENTED.value(),
+                    error = "Not Implemented",
+                    message = ex.message ?: "Not implemented",
+                    code = "NOT_IMPLEMENTED",
+                    details = details
+                )
+            )
+    }
 
     @ExceptionHandler(ValidationException::class)
     fun handleValidationException(ex: ValidationException): ResponseEntity<ErrorResponse> {

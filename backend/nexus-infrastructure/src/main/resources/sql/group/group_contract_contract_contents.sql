@@ -1,0 +1,11 @@
+-- P2-6 placeholder
+-- Subresource: contractContents (契約内容)
+-- Params: :cmpCd, :contractNo
+-- Implement in P2-7+
+--
+-- この SQL は「契約内容」サブリソースに対応する。
+-- P2-6 では SQL 名と置き場所の確定のみを行い、実装は P2-7 以降で行う。
+--
+-- SELECT
+--     -- P2-7 以降で実装
+-- FROM ...

@@ -363,6 +363,49 @@ export interface GroupContractDetailResponse {
 }
 
 // ============================================
+// Group Contract Detail Sub-resources (P2-6)
+// ============================================
+
+export interface GroupContractContractContentsResponse {
+  cmpCd: string;
+  contractNo: string;
+  attributes: Record<string, string | null>;
+}
+
+export interface GroupContractStaffResponse {
+  cmpCd: string;
+  contractNo: string;
+  staffs: Array<{
+    id: string;
+    displayName: string | null;
+  }>;
+}
+
+export interface GroupContractBankAccountResponse {
+  cmpCd: string;
+  contractNo: string;
+  accounts: Array<{
+    id: string;
+  }>;
+}
+
+export interface GroupContractPaymentsResponse {
+  cmpCd: string;
+  contractNo: string;
+  payments: Array<{
+    id: string;
+  }>;
+}
+
+export interface GroupContractActivityHistoryResponse {
+  cmpCd: string;
+  contractNo: string;
+  activities: Array<{
+    id: string;
+  }>;
+}
+
+// ============================================
 // Bridal Types
 // ============================================
 

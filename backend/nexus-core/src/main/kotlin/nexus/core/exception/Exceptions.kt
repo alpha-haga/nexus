@@ -58,3 +58,9 @@ class OptimisticLockException(
     val resourceId: String,
     message: String = "Optimistic lock failed for $resourceType: $resourceId"
 ) : NexusException(message)
+
+/** 未実装機能（明示的に 501 を返すための例外） */
+class NotImplementedException(
+    val feature: String,
+    message: String = "Not implemented: $feature"
+) : NexusException(message)
