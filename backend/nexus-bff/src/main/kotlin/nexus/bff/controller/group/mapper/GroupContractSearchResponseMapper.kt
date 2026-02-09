@@ -1,5 +1,6 @@
 package nexus.bff.controller.group.mapper
 
+import nexus.bff.controller.group.mapper.buildContractStatus
 import nexus.bff.controller.group.dto.GroupContractSearchResponse
 import nexus.bff.controller.group.dto.PaginatedGroupContractResponse
 import nexus.core.pagination.PaginatedResult
@@ -27,8 +28,8 @@ fun GroupContractSearchDto.toResponse(): GroupContractSearchResponse =
         // 契約状態（SQL SELECT 順）
         contractStatusKbn = contractStatusKbn,
         contractStatusName = contractStatusName,
-        dmdStopRasonKbn = dmdStopRasonKbn,
-        dmdStopRasonName = dmdStopRasonName,
+        dmdStopReasonKbn = dmdStopReasonKbn,
+        dmdStopReasonName = dmdStopReasonName,
         cancelReasonKbn = cancelReasonKbn,
         cancelReasonName = cancelReasonName,
         zashuReasonKbn = zashuReasonKbn,
@@ -102,73 +103,6 @@ fun GroupContractSearchDto.toResponse(): GroupContractSearchResponse =
         registYmd = registYmd,
         receptionNo = receptionNo
     )
-
-/**
- * 状態文字列を結合する（片側 NULL でも表示）
- * 
- * - base と reason の両方が非null → "base（reason）"
- * - base のみ非null → base
- * - reason のみ非null → reason
- * - 両方 null → null
- */
-private fun joinStatus(base: String?, reason: String?): String? {
-    return when {
-        base != null && reason != null -> "$base（$reason）"
-        base != null -> base
-        reason != null -> reason
-        else -> null
-    }
-}
-
-/**
- * contract_status を組み立てる（SQL CASE ロジックを 1:1 で写経）
- * 
- * SQL CASE の構造をそのまま Kotlin when/if に変換
- * 文字列結合は joinStatus を使用（片側 NULL でも表示）
- */
-private fun buildContractStatus(dto: GroupContractSearchDto): String? {
-    val contractStatusKbn = dto.contractStatusKbn
-    val contractStatusName = dto.contractStatusName
-    
-    return when (contractStatusKbn) {
-        "1" -> contractStatusName
-        "2" -> {
-            when (dto.torikeshiReasonKbn) {
-                "1" -> joinStatus(contractStatusName, dto.torikeshiReasonName)
-                "2" -> contractStatusName
-                "3" -> dto.torikeshiReasonName
-                else -> null
-            }
-        }
-        "3" -> {
-            when {
-                dto.anspApproveKbn == "1" -> {
-                    when {
-                        dto.dmdStopRasonKbn == "B" -> joinStatus(contractStatusName, dto.dmdStopRasonName)
-                        else -> joinStatus(contractStatusName, dto.anspApproveName)
-                    }
-                }
-                dto.anspApproveKbn == "2" -> joinStatus(contractStatusName, dto.anspApproveName)
-                dto.ecApproveKbn == "1" -> {
-                    when {
-                        dto.dmdStopRasonKbn == "B" -> joinStatus(contractStatusName, dto.dmdStopRasonName)
-                        else -> joinStatus(contractStatusName, dto.ecApproveName)
-                    }
-                }
-                else -> {
-                    when {
-                        dto.dmdStopRasonName == null -> contractStatusName
-                        else -> joinStatus(contractStatusName, dto.dmdStopRasonName)
-                    }
-                }
-            }
-        }
-        "4" -> joinStatus(contractStatusName, dto.cancelReasonName)
-        "5" -> joinStatus(contractStatusName, dto.zashuReasonName)
-        "6" -> contractStatusName
-        else -> null
-    }
-}
 
 /**
  * PaginatedResult<GroupContractSearchDto> -> PaginatedGroupContractResponse の変換

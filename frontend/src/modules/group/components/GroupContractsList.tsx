@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useState, useEffect, useRef } from 'react';
 import { groupService } from '@/services/group';
 import type {
   GroupContractSearchResponse,
@@ -11,6 +12,13 @@ import type {
 } from '@/types';
 import { GroupContractSearchForm } from './GroupContractSearchForm';
 import { RegionSelector } from './RegionSelector';
+import {
+  saveListState,
+  restoreListState,
+  buildQueryKey,
+  clearListState,
+  getSavedState,
+} from '../utils/sessionStorage';
 
 type SearchState = 'not-started' | 'loading' | 'success' | 'error';
 type ColumnPreset = 'standard' | 'contact' | 'staff';
@@ -159,6 +167,7 @@ const STICKY_COLUMN_LEFTS = {
 } as const;
 
 export function GroupContractsList() {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [region, setRegion] = useState<Region | null>(null);
   const [result, setResult] = useState<PaginatedGroupContractResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -170,9 +179,33 @@ export function GroupContractsList() {
   const [searchState, setSearchState] = useState<SearchState>('not-started');
   const [isSearchFormOpen, setIsSearchFormOpen] = useState(false);
   const [columnPreset, setColumnPreset] = useState<ColumnPreset>('standard');
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const hasRestoredRef = useRef(false);
+  const restoringRegionRef = useRef(false);
+
+  // 初回マウント時に region を自動復元
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (region !== null) return;
+  
+    const saved = getSavedState();
+    if (!saved?.region) return;
+  
+    restoringRegionRef.current = true;
+    setRegion(saved.region);
+  }, [region]);
 
   // Region変更時に状態をリセット
   useEffect(() => {
+    if (region === null) return;
+  
+    if (restoringRegionRef.current) {
+      restoringRegionRef.current = false;
+      return;
+    }
+  
+    clearListState();
+  
     setResult(null);
     setError(null);
     setSearchState('not-started');
@@ -180,7 +213,56 @@ export function GroupContractsList() {
     setHasSearched(false);
     setIsSearchFormOpen(false);
     setSearchCondition({});
+    setSelectedKey(null);
+    hasRestoredRef.current = false;
   }, [region]);
+
+  // region 確定後に sessionStorage から状態を復元（1回のみ）
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (!region) return; // region が確定するまで待つ
+    if (hasRestoredRef.current) return; // 既に復元済みならスキップ
+    
+    const saved = getSavedState();
+    if (!saved) return;
+    
+    // saved.region と region が一致しないなら復元しない
+    if (saved.region !== region) {
+      return;
+    }
+
+    // 復元確定ロック（以降の再実行を防ぐ）
+    hasRestoredRef.current = true;
+
+    // 保存された条件を設定（空の場合のみ）
+    if (Object.keys(searchCondition).length === 0 && saved.condition) {
+      setSearchCondition(saved.condition);
+    }
+
+    // 保存されたページネーション設定を適用
+    if (saved.page !== undefined) setPage(saved.page);
+    if (saved.size !== undefined) setSize(saved.size as 20 | 50 | 100);
+    if (saved.columnPreset !== undefined) setColumnPreset(saved.columnPreset);
+
+    // 保存された結果を表示
+    if (saved.result) {
+      setResult(saved.result);
+      setSearchState('success');
+      setHasSearched(true);
+    }
+
+    // 選択行とスクロール位置を復元
+    if (saved.selectedKey) {
+      setSelectedKey(saved.selectedKey);
+    }
+    if (saved.scrollY !== undefined && scrollContainerRef.current) {
+      requestAnimationFrame(() => {
+        if (scrollContainerRef.current) {
+          scrollContainerRef.current.scrollTop = saved.scrollY!;
+        }
+      });
+    }
+  }, [region]); // region 確定後に1回だけ復元
 
   const loadContracts = async (params: {
     region: Region | null;
@@ -190,6 +272,16 @@ export function GroupContractsList() {
   }) => {
     // Region未設定時はAPIを呼ばない
     if (!params.region) {
+      return;
+    }
+    
+    // キャッシュチェック: 同一条件なら sessionStorage から復元
+    const queryKey = buildQueryKey(params.condition, params.page, params.size, columnPreset);
+    const cached = restoreListState(params.region, params.condition, params.page, params.size, columnPreset);
+    if (cached && cached.result && cached.queryKey === queryKey) {
+      setResult(cached.result);
+      setSearchState('success');
+      setIsLoading(false);
       return;
     }
 
@@ -204,6 +296,8 @@ export function GroupContractsList() {
         page: params.page,
         size: params.size,
       });
+      // 検索結果を sessionStorage に保存
+      saveListState(params.region, params.condition, params.page, params.size, columnPreset, result);
       setResult(result);
       setSearchState('success');
     } catch (err) {
@@ -235,12 +329,25 @@ export function GroupContractsList() {
     setSearchCondition(condition);
     setPage(0); // 検索時はページをリセット
     setHasSearched(true);
+    setSelectedKey(null);
     setIsSearchFormOpen(false); // 検索後に折りたたむ
     loadContracts({
       region,
       condition,
       page: 0,
       size,
+    });
+  };
+  
+  // 詳細への遷移時に状態を保存
+  const handleDetailClick = (cmpCd: string, contractNo: string) => {
+    if (!region || !result) return;
+    
+    const scrollY = scrollContainerRef.current?.scrollTop ?? 0;
+    
+    saveListState(region, searchCondition, page, size, columnPreset, result, {
+      selectedKey: `${cmpCd}:${contractNo}`,
+      scrollY,
     });
   };
 
@@ -437,7 +544,7 @@ export function GroupContractsList() {
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 overflow-auto" style={{ maxHeight: tableMaxHeight }}>
+          <div ref={scrollContainerRef} className="flex-1 min-h-0 overflow-auto" style={{ maxHeight: tableMaxHeight }}>
             <table className="w-full min-w-[1600px] border-separate border-spacing-0">
               <thead>
                 <tr>
@@ -541,8 +648,12 @@ export function GroupContractsList() {
                   const telNo = contract.telNo || '-';
                   const mobileNo = contract.mobileNo || '-';
 
+                  const isSelected = selectedKey === `${contract.cmpCd}:${contract.contractNo}`;
                   return (
-                    <tr key={`${contract.contractNo}-${index}`} className="group hover:bg-gray-50">
+                    <tr 
+                      key={`${contract.contractNo}-${index}`} 
+                      className={`group hover:bg-gray-50 ${isSelected ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''}`}
+                    >
                       {/* 固定列（DOM先頭） */}
                       <td 
                         className="px-4 py-2 text-sm sticky bg-white group-hover:bg-gray-50 z-20"
@@ -555,7 +666,14 @@ export function GroupContractsList() {
                         className="px-4 py-2 text-sm sticky bg-white group-hover:bg-gray-50 z-20"
                         style={{ left: `${STICKY_COLUMN_LEFTS.contractNo}px`, width: `${STICKY_COLUMN_WIDTHS.contractNo}px` }}
                       >
-                        {contract.contractNo}
+                        <Link 
+                          href={`/group/contracts/${encodeURIComponent(contract.cmpCd)}/${encodeURIComponent(contract.contractNo)}`}
+                          onClick={() => handleDetailClick(contract.cmpCd, contract.contractNo)}
+                          className="text-blue-600 hover:text-blue-800 hover:underline"
+                          aria-label={`契約詳細へ移動: ${contract.contractNo}`}
+                        >
+                          {contract.contractNo}
+                        </Link>
                       </td>
                       <td 
                         className="px-4 py-2 text-sm sticky bg-white group-hover:bg-gray-50 z-20"

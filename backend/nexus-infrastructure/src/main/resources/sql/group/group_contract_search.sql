@@ -121,8 +121,8 @@ SELECT
     , base.birthday AS birthday
     , status_rec.contract_status_kbn AS contract_status_kbn
     , cd0018.cd_nm1_kanji AS contract_status_name
-    , status_rec.dmd_stop_reason_kbn AS dmd_stop_rason_kbn
-    , cd0019.cd_nm1_kanji AS dmd_stop_rason_name
+    , status_rec.dmd_stop_reason_kbn AS dmd_stop_reason_kbn
+    , cd0019.cd_nm1_kanji AS dmd_stop_reason_name
     , status_rec.cancel_reason_kbn AS cancel_reason_kbn
     , cd0020.cd_nm1_kanji AS cancel_reason_name
     , status_rec.zashu_reason_kbn AS zashu_reason_kbn

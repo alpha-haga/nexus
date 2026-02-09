@@ -38,8 +38,8 @@ class GroupContractRowMapper : RowMapper<GroupContractSearchDto> {
             // 契約状態（SQL SELECT 順）
             contractStatusKbn = rs.getString("contract_status_kbn"),
             contractStatusName = rs.getString("contract_status_name"),
-            dmdStopRasonKbn = rs.getString("dmd_stop_rason_kbn"),
-            dmdStopRasonName = rs.getString("dmd_stop_rason_name"),
+            dmdStopReasonKbn = rs.getString("dmd_stop_reason_kbn"),
+            dmdStopReasonName = rs.getString("dmd_stop_reason_name"),
             cancelReasonKbn = rs.getString("cancel_reason_kbn"),
             cancelReasonName = rs.getString("cancel_reason_name"),
             zashuReasonKbn = rs.getString("zashu_reason_kbn"),

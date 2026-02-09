@@ -238,7 +238,7 @@ export interface GroupContractSearchResponse {
   
   // 契約状態
   contractStatusKbn: string | null;
-  dmdStopRasonKbn: string | null;
+  dmdStopReasonKbn: string | null;
   cancelReasonKbn: string | null;
   cancelStatusKbn: string | null;
   zashuReasonKbn: string | null;
@@ -310,6 +310,56 @@ export interface PaginatedGroupContractResponse {
   totalPages: number;
   page: number;
   size: number;
+}
+
+export interface GroupContractDetailResponse {
+  // 基本識別情報
+  cmpCd: string;
+  cmpShortName: string | null;
+  contractNo: string;
+  familyNo: string;
+  houseNo: string | null;
+  
+  // 契約者情報
+  familyNameGaiji: string | null;
+  firstNameGaiji: string | null;
+  familyNameKana: string | null;
+  firstNameKana: string | null;
+  contractReceiptYmd: string | null; // YYYYMMDD format
+  birthday: string | null; // YYYYMMDD format
+  
+  // 契約状態（表示用材料）
+  contractStatusKbn: string | null;
+  contractStatusName: string | null;
+  dmdStopReasonKbn: string | null;
+  dmdStopReasonName: string | null;
+  cancelReasonKbn: string | null;
+  cancelReasonName: string | null;
+  zashuReasonKbn: string | null;
+  zashuReasonName: string | null;
+  anspApproveKbn: string | null;
+  anspApproveName: string | null;
+  torikeshiReasonKbn: string | null;
+  torikeshiReasonName: string | null;
+  ecApproveKbn: string | null;
+  ecApproveName: string | null;
+  cancelStatusKbn: string | null;
+  cancelStatusName: string | null;
+  contractStatus: string | null;
+  
+  // コース情報
+  courseCd: string | null;
+  courseName: string | null;
+  
+  // 連絡先
+  telNo: string | null;
+  mobileNo: string | null;
+  
+  // 住所
+  prefName: string | null;
+  cityTownName: string | null;
+  addr1: string | null;
+  addr2: string | null;
 }
 
 // ============================================

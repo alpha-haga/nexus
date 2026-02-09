@@ -1,9 +1,8 @@
-// frontend/src/services/group.ts（新規作成）
-
 import { apiClient } from './api';
 import type {
   Company,
   GroupContractSearchCondition,
+  GroupContractDetailResponse,
   PaginatedGroupContractResponse,
   Region,
 } from '@/types';
@@ -82,6 +81,20 @@ export const groupService = {
     return apiClient.get<PaginatedGroupContractResponse>(
       `/group/contracts/search${queryString ? `?${queryString}` : ''}`,
       params.region
+    );
+  },
+
+  /**
+   * 法人横断契約詳細取得
+   * Backend: GET /api/v1/group/contracts/{cmpCd}/{contractNo}
+   */
+  async getContractDetail(
+    cmpCd: string,
+    contractNo: string
+  ): Promise<GroupContractDetailResponse> {
+    return apiClient.get<GroupContractDetailResponse>(
+      `/group/contracts/${encodeURIComponent(cmpCd)}/${encodeURIComponent(contractNo)}`,
+      'INTEGRATION'
     );
   },
 };

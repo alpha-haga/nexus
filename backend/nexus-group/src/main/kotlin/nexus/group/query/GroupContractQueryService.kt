@@ -27,4 +27,16 @@ interface GroupContractQueryService {
         page: Int,
         size: Int
     ): PaginatedResult<GroupContractSearchDto>
+
+    /**
+     * 法人横断契約詳細を取得
+     *
+     * @param cmpCd 法人コード（必須）
+     * @param contractNo 契約番号（必須）
+     * @return 契約詳細DTO（存在しない場合は null）
+     */
+    fun findDetail(
+        cmpCd: String,
+        contractNo: String
+    ): GroupContractDetailDto?
 }

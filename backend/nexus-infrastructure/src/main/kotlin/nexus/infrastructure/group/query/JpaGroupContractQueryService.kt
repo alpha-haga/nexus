@@ -3,6 +3,7 @@ package nexus.infrastructure.group.query
 import nexus.core.pagination.PaginatedResult
 import nexus.group.query.GroupContractSearchCondition
 import nexus.group.query.GroupContractSearchDto
+import nexus.group.query.GroupContractDetailDto
 import nexus.group.query.GroupContractQueryService
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Service
@@ -38,5 +39,13 @@ class JpaGroupContractQueryService(
             page = page,
             size = size
         )
+    }
+
+    override fun findDetail(
+        cmpCd: String,
+        contractNo: String
+    ): GroupContractDetailDto? {
+        // TODO(P04-2): JDBC 実装に統一後、本クラスは削除予定
+        return null
     }
 }

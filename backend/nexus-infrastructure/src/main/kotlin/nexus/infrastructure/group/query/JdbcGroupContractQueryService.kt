@@ -3,6 +3,7 @@ package nexus.infrastructure.group.query
 import nexus.core.pagination.PaginatedResult
 import nexus.group.query.GroupContractSearchCondition
 import nexus.group.query.GroupContractSearchDto
+import nexus.group.query.GroupContractDetailDto
 import nexus.group.query.GroupContractQueryService
 import nexus.infrastructure.jdbc.SqlLoader
 import nexus.infrastructure.jdbc.query.*
@@ -35,6 +36,7 @@ class JdbcGroupContractQueryService(
 ) : GroupContractQueryService {
 
     private val rowMapper = GroupContractRowMapper()
+    private val detailRowMapper = GroupContractDetailRowMapper()
 
     // 業務日付フォーマッター（YYYYMMDD形式）
     private val businessYmdFormatter = DateTimeFormatter.ofPattern("yyyyMMdd")
@@ -109,5 +111,27 @@ class JdbcGroupContractQueryService(
             page = page,
             size = size,
         )
+    }
+
+    override fun findDetail(
+        cmpCd: String,
+        contractNo: String
+    ): GroupContractDetailDto? {
+        // SQL を読み込み
+        val sql = sqlLoader.load("group/group_contract_detail.sql")
+
+        // パラメータを構築
+        val params = mapOf(
+            "cmpCd" to cmpCd,
+            "contractNo" to contractNo
+        )
+
+        // 1件取得（Fail Fast: 0件→null、1件→OK、複数件→例外）
+        val results = jdbc.query(sql, params, detailRowMapper)
+        return when (results.size) {
+            0 -> null
+            1 -> results[0]
+            else -> throw IllegalStateException("GroupContractDetail returned ${results.size} rows for $cmpCd/$contractNo")
+        }
     }
 }

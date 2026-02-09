@@ -23,8 +23,8 @@ data class GroupContractSearchResponse(
     // 契約状態（SQL SELECT 順）
     val contractStatusKbn: String?,
     val contractStatusName: String?,
-    val dmdStopRasonKbn: String?,
-    val dmdStopRasonName: String?,
+    val dmdStopReasonKbn: String?,
+    val dmdStopReasonName: String?,
     val cancelReasonKbn: String?,
     val cancelReasonName: String?,
     val zashuReasonKbn: String?,

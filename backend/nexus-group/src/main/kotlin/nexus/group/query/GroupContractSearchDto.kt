@@ -26,22 +26,22 @@ data class GroupContractSearchDto(
     val birthday: String?,                    // birthday (YYYYMMDD format)
     
     // 契約状態（SQL SELECT 順）
-    val contractStatusKbn: String?,           // contract_status_kbn
-    val contractStatusName: String?,          // contract_status_name
-    val dmdStopRasonKbn: String?,             // dmd_stop_rason_kbn
-    val dmdStopRasonName: String?,            // dmd_stop_rason_name
-    val cancelReasonKbn: String?,             // cancel_reason_kbn
-    val cancelReasonName: String?,            // cancel_reason_name
-    val zashuReasonKbn: String?,              // zashu_reason_kbn
-    val zashuReasonName: String?,             // zashu_reason_name
-    val anspApproveKbn: String?,              // ansp_approve_kbn
-    val anspApproveName: String?,            // ansp_approve_name
-    val torikeshiReasonKbn: String?,         // torikeshi_reason_kbn
-    val torikeshiReasonName: String?,        // torikeshi_reason_name
-    val ecApproveKbn: String?,                 // ec_approve_kbn
-    val ecApproveName: String?,               // ec_approve_name
-    val cancelStatusKbn: String?,             // cancel_status_kbn
-    val cancelStatusName: String?,            // cancel_status_name
+    override val contractStatusKbn: String?,           // contract_status_kbn
+    override val contractStatusName: String?,          // contract_status_name
+    override val dmdStopReasonKbn: String?,             // dmd_stop_reason_kbn
+    override val dmdStopReasonName: String?,            // dmd_stop_reason_name
+    override val cancelReasonKbn: String?,             // cancel_reason_kbn
+    override val cancelReasonName: String?,            // cancel_reason_name
+    override val zashuReasonKbn: String?,              // zashu_reason_kbn
+    override val zashuReasonName: String?,             // zashu_reason_name
+    override val anspApproveKbn: String?,              // ansp_approve_kbn
+    override val anspApproveName: String?,            // ansp_approve_name
+    override val torikeshiReasonKbn: String?,         // torikeshi_reason_kbn
+    override val torikeshiReasonName: String?,        // torikeshi_reason_name
+    override val ecApproveKbn: String?,                 // ec_approve_kbn
+    override val ecApproveName: String?,               // ec_approve_name
+    override val cancelStatusKbn: String?,             // cancel_status_kbn
+    override val cancelStatusName: String?,            // cancel_status_name
     val contractStatus: String?,              // contract_status (SQL では NULL)
     val taskName: String?,                    // task_name
     val statusUpdateYmd: String?,             // status_update_ymd (YYYYMMDD format)
@@ -102,4 +102,4 @@ data class GroupContractSearchDto(
     val foreclosureFlg: String?,              // foreclosure_flg
     val registYmd: String?,                   // regist_ymd (YYYYMMDD format)
     val receptionNo: String?                  // reception_no
-)
+) : ContractStatusMaterials
