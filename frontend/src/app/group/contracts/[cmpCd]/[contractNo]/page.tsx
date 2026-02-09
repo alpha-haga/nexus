@@ -10,6 +10,17 @@ import { Forbidden } from '@/modules/core/components/errors/Forbidden';
 import { groupService } from '@/services/group';
 import type { ApiError, GroupContractDetailResponse } from '@/types';
 
+// TODO 表示用ヘルパーコンポーネント
+const TodoCard = ({ title }: { title: string }) => (
+  <div className="card p-6">
+    <h2 className="text-lg font-semibold text-gray-900 mb-4">{title}</h2>
+    <div className="text-sm text-amber-600">
+      <p className="font-medium">TODO: 未実装（P2-7 以降で詳細API接続予定）</p>
+      <p className="mt-1 text-gray-500">このカードは仕様確定後に項目を追加します。</p>
+    </div>
+  </div>
+);
+
 export default function GroupContractDetailPage() {
   const { data: session, status } = useSession();
   const params = useParams();
@@ -204,7 +215,7 @@ export default function GroupContractDetailPage() {
           </div>
 
           <div className="space-y-6">
-            {/* 基本識別情報 */}
+            {/* 1. 契約基本情報 */}
             <div className="card p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">基本情報</h2>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -231,7 +242,7 @@ export default function GroupContractDetailPage() {
               </dl>
             </div>
 
-            {/* 契約者情報 */}
+            {/* 2. 契約者情報 */}
             <div className="card p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">契約者情報</h2>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -270,7 +281,7 @@ export default function GroupContractDetailPage() {
               </dl>
             </div>
 
-            {/* 連絡先 */}
+            {/* 3. 連絡先 */}
             <div className="card p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">連絡先</h2>
               <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -285,7 +296,7 @@ export default function GroupContractDetailPage() {
               </dl>
             </div>
 
-            {/* 住所 */}
+            {/* 4. 住所 */}
             <div className="card p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">住所</h2>
               <dl className="grid grid-cols-1 gap-4">
@@ -300,7 +311,7 @@ export default function GroupContractDetailPage() {
               </dl>
             </div>
 
-            {/* 契約状態 */}
+            {/* 5. 契約状態 */}
             <div className="card p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">契約状態</h2>
               {data.contractStatus ? (
@@ -360,6 +371,21 @@ export default function GroupContractDetailPage() {
                 </div>
               )}
             </div>
+
+            {/* 6. 契約詳細（未実装） */}
+            <TodoCard title="契約詳細" />
+
+            {/* 7. 担当者情報（未実装） */}
+            <TodoCard title="担当者情報" />
+
+            {/* 8. 口座情報（未実装） */}
+            <TodoCard title="口座情報" />
+
+            {/* 9. 入金情報（未実装） */}
+            <TodoCard title="入金情報" />
+
+            {/* 10. 対応履歴（未実装） */}
+            <TodoCard title="対応履歴" />
           </div>
         </div>
       </AppLayout>
