@@ -427,7 +427,7 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 | P2-2 | Frontend 本格接続 | **一旦完了（P2-2-0 は別立て継続）** |
 | P2-3 | 権限制御反映 | **完了** |
 | P2-4 | 検索条件拡張 | **完了** |
-| P2-5 | パフォーマンス最適化 | 未着手 |
+| P2-5 | 視認性改善/検索UX改善 | **完了** |
 | P2-6 | 本番運用前最終調整 | 未着手 |
 
 ---
@@ -591,67 +591,39 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 ---
 
-### P2-5（未着手）— パフォーマンス最適化（P1-B3 の実施 + 実務項目の精査・追加）
+### P2-5（完了）— 視認性改善/検索UX改善
 
 **目的**: 
-P1-B0 最低限を土台として、実務に合わせた「検索・一覧の項目」を精査・追加し、業務成立へ寄せる。
-特に「一覧表示項目の精査・追加」と「それに必要なJOIN段階的復活」をスコープインする。
-追加項目に必要なJOINを段階的に復活させ、パフォーマンス（インデックス/統計/SQL）を改善する。
-JDBC vs JPA 同一仕様比較検証（判断材料の記録）も実施する。
-（ただしP2-3を壊さない）
+法人横断契約一覧の視認性改善と検索UX改善を実施する。
+一覧画面の横幅全幅使用、固定列+横スクロール、縦スクロール時のヘッダ固定、検索フォーム折りたたみ化、条件サマリ表示、ブラウザ縦スクロール抑制を実装。
 
 **位置づけ**:
-- P2-4 で成立した P1-B0 最低限を土台とする
-- 実務に合わせた項目の精査・追加と、それに必要なJOIN段階的復活をスコープイン
-- パフォーマンス（インデックス/統計/SQL本格チューニング）をP2-5で扱う
+- P2-4 で成立した検索条件拡張を土台とする
+- 一覧画面の視認性を向上させ、業務で使いやすいUI/UXを実現する
 
-**スコープ（やること）**:
+**実施内容**:
+1. 一覧画面の視認性改善（横幅全幅使用、固定列+横スクロール、縦スクロール時のヘッダ固定）
+2. 検索フォームのUX改善（折りたたみ化、state統一、条件サマリ表示）
+3. スクロール制御の改善（ブラウザ縦スクロール抑制）
 
-1. **実務項目の精査と追加**
-   - 追加項目を「検索条件」「一覧表示項目」に分けて合意・確定
-   - "Frontendが業務判断しない"前提で、UIは入力と表示の器として拡張
+**変更ファイル**:
+- `frontend/src/modules/group/components/GroupContractSearchForm.tsx`（controlled化）
+- `frontend/src/modules/group/components/GroupContractsList.tsx`（視認性改善）
+- `frontend/src/app/group/contracts/page.tsx`（横幅全幅使用）
 
-2. **JOIN 段階的復活**
-   - 追加項目の根拠となるJOINを段階的に追加
-   - Search/Countの整合（FROM/WHERE一致）を維持
+**状態**: 完了
 
-3. **QueryBuilder/条件組み立ての規律強化**
-   - NULL吸収ORを避け、条件があるものだけWHEREに入れる方針を徹底
-   - count/search の FROM/JOIN/WHERE を構造で一致させる（QueryBuilder導入）
-   - 許可ソートキーのホワイトリスト制（P1-B0 を正とする）
+**完了宣言**: [p2-5-closeout.md](./p2-5-closeout.md) を参照
 
-4. **性能・運用**
-   - explain/計測/索引/統計を含め、実務性能に合わせて改善
-   - パフォーマンス測定の実施（実データ量前提）
-   - 許容時間内で動作することを確認
-
-**Done 条件（チェックリスト形式）**:
-
-- [ ] 実務項目の一覧がdocsで確定している（検索条件/一覧表示）
-- [ ] 追加項目に必要なJOINが段階的に復活している（差分が説明可能）
-- [ ] Search/Count整合が担保され、回帰観点がdocs化されている
-- [ ] QueryBuilder導入により、count/search の FROM/JOIN/WHERE が構造で一致している
-- [ ] OR吸収が廃止されている（動的WHERE化）
-- [ ] 動的ソートがホワイトリストで安全に適用される（不正は400）
-- [ ] 性能計測と改善結果が記録されている（最低限、推測禁止）
-- [ ] 実データ量・権限スコープ前提で許容時間内で動作する
-- [ ] 改善前後の計測が docs に残っている（推測禁止）
-
-**今やらないこと（必須：明示）**:
-
-- 名寄せ/同義語/ゆらぎ吸収などの高度検索
-- UI側での自動補完・推測
-- 更新/編集系（別フェーズ）
+**次フェーズ（P2-6）へ回す事項**:
+1. 一覧→詳細遷移機能
+2. パフォーマンス最適化（本来のP2-5の内容、P2-6以降で検討）
+3. エラーハンドリング検証（P2-2-0、別チャットで継続中）
 
 **参照**:
-- [p2-detailed-roadmap.md](./p2-detailed-roadmap.md)（P2-5 詳細）
-- [p2-5-performance-optimization-roadmap.md](./p2-5-performance-optimization-roadmap.md)（P2-5 詳細ロードマップ）
+- [p2-5-closeout.md](./p2-5-closeout.md)（P2-5 完了宣言）
 - [p2-5-group-contract-list-display-items.md](./p2-5-group-contract-list-display-items.md)（一覧表示項目の正本）
-- [p2-5-group-contract-list-join-plan.md](./p2-5-group-contract-list-join-plan.md)（JOIN 段階的復活計画の正本）
-- [p2-5-jdbc-querybuilder-guideline.md](./p2-5-jdbc-querybuilder-guideline.md)（JDBC QueryBuilder ガイド）
-- [p1-b2-completion.md](./p1-b2-completion.md)（現状のパフォーマンス測定結果を参照）
-
-**状態**: 未着手
+- [p2-5-performance-optimization-roadmap.md](./p2-5-performance-optimization-roadmap.md)（本来のP2-5の内容、P2-6以降で検討）
 
 ---
 
