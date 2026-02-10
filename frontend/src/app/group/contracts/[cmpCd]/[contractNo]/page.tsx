@@ -9,6 +9,7 @@ import { useScreenPermission } from '@/modules/core/auth/useScreenPermission';
 import { Forbidden } from '@/modules/core/components/errors/Forbidden';
 import { groupService } from '@/services/group';
 import type { ApiError, GroupContractDetailResponse } from '@/types';
+import type { GroupContractContractContentsResponse, GroupContractStaffResponse } from '@/types';
 
 // TODO 表示用ヘルパーコンポーネント
 const TodoCard = ({ title }: { title: string }) => (
@@ -34,6 +35,13 @@ export default function GroupContractDetailPage() {
   const [data, setData] = useState<GroupContractDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<ApiError | null>(null);
+  // サブリソース API 呼び出し状態
+  const [contractContents, setContractContents] = useState<GroupContractContractContentsResponse | null>(null);
+  const [contractContentsLoading, setContractContentsLoading] = useState(false);
+  const [contractContentsError, setContractContentsError] = useState<ApiError | null>(null);
+  const [staff, setStaff] = useState<GroupContractStaffResponse | null>(null);
+  const [staffLoading, setStaffLoading] = useState(false);
+  const [staffError, setStaffError] = useState<ApiError | null>(null);
 
   // API呼び出し
   useEffect(() => {
@@ -65,6 +73,66 @@ export default function GroupContractDetailPage() {
       cancelled = true;
     };
   }, [cmpCd, contractNo]);
+
+  // 契約内容 API 呼び出し
+  useEffect(() => {
+    if (!cmpCd || !contractNo || !data) {
+      return;
+    }
+
+    let cancelled = false;
+    setContractContentsLoading(true);
+    setContractContentsError(null);
+
+    groupService
+      .getContractContents(cmpCd, contractNo)
+      .then((result) => {
+        if (!cancelled) {
+          setContractContents(result);
+          setContractContentsLoading(false);
+        }
+      })
+      .catch((err: ApiError) => {
+        if (!cancelled) {
+          setContractContentsError(err);
+          setContractContentsLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cmpCd, contractNo, data]);
+
+  // 担当者情報 API 呼び出し
+  useEffect(() => {
+    if (!cmpCd || !contractNo || !data) {
+      return;
+    }
+
+    let cancelled = false;
+    setStaffLoading(true);
+    setStaffError(null);
+
+    groupService
+      .getContractStaff(cmpCd, contractNo)
+      .then((result) => {
+        if (!cancelled) {
+          setStaff(result);
+          setStaffLoading(false);
+        }
+      })
+      .catch((err: ApiError) => {
+        if (!cancelled) {
+          setStaffError(err);
+          setStaffLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cmpCd, contractNo, data]);
 
   // 認証中は一旦表示（ローディング状態）
   if (status === 'loading') {
@@ -372,11 +440,64 @@ export default function GroupContractDetailPage() {
               )}
             </div>
 
-            {/* 6. 契約詳細（未実装） */}
-            <TodoCard title="契約詳細" />
+            {/* 6. 契約内容 */}
+            <div className="card p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">契約内容</h2>
+              {contractContentsLoading ? (
+                <p className="text-sm text-gray-500">読み込み中...</p>
+              ) : contractContentsError ? (
+                <div className="text-sm text-red-600">
+                  <p className="font-medium">エラー: {contractContentsError.status} {contractContentsError.message}</p>
+                </div>
+              ) : contractContents ? (
+                <div>
+                  {Object.keys(contractContents.attributes).length > 0 ? (
+                    <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(contractContents.attributes).map(([key, value]) => (
+                        <div key={key}>
+                          <dt className="text-sm font-medium text-gray-500">{key}</dt>
+                          <dd className="mt-1 text-sm text-gray-900">{value === null ? '(null)' : value}</dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
 
-            {/* 7. 担当者情報（未実装） */}
-            <TodoCard title="担当者情報" />
+            {/* 7. 担当者情報 */}
+            <div className="card p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">担当者情報</h2>
+              {staffLoading ? (
+                <p className="text-sm text-gray-500">読み込み中...</p>
+              ) : staffError ? (
+                <div className="text-sm text-red-600">
+                  <p className="font-medium">エラー: {staffError.status} {staffError.message}</p>
+                </div>
+              ) : staff ? (
+                <div>
+                  {staff.staffs.length > 0 ? (
+                    <dl className="grid grid-cols-1 gap-4">
+                      {staff.staffs.map((s) => (
+                        <div key={s.role}>
+                          <dt className="text-sm font-medium text-gray-500">{s.roleLabel}</dt>
+                          <dd className="mt-1 text-sm text-gray-900">
+                            {s.staffName ? (
+                              <>
+                                {s.staffName}
+                                {s.bosyuCd && <span className="text-gray-500 ml-2">({s.bosyuCd})</span>}
+                              </>
+                            ) : (
+                              s.bosyuCd
+                            )}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
 
             {/* 8. 口座情報（未実装） */}
             <TodoCard title="口座情報" />

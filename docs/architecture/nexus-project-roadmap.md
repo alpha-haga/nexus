@@ -428,7 +428,12 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 | P2-3 | 権限制御反映 | **完了** |
 | P2-4 | 検索条件拡張 | **完了** |
 | P2-5 | 視認性改善/検索UX改善 | **完了** |
-| P2-6 | 本番運用前最終調整 | 未着手 |
+| P2-6 | 詳細画面 TODO カード群の API 分離設計確定 | **完了** |
+| P2-7 | 詳細API 実装(1) 契約内容/担当者情報 | 未着手 |
+| P2-8 | 詳細API 実装(2) 口座情報 | 未着手 |
+| P2-9 | 詳細API 実装(3) 入金情報/対応履歴 | 未着手 |
+| P2-10 | RegionSelector 廃止→法人（Tenant）選択へ統合 | 未着手 |
+| P2-11 | 本番運用前最終調整 | 未着手 |
 
 ---
 
@@ -627,7 +632,121 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 ---
 
-### P2-6（未着手）— 本番運用前最終調整
+### P2-6（完了）— 詳細画面 TODO カード群の API 分離設計確定
+
+**目的**: 契約詳細画面の TODO カード群に対応する API の分離設計を確定し、P2-7 以降の実装準備を完了する。
+
+**スコープ**:
+- 詳細画面 TODO カード群の API 分離単位の確定
+- URL 命名規則の確定
+- SQL 命名規則・置き場所の確定
+- 実装単位（コード構造）の固定
+
+**Done 条件**:
+- ✅ 詳細画面 TODO カード群と API の 1:1 対応が確定している
+- ✅ URL 命名規則が確定している
+- ✅ SQL 命名規則・置き場所が確定している
+- ✅ 実装単位（コード構造）が固定されている
+- ✅ 設計ドキュメント（p2-6-group-contract-detail-api-splitting.md）が作成されている
+
+**状態**: 完了
+
+**参照**:
+- [p2-6-group-contract-detail-api-splitting.md](./p2-6-group-contract-detail-api-splitting.md)（P2-6 設計確定ドキュメント）
+- [p2-6-contract-detail.md](./p2-6-contract-detail.md)（P2-6 設計判断記録）
+
+---
+
+### P2-7（未着手）— 詳細API 実装(1) 契約内容/担当者情報
+
+**目的**: 契約詳細画面の「契約内容」「担当者情報」TODO カードに対応する API を実装し、Frontend で表示できるようにする。
+
+**スコープ**:
+- `GET /api/v1/group/contracts/{cmpCd}/{contractNo}/contractContents` の実装
+- `GET /api/v1/group/contracts/{cmpCd}/{contractNo}/staff` の実装
+- SQL 実装（`group_contract_contract_contents.sql`, `group_contract_staff.sql`）
+- QueryService 実装（JDBC）
+- Frontend での API 接続と表示差し替え
+
+**Done 条件**:
+- ✅ 契約内容 API が実装され、Frontend で表示できる
+- ✅ 担当者情報 API が実装され、Frontend で表示できる
+- ✅ SQL / DTO / RowMapper / Controller が実装されている
+- ✅ Frontend で TODO カードが実データ表示に差し替えられている
+
+**参照**:
+- [p2-6-group-contract-detail-api-splitting.md](./p2-6-group-contract-detail-api-splitting.md)（API 分離設計）
+
+---
+
+### P2-8（未着手）— 詳細API 実装(2) 口座情報
+
+**目的**: 契約詳細画面の「口座情報」TODO カードに対応する API を実装し、Frontend で表示できるようにする。特に権限制御の確認を重点的に実施する。
+
+**スコープ**:
+- `GET /api/v1/group/contracts/{cmpCd}/{contractNo}/bankAccount` の実装
+- SQL 実装（`group_contract_bank_account.sql`）
+- QueryService 実装（JDBC）
+- 権限制御の確認（403/404 の適切な返却）
+- Frontend での API 接続と表示差し替え
+
+**Done 条件**:
+- ✅ 口座情報 API が実装され、Frontend で表示できる
+- ✅ SQL / DTO / RowMapper / Controller が実装されている
+- ✅ 権限制御が適切に動作することを確認している（403/404 の確認）
+- ✅ Frontend で TODO カードが実データ表示に差し替えられている
+
+**参照**:
+- [p2-6-group-contract-detail-api-splitting.md](./p2-6-group-contract-detail-api-splitting.md)（API 分離設計）
+
+---
+
+### P2-9（未着手）— 詳細API 実装(3) 入金情報/対応履歴
+
+**目的**: 契約詳細画面の「入金情報」「対応履歴」TODO カードに対応する API を実装し、Frontend で表示できるようにする。
+
+**スコープ**:
+- `GET /api/v1/group/contracts/{cmpCd}/{contractNo}/payments` の実装
+- `GET /api/v1/group/contracts/{cmpCd}/{contractNo}/activityHistory` の実装
+- SQL 実装（`group_contract_payments.sql`, `group_contract_activity_history.sql`）
+- QueryService 実装（JDBC）
+- ページング要否の確定（P2-7 で確定）
+- Frontend での API 接続と表示差し替え
+
+**Done 条件**:
+- ✅ 入金情報 API が実装され、Frontend で表示できる
+- ✅ 対応履歴 API が実装され、Frontend で表示できる
+- ✅ SQL / DTO / RowMapper / Controller が実装されている
+- ✅ ページング要否が確定している
+- ✅ Frontend で TODO カードが実データ表示に差し替えられている
+
+**参照**:
+- [p2-6-group-contract-detail-api-splitting.md](./p2-6-group-contract-detail-api-splitting.md)（API 分離設計）
+
+---
+
+### P2-10（未着手）— RegionSelector 廃止→法人（Tenant）選択へ統合
+
+**目的**: RegionSelector を廃止し、法人（Tenant）選択へ統合する。claim 例（`integration__ALL__GROUP` 等）を前提に画面スコープを決定する。
+
+**スコープ**:
+- RegionSelector の廃止
+- 法人（Tenant）選択 UI の実装
+- claim 例（`integration__ALL__GROUP` 等）を前提にした画面スコープ決定ロジックの実装
+- 法人選択肢（名称含む）を認証情報 or BFF のどちらで提供するかの判断確定と実装
+
+**Done 条件**:
+- ✅ RegionSelector が廃止されている
+- ✅ 法人（Tenant）選択 UI が実装されている
+- ✅ claim を前提にした画面スコープ決定ロジックが実装されている
+- ✅ 法人選択肢（名称含む）の提供方法が確定・実装されている
+
+**参照**:
+- [p04-5-keycloak-claims-db-routing.md](./p04-5-keycloak-claims-db-routing.md)（claim 設計）
+
+---
+
+### P2-11（未着手）— 本番運用前最終調整
 
 **目的**: 本番運用に向けた最終調整を実施する。
 
@@ -648,4 +767,4 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 * 本ドキュメントは**更新される前提**の資料
 * 設計原則の変更は nexus-design-constitution.md のみで行う
-* Cursor / Agent 実行時は、常に「現在地（P1 完了、P2-1 完了、P2-2 一旦完了、P2-3 完了、P2-4 着手中）」を明示して開始する
+* Cursor / Agent 実行時は、常に「現在地（P1 完了、P2-1 完了、P2-2 一旦完了、P2-3 完了、P2-4 完了、P2-5 完了、P2-6 完了、P2-7 未着手）」を明示して開始する

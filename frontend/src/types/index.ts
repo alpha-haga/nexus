@@ -376,8 +376,10 @@ export interface GroupContractStaffResponse {
   cmpCd: string;
   contractNo: string;
   staffs: Array<{
-    id: string;
-    displayName: string | null;
+    role: string;
+    roleLabel: string;
+    bosyuCd: string | null;
+    staffName: string | null;
   }>;
 }
 

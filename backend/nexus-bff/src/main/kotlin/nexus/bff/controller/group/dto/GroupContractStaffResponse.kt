@@ -3,8 +3,9 @@ package nexus.bff.controller.group.dto
 /**
  * 担当者情報（TODO カード: 担当者情報）
  *
- * P2-6：API 分離設計のためのレスポンス骨格。
- * 項目は P2-7 以降で確定し、段階的に拡張する。
+ * P2-7: 項目確定
+ * - bosyu/entry/restore/taking を UNION ALL で 4行必ず返す
+ * - SQL の role / role_label / bosyu_cd / staff_name をそのまま反映
  */
 data class GroupContractStaffResponse(
     val cmpCd: String,
@@ -12,7 +13,13 @@ data class GroupContractStaffResponse(
     val staffs: List<Staff> = emptyList(),
 ) {
     data class Staff(
-        val id: String,
-        val displayName: String? = null,
+        /** 役割（bosyu/entry/restore/taking） */
+        val role: String,
+        /** 役割ラベル（募集担当者/加入担当者/復活担当者/引継担当者） */
+        val roleLabel: String,
+        /** 募集コード（SQL: bosyu_cd） */
+        val bosyuCd: String?,
+        /** 担当者名（SQL: staff_name、SQL 側で結合済み） */
+        val staffName: String?,
     )
 }
