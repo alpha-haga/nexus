@@ -413,6 +413,51 @@ export interface GroupContractBankAccountResponse {
   viewFlg: number | null;
 }
 
+export interface GroupContractReceiptResponse {
+  cmpCd: string;
+  contractNo: string;
+  receipts: Array<{
+    listNo: number | null;
+    ym: string | null;
+    dmdMethodKbn: string | null;
+    dmdRsltKbn: string | null;
+    dmdMethodName: string | null;
+    dmdRsltName: string | null;
+    clientConsignorKbn: string | null;
+    clientConsignorName: string | null;
+    discountGaku: number | null;
+    shareNum: number | null;
+    courseMonthlyPremium: number | null;
+    receiptReceiptMethodKbn: string | null;
+    receiptReceiptMethodName: string | null;
+    receiptReceiptYmd: string | null;
+    receiptReceiptGaku: number | null;
+    receiptNum: number | null;
+    pekeReceiptMethodKbn: string | null;
+    pekeReceiptReasonKbn: string | null;
+    pekeReceiptReasonName: string | null;
+    pekeReceiptYmd: string | null;
+    pekeReceiptGaku: number | null;
+    pekeNum: number | null;
+    refundReasonKbn: string | null;
+    refundReasonName: string | null;
+    refundGaku: number | null;
+    refundYmd: string | null;
+    count: number | null;
+    paymentRec: number | null;
+    refundCount: number | null;
+    refundPayment: number | null;
+    pekeReceiptReasonKbnCd: string | null;
+    opeRecFlg: string | null;
+    opeUsageKbn: string | null;
+    opeUsageName: string | null;
+    opeUsagePurposeKbn: string | null;
+    opeUsagePurposeName: string | null;
+    partUsageGaku: number | null;
+    opeYmd: string | null;
+  }>;
+}
+
 export interface GroupContractPaymentsResponse {
   cmpCd: string;
   contractNo: string;

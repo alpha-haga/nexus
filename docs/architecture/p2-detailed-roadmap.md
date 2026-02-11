@@ -63,8 +63,8 @@ P2 は以下を目的として実施する：
 | P2-4 | 検索条件拡張 | 法人横断契約一覧の業務成立 | 完了 |
 | P2-5 | 視認性改善/検索UX改善 | 一覧画面の視認性向上 | 完了 |
 | P2-6 | 詳細画面 TODO カード群の API 分離設計確定 | API 分離設計の確定 | 完了 |
-| P2-7 | 詳細API 実装(1) 契約内容/担当者情報 | 契約内容・担当者情報 API 実装 | 未着手 |
-| P2-8 | 詳細API 実装(2) 口座情報 | 口座情報 API 実装（権限制御確認重点） | 未着手 |
+| P2-7 | 詳細API 実装(1) 契約内容/担当者情報 | 契約内容・担当者情報 API 実装 | 完了 |
+| P2-8 | 詳細API 実装(2) 口座情報 | 口座情報 API 実装（権限制御確認重点） | 完了 |
 | P2-9 | 詳細API 実装(3) 入金情報/対応履歴 | 入金情報・対応履歴 API 実装 | 未着手 |
 | P2-10 | RegionSelector 廃止→法人（Tenant）選択へ統合 | RegionSelector 廃止と法人選択統合 | 未着手 |
 | P2-11 | 本番運用前最終調整 | ログ・監査・セキュリティ | 未着手 |
@@ -441,19 +441,38 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 ### 12.5 Done 条件
 
-- [ ] 口座情報 API が実装され、Frontend で表示できる（権限OKユーザーで 200 を返す）
-- [ ] SQL / DTO / RowMapper / Controller が実装されている
+- [x] 口座情報 API が実装され、Frontend で表示できる（権限OKユーザーで 200 を返す）
+- [x] SQL / DTO / RowMapper / Controller が実装されている
   - SQL: `backend/nexus-infrastructure/src/main/resources/sql/group/group_contract_bank_account.sql`
   - QueryService: `GroupContractBankAccountQueryService`（group）, `JdbcGroupContractBankAccountQueryService`（infrastructure）
   - RowMapper: `GroupContractBankAccountRowMapper`
   - Controller: `GroupContractBankAccountController`（501 → 200）
-- [ ] 権限制御が適切に動作することを確認している
+- [x] 権限制御が適切に動作することを確認している
   - 権限OKユーザー: 200 を返す
   - 権限NGユーザー: 403 を返し、Frontend が既存 Forbidden UI 規約どおり表示する
   - 存在しない契約: 404 を返す
-- [ ] Frontend で TODO カードが実データ表示に差し替えられている（Frontend は業務判断しない）
-- [ ] `./gradlew build` / `npm run build` が通る
-- [ ] 一覧→詳細→一覧 UX（P2-5 の sessionStorage 復元等）を壊していない
+- [x] Frontend で TODO カードが実データ表示に差し替えられている（Frontend は業務判断しない）
+- [x] `./gradlew build` / `npm run build` が通る
+- [x] 一覧→詳細→一覧 UX（P2-5 の sessionStorage 復元等）を壊していない
+
+**状態**: 完了
+
+**実施内容（完了済み）**:
+- Backend:
+  - SQL を infrastructure 層に配置（`group_contract_bank_account.sql`）
+  - JDBC QueryService / RowMapper を追加（`JdbcGroupContractBankAccountQueryService`, `GroupContractBankAccountRowMapper`）
+  - BFF Controller を QueryService 呼び出しに切替（501 → 200）
+  - 0件→404（ResourceNotFoundException）／権限制御は既存規約（403）に従う
+- Frontend:
+  - 詳細ページの「口座情報」カードを TODO 表示 → 実データ表示へ差し替え
+  - null を "(null)" で可視化（補完禁止・状態を隠さない）
+  - エラーは status/message を可視化（独自の意味付け禁止）
+- 動作確認:
+  - `./gradlew build` が通る
+  - `npm run build` が通る
+  - 口座情報 API が 200 を返す（権限OKユーザー）
+  - 口座情報 API が 403 を返す（権限NGユーザー、既存 Forbidden UI 規約どおり表示）
+  - 一覧→詳細→一覧 UX（P2-5 の sessionStorage 復元等）を壊していない
 
 ### 12.6 参照
 
@@ -631,6 +650,6 @@ P2 完了後の候補タスク（P3 として整理予定）：
 
 - 本ロードマップは P2 の実装ガイドであり、設計の正は nexus-design-constitution.md である
 - 各サブフェーズ完了時に完了宣言ドキュメントを作成する
-- Cursor / Agent 実行時は「現在地（P2-7 完了、P2-8 未着手）」を明示して開始する
+- Cursor / Agent 実行時は「現在地（P2-7 完了、P2-8 完了、P2-9 未着手）」を明示して開始する
 
 以上。

@@ -9,7 +9,7 @@ import { useScreenPermission } from '@/modules/core/auth/useScreenPermission';
 import { Forbidden } from '@/modules/core/components/errors/Forbidden';
 import { groupService } from '@/services/group';
 import type { ApiError, GroupContractDetailResponse } from '@/types';
-import type { GroupContractContractContentsResponse, GroupContractStaffResponse, GroupContractBankAccountResponse } from '@/types';
+import type { GroupContractContractContentsResponse, GroupContractStaffResponse, GroupContractBankAccountResponse, GroupContractReceiptResponse } from '@/types';
 
 // TODO 表示用ヘルパーコンポーネント
 const TodoCard = ({ title }: { title: string }) => (
@@ -54,6 +54,11 @@ export default function GroupContractDetailPage() {
   const [bankAccount, setBankAccount] = useState<GroupContractBankAccountResponse | null>(null);
   const [bankAccountLoading, setBankAccountLoading] = useState(false);
   const [bankAccountError, setBankAccountError] = useState<ApiError | null>(null);
+  const [receipt, setReceipt] = useState<GroupContractReceiptResponse | null>(null);
+  const [receiptLoading, setReceiptLoading] = useState(false);
+  const [receiptError, setReceiptError] = useState<ApiError | null>(null);
+  const [receiptPage, setReceiptPage] = useState(1);
+  const receiptPageSize = 20;
 
   // API呼び出し
   useEffect(() => {
@@ -175,6 +180,58 @@ export default function GroupContractDetailPage() {
       cancelled = true;
     };
   }, [cmpCd, contractNo, data]);
+
+  // 入金情報 API 呼び出し
+  useEffect(() => {
+    if (!cmpCd || !contractNo || !data) {
+      return;
+    }
+
+    let cancelled = false;
+    setReceiptLoading(true);
+    setReceiptError(null);
+
+    groupService
+      .getContractReceipts(cmpCd, contractNo)
+      .then((result) => {
+        if (!cancelled) {
+          setReceipt(result);
+          setReceiptPage(1); // データ更新時にページをリセット
+          setReceiptLoading(false);
+        }
+      })
+      .catch((err: ApiError) => {
+        if (!cancelled) {
+          setReceiptError(err);
+          setReceiptLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cmpCd, contractNo, data]);
+
+  // 契約切替時にページをリセット
+  useEffect(() => {
+    setReceiptPage(1);
+  }, [cmpCd, contractNo]);
+
+  // 入金情報のページング計算
+  const receiptTotalCount = receipt?.receipts?.length ?? 0;
+  const receiptTotalPages = Math.max(1, Math.ceil(receiptTotalCount / receiptPageSize));
+  const receiptStartIndex = (receiptPage - 1) * receiptPageSize;
+  const receiptEndIndex = receiptStartIndex + receiptPageSize;
+  const receiptPageReceipts = receipt?.receipts?.slice(receiptStartIndex, receiptEndIndex) ?? [];
+
+  // receiptPage の範囲外補正
+  useEffect(() => {
+    setReceiptPage((p) => {
+      if (p < 1) return 1;
+      if (p > receiptTotalPages) return receiptTotalPages;
+      return p;
+    });
+  }, [receiptTotalPages]);
 
   // 認証中は一旦表示（ローディング状態）
   if (status === 'loading') {
@@ -618,8 +675,86 @@ export default function GroupContractDetailPage() {
               ) : null}
             </div>
 
-            {/* 9. 入金情報（未実装） */}
-            <TodoCard title="入金情報" />
+            {/* 9. 入金情報 */}
+            <div className="card p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">入金情報</h2>
+              {receiptLoading ? (
+                <p className="text-sm text-gray-500">読み込み中...</p>
+              ) : receiptError ? (
+                <div className="text-sm text-red-600">
+                  <p className="font-medium">エラー: {receiptError.status} {receiptError.message}</p>
+                </div>
+              ) : receipt ? (
+                <div>
+                  {receipt.receipts.length === 0 ? (
+                    <p className="text-sm text-gray-500">入金履歴なし</p>
+                  ) : (
+                    <>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">年月</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">請求方法</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">請求結果</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">入金方法</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">入金日</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">入金額</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">入金回数</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">割引額</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">返金理由</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">返金額</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">返金日</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {receiptPageReceipts.map((r, index) => (
+                              <tr key={r.listNo ?? `${r.ym ?? ''}-${index}`}>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableText(r.ym)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableText(r.clientConsignorName)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableText(r.dmdRsltName)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableText(r.receiptReceiptMethodName)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableText(r.receiptReceiptYmd)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableNumber(r.receiptReceiptGaku)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableNumber(r.receiptNum)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableNumber(r.discountGaku)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableText(r.refundReasonName)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableNumber(r.refundGaku)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableText(r.refundYmd)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="mt-4 flex items-center justify-between">
+                        <div className="text-sm text-gray-500">
+                          1ページあたり {receiptPageSize} 件
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <button
+                            onClick={() => setReceiptPage(p => Math.max(1, p - 1))}
+                            disabled={receiptPage === 1}
+                            className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            前へ
+                          </button>
+                          <span className="text-sm text-gray-700">
+                            {receiptPage} / {receiptTotalPages} ページ
+                          </span>
+                          <button
+                            onClick={() => setReceiptPage(p => Math.min(receiptTotalPages, p + 1))}
+                            disabled={receiptPage === receiptTotalPages}
+                            className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            次へ
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : null}
+            </div>
 
             {/* 10. 対応履歴（未実装） */}
             <TodoCard title="対応履歴" />

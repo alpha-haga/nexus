@@ -63,7 +63,7 @@
 | 契約内容 | `GET /api/v1/group/contracts/{cmpCd}/{contractNo}/contractContents` | `GroupContractContractContentsResponse` | `GroupContractContractContentsDto` | `group_contract_contract_contents.sql` |
 | 担当者情報 | `GET /api/v1/group/contracts/{cmpCd}/{contractNo}/staff` | `GroupContractStaffResponse` | `GroupContractStaffDto` | `group_contract_staff.sql` |
 | 口座情報 | `GET /api/v1/group/contracts/{cmpCd}/{contractNo}/bankAccount` | `GroupContractBankAccountResponse` | `GroupContractBankAccountDto` | `group_contract_bank_account.sql` |
-| 入金情報 | `GET /api/v1/group/contracts/{cmpCd}/{contractNo}/payments` | `GroupContractPaymentsResponse` | `GroupContractPaymentDto`（List） | `group_contract_payments.sql` |
+| 入金情報 | `GET /api/v1/group/contracts/{cmpCd}/{contractNo}/receipts` | `GroupContractReceiptResponse` | `GroupContractReceiptDto`（List） | `group_contract_receipts.sql` |
 | 対応履歴 | `GET /api/v1/group/contracts/{cmpCd}/{contractNo}/activityHistory` | `GroupContractActivityHistoryResponse` | `GroupContractActivityHistoryDto`（List） | `group_contract_activity_history.sql` |
 
 補足：
@@ -84,7 +84,7 @@
 - 既存と同じく `group_contract_*.sql`
 - 単数/複数は「返却構造」に合わせる
   - 1 行想定：単数（例：`group_contract_staff.sql`）
-  - 複数行想定：複数（例：`group_contract_payments.sql`）
+  - 複数行想定：複数（例：`group_contract_receipts.sql`）
 
 ---
 
@@ -109,3 +109,14 @@
 - TODO カードと API の 1:1 対応を崩すこと
 - SQL の置き場所を infrastructure 以外へ移すこと
 - 既存の `GET /api/v1/group/contracts/{cmpCd}/{contractNo}` の責務を肥大化させること
+
+---
+
+## 7. 実装状況（P2-7 以降の進捗）
+
+- **P2-7（完了）**: 契約内容（contractContents）、担当者情報（staff）が実装済み
+- **P2-8（完了）**: 口座情報（bankAccount）が実装済み
+- **P2-9（完了）**: 入金情報（receipts）が実装済み
+- **P2-10（未着手）**: 対応履歴（activityHistory）は未実装
+
+---

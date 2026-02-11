@@ -6,6 +6,7 @@ import type {
   GroupContractContractContentsResponse,
   GroupContractStaffResponse,
   GroupContractBankAccountResponse,
+  GroupContractReceiptResponse,
   GroupContractPaymentsResponse,
   GroupContractActivityHistoryResponse,
   PaginatedGroupContractResponse,
@@ -141,6 +142,20 @@ export const groupService = {
   ): Promise<GroupContractBankAccountResponse> {
     return apiClient.get<GroupContractBankAccountResponse>(
       `/group/contracts/${encodeURIComponent(cmpCd)}/${encodeURIComponent(contractNo)}/bankAccount`,
+      'INTEGRATION'
+    );
+  },
+
+  /**
+   * 入金情報（TODO カード: 入金情報）
+   * Backend: GET /api/v1/group/contracts/{cmpCd}/{contractNo}/receipts
+   */
+  async getContractReceipts(
+    cmpCd: string,
+    contractNo: string
+  ): Promise<GroupContractReceiptResponse> {
+    return apiClient.get<GroupContractReceiptResponse>(
+      `/group/contracts/${encodeURIComponent(cmpCd)}/${encodeURIComponent(contractNo)}/receipts`,
       'INTEGRATION'
     );
   },
