@@ -429,7 +429,7 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 | P2-4 | 検索条件拡張 | **完了** |
 | P2-5 | 視認性改善/検索UX改善 | **完了** |
 | P2-6 | 詳細画面 TODO カード群の API 分離設計確定 | **完了** |
-| P2-7 | 詳細API 実装(1) 契約内容/担当者情報 | 未着手 |
+| P2-7 | 詳細API 実装(1) 契約内容/担当者情報 | **完了** |
 | P2-8 | 詳細API 実装(2) 口座情報 | 未着手 |
 | P2-9 | 詳細API 実装(3) 入金情報/対応履歴 | 未着手 |
 | P2-10 | RegionSelector 廃止→法人（Tenant）選択へ統合 | 未着手 |
@@ -657,7 +657,7 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 ---
 
-### P2-7（未着手）— 詳細API 実装(1) 契約内容/担当者情報
+### P2-7（完了）— 詳細API 実装(1) 契約内容/担当者情報
 
 **目的**: 契約詳細画面の「契約内容」「担当者情報」TODO カードに対応する API を実装し、Frontend で表示できるようにする。
 
@@ -668,11 +668,33 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 - QueryService 実装（JDBC）
 - Frontend での API 接続と表示差し替え
 
+**実施内容（完了済み）**:
+- Backend:
+  - infrastructure 層に SQL を追加（`group_contract_contract_contents.sql`, `group_contract_staff.sql`）
+  - JDBC QueryService 実装（`JdbcGroupContractContractContentsQueryService`, `JdbcGroupContractStaffQueryService`）
+  - RowMapper 実装（`GroupContractContractContentsRowMapper`, `GroupContractStaffRowMapper`）
+  - BFF Controller を QueryService 呼び出しに切替（501 → 200）
+- Frontend:
+  - 詳細ページの「契約内容」「担当者情報」カードを TODO 表示から実データ表示へ差し替え
+  - null は "(null)" として可視化（補完禁止の範囲で状態を隠さない）
+- 動作確認:
+  - `./gradlew build` が通る
+  - `npm run build` が通る
+  - 2 API が 200 を返す
+  - 一覧→詳細→一覧 UX（P2-5 の sessionStorage 復元等）を壊していない
+
 **Done 条件**:
 - ✅ 契約内容 API が実装され、Frontend で表示できる
 - ✅ 担当者情報 API が実装され、Frontend で表示できる
 - ✅ SQL / DTO / RowMapper / Controller が実装されている
 - ✅ Frontend で TODO カードが実データ表示に差し替えられている
+- ✅ null 値の可視化が実装されている（"(null)" 表示）
+- ✅ ビルドが通る（Backend / Frontend）
+- ✅ 一覧→詳細→一覧 UX を壊していない
+
+**状態**: 完了
+
+**次フェーズ**: P2-8（口座情報 API 実装）に着手する。権限制御の確認を重点的に実施する。
 
 **参照**:
 - [p2-6-group-contract-detail-api-splitting.md](./p2-6-group-contract-detail-api-splitting.md)（API 分離設計）
@@ -681,7 +703,7 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 ### P2-8（未着手）— 詳細API 実装(2) 口座情報
 
-**目的**: 契約詳細画面の「口座情報」TODO カードに対応する API を実装し、Frontend で表示できるようにする。特に権限制御の確認を重点的に実施する。
+**目的**: 契約詳細画面の「口座情報」TODO カードに対応する API を実装し、Frontend で表示できるようにする。特に権限制御（口座情報へのアクセス権限）の確認を重点的に実施する。
 
 **スコープ**:
 - `GET /api/v1/group/contracts/{cmpCd}/{contractNo}/bankAccount` の実装
@@ -689,12 +711,22 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 - QueryService 実装（JDBC）
 - 権限制御の確認（403/404 の適切な返却）
 - Frontend での API 接続と表示差し替え
+- 権限NGユーザーでの 403 挙動確認（既存 Forbidden UI 規約に従う）
 
 **Done 条件**:
-- ✅ 口座情報 API が実装され、Frontend で表示できる
-- ✅ SQL / DTO / RowMapper / Controller が実装されている
-- ✅ 権限制御が適切に動作することを確認している（403/404 の確認）
-- ✅ Frontend で TODO カードが実データ表示に差し替えられている
+- [ ] 口座情報 API が実装され、Frontend で表示できる（権限OKユーザーで 200 を返す）
+- [ ] SQL / DTO / RowMapper / Controller が実装されている
+  - SQL: `backend/nexus-infrastructure/src/main/resources/sql/group/group_contract_bank_account.sql`
+  - QueryService: `GroupContractBankAccountQueryService`（group）, `JdbcGroupContractBankAccountQueryService`（infrastructure）
+  - RowMapper: `GroupContractBankAccountRowMapper`
+  - Controller: `GroupContractBankAccountController`（501 → 200）
+- [ ] 権限制御が適切に動作することを確認している
+  - 権限OKユーザー: 200 を返す
+  - 権限NGユーザー: 403 を返し、Frontend が既存 Forbidden UI 規約どおり表示する
+  - 存在しない契約: 404 を返す
+- [ ] Frontend で TODO カードが実データ表示に差し替えられている（Frontend は業務判断しない）
+- [ ] `./gradlew build` / `npm run build` が通る
+- [ ] 一覧→詳細→一覧 UX（P2-5 の sessionStorage 復元等）を壊していない
 
 **参照**:
 - [p2-6-group-contract-detail-api-splitting.md](./p2-6-group-contract-detail-api-splitting.md)（API 分離設計）
@@ -767,4 +799,4 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 * 本ドキュメントは**更新される前提**の資料
 * 設計原則の変更は nexus-design-constitution.md のみで行う
-* Cursor / Agent 実行時は、常に「現在地（P1 完了、P2-1 完了、P2-2 一旦完了、P2-3 完了、P2-4 完了、P2-5 完了、P2-6 完了、P2-7 未着手）」を明示して開始する
+* Cursor / Agent 実行時は、常に「現在地（P1 完了、P2-1 完了、P2-2 一旦完了、P2-3 完了、P2-4 完了、P2-5 完了、P2-6 完了、P2-7 完了、P2-8 未着手）」を明示して開始する

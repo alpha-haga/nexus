@@ -9,7 +9,7 @@ import { useScreenPermission } from '@/modules/core/auth/useScreenPermission';
 import { Forbidden } from '@/modules/core/components/errors/Forbidden';
 import { groupService } from '@/services/group';
 import type { ApiError, GroupContractDetailResponse } from '@/types';
-import type { GroupContractContractContentsResponse, GroupContractStaffResponse } from '@/types';
+import type { GroupContractContractContentsResponse, GroupContractStaffResponse, GroupContractBankAccountResponse } from '@/types';
 
 // TODO 表示用ヘルパーコンポーネント
 const TodoCard = ({ title }: { title: string }) => (
@@ -21,6 +21,15 @@ const TodoCard = ({ title }: { title: string }) => (
     </div>
   </div>
 );
+
+// 表示用ヘルパー関数（設計憲法: 補完禁止、状態を隠さない）
+const renderNullableText = (v: string | null): React.ReactNode => {
+  return v === null ? '(null)' : v;
+};
+
+const renderNullableNumber = (v: number | null): React.ReactNode => {
+  return v === null ? '(null)' : v.toLocaleString();
+};
 
 export default function GroupContractDetailPage() {
   const { data: session, status } = useSession();
@@ -42,6 +51,9 @@ export default function GroupContractDetailPage() {
   const [staff, setStaff] = useState<GroupContractStaffResponse | null>(null);
   const [staffLoading, setStaffLoading] = useState(false);
   const [staffError, setStaffError] = useState<ApiError | null>(null);
+  const [bankAccount, setBankAccount] = useState<GroupContractBankAccountResponse | null>(null);
+  const [bankAccountLoading, setBankAccountLoading] = useState(false);
+  const [bankAccountError, setBankAccountError] = useState<ApiError | null>(null);
 
   // API呼び出し
   useEffect(() => {
@@ -126,6 +138,36 @@ export default function GroupContractDetailPage() {
         if (!cancelled) {
           setStaffError(err);
           setStaffLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cmpCd, contractNo, data]);
+
+  // 口座情報 API 呼び出し
+  useEffect(() => {
+    if (!cmpCd || !contractNo || !data) {
+      return;
+    }
+
+    let cancelled = false;
+    setBankAccountLoading(true);
+    setBankAccountError(null);
+
+    groupService
+      .getContractBankAccount(cmpCd, contractNo)
+      .then((result) => {
+        if (!cancelled) {
+          setBankAccount(result);
+          setBankAccountLoading(false);
+        }
+      })
+      .catch((err: ApiError) => {
+        if (!cancelled) {
+          setBankAccountError(err);
+          setBankAccountLoading(false);
         }
       });
 
@@ -499,8 +541,82 @@ export default function GroupContractDetailPage() {
               ) : null}
             </div>
 
-            {/* 8. 口座情報（未実装） */}
-            <TodoCard title="口座情報" />
+            {/* 8. 口座情報 */}
+            <div className="card p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">口座情報</h2>
+              {bankAccountLoading ? (
+                <p className="text-sm text-gray-500">読み込み中...</p>
+              ) : bankAccountError ? (
+                <div className="text-sm text-red-600">
+                  <p className="font-medium">エラー: {bankAccountError.status} {bankAccountError.message}</p>
+                </div>
+              ) : bankAccount ? (
+                <div>
+                  <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">支払方法（名称）</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableText(bankAccount.debitMethodName)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">支払方法（区分）</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableText(bankAccount.debitMethodKbn)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">積立方法（名称）</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableText(bankAccount.saveMethodName)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">積立方法（区分）</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableText(bankAccount.saveMethodKbn)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">銀行名</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableText(bankAccount.bankName)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">支店名</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableText(bankAccount.bankBranchName)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">口座名義</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableText(bankAccount.depositorName)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">口座種別</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableText(bankAccount.accTypeKbn)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">口座番号</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableText(bankAccount.accNo)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">口座状態</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableText(bankAccount.accStatusKbn)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">登録更新年月日</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableText(bankAccount.registrationUpdateYmd)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">月額保険料</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableNumber(bankAccount.monthlyPremium)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">残積立回数</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableNumber(bankAccount.remainingSaveNum)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">残受取額</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableNumber(bankAccount.remainingReceiptGaku)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-sm font-medium text-gray-500">割引額</dt>
+                      <dd className="mt-1 text-sm text-gray-900">{renderNullableNumber(bankAccount.discountGaku)}</dd>
+                    </div>
+                  </dl>
+                </div>
+              ) : null}
+            </div>
 
             {/* 9. 入金情報（未実装） */}
             <TodoCard title="入金情報" />

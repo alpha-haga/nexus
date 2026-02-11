@@ -386,9 +386,31 @@ export interface GroupContractStaffResponse {
 export interface GroupContractBankAccountResponse {
   cmpCd: string;
   contractNo: string;
-  accounts: Array<{
-    id: string;
-  }>;
+  // 支払方法
+  debitMethodKbn: string | null;
+  debitMethodName: string | null;
+  // 積立方法
+  saveMethodKbn: string | null;
+  saveMethodName: string | null;
+  // 銀行情報
+  bankCd: string | null;
+  bankName: string | null;
+  bankBranchCd: string | null;
+  bankBranchName: string | null;
+  // 口座情報
+  depositorName: string | null;
+  accTypeKbn: string | null;
+  accNo: string | null;
+  accStatusKbn: string | null;
+  registrationUpdateYmd: string | null;
+  // その他
+  abolishFlg: string | null;
+  compelMonthPayFlg: string | null;
+  monthlyPremium: number | null;
+  remainingSaveNum: number | null;
+  remainingReceiptGaku: number | null;
+  discountGaku: number | null;
+  viewFlg: number | null;
 }
 
 export interface GroupContractPaymentsResponse {

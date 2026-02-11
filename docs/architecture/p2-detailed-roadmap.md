@@ -385,10 +385,26 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 ### 11.5 Done 条件
 
-- [ ] 契約内容 API が実装され、Frontend で表示できる
-- [ ] 担当者情報 API が実装され、Frontend で表示できる
-- [ ] SQL / DTO / RowMapper / Controller が実装されている
-- [ ] Frontend で TODO カードが実データ表示に差し替えられている
+- [x] 契約内容 API が実装され、Frontend で表示できる
+- [x] 担当者情報 API が実装され、Frontend で表示できる
+- [x] SQL / DTO / RowMapper / Controller が実装されている
+  - SQL: `group_contract_contract_contents.sql`, `group_contract_staff.sql`（infrastructure 層）
+  - QueryService: `JdbcGroupContractContractContentsQueryService`, `JdbcGroupContractStaffQueryService`
+  - RowMapper: `GroupContractContractContentsRowMapper`, `GroupContractStaffRowMapper`
+  - Controller: `GroupContractContractContentsController`, `GroupContractStaffController`（501 → 200）
+- [x] Frontend で TODO カードが実データ表示に差し替えられている
+  - 契約内容: attributes を key-value 一覧として表示（null は "(null)" として可視化）
+  - 担当者情報: roleLabel を見出しとして縦に表示（staffName / bosyuCd を値として表示）
+- [x] null 値の可視化が実装されている（補完禁止の範囲で状態を隠さない）
+- [x] ビルドが通る（`./gradlew build` / `npm run build`）
+- [x] 一覧→詳細→一覧 UX（P2-5 の sessionStorage 復元等）を壊していない
+
+**状態**: 完了
+
+**実施内容（完了済み）**:
+- Backend: infrastructure 層に SQL 追加、JDBC QueryService / RowMapper 実装、BFF Controller を 501 → 200 化
+- Frontend: 詳細ページの対象2カードを TODO → 実データ表示へ差し替え、null は "(null)" として可視化
+- 動作確認: ビルドOK、API 200 OK、画面表示OK、一覧→詳細→一覧 UX 維持
 
 ### 11.6 参照
 
@@ -425,10 +441,19 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 ### 12.5 Done 条件
 
-- [ ] 口座情報 API が実装され、Frontend で表示できる
+- [ ] 口座情報 API が実装され、Frontend で表示できる（権限OKユーザーで 200 を返す）
 - [ ] SQL / DTO / RowMapper / Controller が実装されている
-- [ ] 権限制御が適切に動作することを確認している（403/404 の確認）
-- [ ] Frontend で TODO カードが実データ表示に差し替えられている
+  - SQL: `backend/nexus-infrastructure/src/main/resources/sql/group/group_contract_bank_account.sql`
+  - QueryService: `GroupContractBankAccountQueryService`（group）, `JdbcGroupContractBankAccountQueryService`（infrastructure）
+  - RowMapper: `GroupContractBankAccountRowMapper`
+  - Controller: `GroupContractBankAccountController`（501 → 200）
+- [ ] 権限制御が適切に動作することを確認している
+  - 権限OKユーザー: 200 を返す
+  - 権限NGユーザー: 403 を返し、Frontend が既存 Forbidden UI 規約どおり表示する
+  - 存在しない契約: 404 を返す
+- [ ] Frontend で TODO カードが実データ表示に差し替えられている（Frontend は業務判断しない）
+- [ ] `./gradlew build` / `npm run build` が通る
+- [ ] 一覧→詳細→一覧 UX（P2-5 の sessionStorage 復元等）を壊していない
 
 ### 12.6 参照
 
@@ -606,6 +631,6 @@ P2 完了後の候補タスク（P3 として整理予定）：
 
 - 本ロードマップは P2 の実装ガイドであり、設計の正は nexus-design-constitution.md である
 - 各サブフェーズ完了時に完了宣言ドキュメントを作成する
-- Cursor / Agent 実行時は「現在地（P2-6 完了、P2-7 未着手）」を明示して開始する
+- Cursor / Agent 実行時は「現在地（P2-7 完了、P2-8 未着手）」を明示して開始する
 
 以上。
