@@ -413,7 +413,7 @@ export interface GroupContractBankAccountResponse {
   viewFlg: number | null;
 }
 
-export interface GroupContractReceiptResponse {
+export interface GroupContractReceiptsResponse {
   cmpCd: string;
   contractNo: string;
   receipts: Array<{
@@ -455,14 +455,6 @@ export interface GroupContractReceiptResponse {
     opeUsagePurposeName: string | null;
     partUsageGaku: number | null;
     opeYmd: string | null;
-  }>;
-}
-
-export interface GroupContractPaymentsResponse {
-  cmpCd: string;
-  contractNo: string;
-  payments: Array<{
-    id: string;
   }>;
 }
 

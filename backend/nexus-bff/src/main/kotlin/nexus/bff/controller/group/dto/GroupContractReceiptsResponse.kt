@@ -1,14 +1,13 @@
-package nexus.group.query
+package nexus.bff.controller.group.dto
 
 /**
- * 入金情報（サブリソース）
+ * 入金情報（TODO カード: 入金情報）
  *
  * P2-9: 項目確定
  * - SQL の列をそのまま反映（取得できない項目は null）
  * - 1契約に対して複数行（履歴）を返す
- * - ORDER BY は SQL 側で保証
  */
-data class GroupContractReceiptDto(
+data class GroupContractReceiptsResponse(
     val cmpCd: String,
     val contractNo: String,
     val receipts: List<Receipt>

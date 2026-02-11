@@ -23,13 +23,8 @@ interface GroupContractBankAccountQueryService {
 }
 
 /** 入金情報 */
-interface GroupContractReceiptQueryService {
-    fun getReceipts(cmpCd: String, contractNo: String): GroupContractReceiptDto
-}
-
-/** 入金情報（将来予定/旧名称: payment トップドメインとの混同を避けるため receipt を採用） */
-interface GroupContractPaymentQueryService {
-    fun getPayments(cmpCd: String, contractNo: String): GroupContractPaymentDto?
+interface GroupContractReceiptsQueryService {
+    fun getReceipts(cmpCd: String, contractNo: String): GroupContractReceiptsDto
 }
 
 /** 対応履歴 */

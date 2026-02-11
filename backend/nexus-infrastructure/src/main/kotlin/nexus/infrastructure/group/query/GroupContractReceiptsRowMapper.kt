@@ -1,20 +1,20 @@
 package nexus.infrastructure.group.query
 
-import nexus.group.query.GroupContractReceiptDto
+import nexus.group.query.GroupContractReceiptsDto
 import org.springframework.jdbc.core.RowMapper
 import java.sql.ResultSet
 
 /**
- * GroupContractReceiptDto.Receipt の RowMapper
+ * GroupContractReceiptsDto.Receipt の RowMapper
  *
  * P2-9: SQL から入金情報を取得
  * - SQL alias (snake_case) を直接読む
  * - 取得できない項目は null として扱う
  * - SQL の列順に準拠
  */
-class GroupContractReceiptRowMapper : RowMapper<GroupContractReceiptDto.Receipt> {
-    override fun mapRow(rs: ResultSet, rowNum: Int): GroupContractReceiptDto.Receipt {
-        return GroupContractReceiptDto.Receipt(
+class GroupContractReceiptsRowMapper : RowMapper<GroupContractReceiptsDto.Receipt> {
+    override fun mapRow(rs: ResultSet, rowNum: Int): GroupContractReceiptsDto.Receipt {
+        return GroupContractReceiptsDto.Receipt(
             listNo = rs.getLong("list_no").takeIf { !rs.wasNull() },
             ym = rs.getString("ym"),
             dmdMethodKbn = rs.getString("dmd_method_kbn"),

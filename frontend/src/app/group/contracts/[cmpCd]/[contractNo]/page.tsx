@@ -9,7 +9,7 @@ import { useScreenPermission } from '@/modules/core/auth/useScreenPermission';
 import { Forbidden } from '@/modules/core/components/errors/Forbidden';
 import { groupService } from '@/services/group';
 import type { ApiError, GroupContractDetailResponse } from '@/types';
-import type { GroupContractContractContentsResponse, GroupContractStaffResponse, GroupContractBankAccountResponse, GroupContractReceiptResponse, GroupContractActivitysResponse } from '@/types';
+import type { GroupContractContractContentsResponse, GroupContractStaffResponse, GroupContractBankAccountResponse, GroupContractReceiptsResponse, GroupContractActivitysResponse } from '@/types';
 
 // TODO 表示用ヘルパーコンポーネント
 const TodoCard = ({ title }: { title: string }) => (
@@ -54,7 +54,7 @@ export default function GroupContractDetailPage() {
   const [bankAccount, setBankAccount] = useState<GroupContractBankAccountResponse | null>(null);
   const [bankAccountLoading, setBankAccountLoading] = useState(false);
   const [bankAccountError, setBankAccountError] = useState<ApiError | null>(null);
-  const [receipt, setReceipt] = useState<GroupContractReceiptResponse | null>(null);
+  const [receipt, setReceipt] = useState<GroupContractReceiptsResponse | null>(null);
   const [receiptLoading, setReceiptLoading] = useState(false);
   const [receiptError, setReceiptError] = useState<ApiError | null>(null);
   const [receiptPage, setReceiptPage] = useState(1);

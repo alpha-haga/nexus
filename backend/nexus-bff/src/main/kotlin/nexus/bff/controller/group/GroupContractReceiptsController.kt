@@ -1,8 +1,8 @@
 package nexus.bff.controller.group
 
-import nexus.bff.controller.group.dto.GroupContractReceiptResponse
+import nexus.bff.controller.group.dto.GroupContractReceiptsResponse
 import nexus.core.exception.ValidationException
-import nexus.group.query.GroupContractReceiptQueryService
+import nexus.group.query.GroupContractReceiptsQueryService
 import org.springframework.context.annotation.Profile
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -20,15 +20,15 @@ import org.springframework.web.bind.annotation.RestController
 @Profile("jdbc")
 @RestController
 @RequestMapping("/api/v1/group/contracts")
-class GroupContractReceiptController(
-    private val receiptQueryService: GroupContractReceiptQueryService
+class GroupContractReceiptsController(
+    private val receiptQueryService: GroupContractReceiptsQueryService
 ) {
 
     @GetMapping("/{cmpCd}/{contractNo}/receipts")
     fun getReceipts(
         @PathVariable cmpCd: String,
         @PathVariable contractNo: String
-    ): ResponseEntity<GroupContractReceiptResponse> {
+    ): ResponseEntity<GroupContractReceiptsResponse> {
         // バリデーション
         if (cmpCd.isBlank()) {
             throw ValidationException("cmpCd", "cmpCd must not be blank")
@@ -42,11 +42,11 @@ class GroupContractReceiptController(
 
         // Response DTO に変換
         return ResponseEntity.ok(
-            GroupContractReceiptResponse(
+            GroupContractReceiptsResponse(
                 cmpCd = receiptDto.cmpCd,
                 contractNo = receiptDto.contractNo,
                 receipts = receiptDto.receipts.map { receipt ->
-                    GroupContractReceiptResponse.Receipt(
+                    GroupContractReceiptsResponse.Receipt(
                         listNo = receipt.listNo,
                         ym = receipt.ym,
                         dmdMethodKbn = receipt.dmdMethodKbn,

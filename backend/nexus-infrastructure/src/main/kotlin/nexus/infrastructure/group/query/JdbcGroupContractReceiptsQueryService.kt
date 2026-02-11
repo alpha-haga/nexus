@@ -1,7 +1,7 @@
 package nexus.infrastructure.group.query
 
-import nexus.group.query.GroupContractReceiptDto
-import nexus.group.query.GroupContractReceiptQueryService
+import nexus.group.query.GroupContractReceiptsDto
+import nexus.group.query.GroupContractReceiptsQueryService
 import nexus.infrastructure.jdbc.SqlLoader
 import org.springframework.context.annotation.Profile
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
@@ -17,14 +17,14 @@ import org.springframework.stereotype.Service
  */
 @Profile("jdbc")
 @Service
-class JdbcGroupContractReceiptQueryService(
+class JdbcGroupContractReceiptsQueryService(
     private val jdbc: NamedParameterJdbcTemplate,
     private val sqlLoader: SqlLoader,
-) : GroupContractReceiptQueryService {
+) : GroupContractReceiptsQueryService {
 
-    private val rowMapper = GroupContractReceiptRowMapper()
+    private val rowMapper = GroupContractReceiptsRowMapper()
 
-    override fun getReceipts(cmpCd: String, contractNo: String): GroupContractReceiptDto {
+    override fun getReceipts(cmpCd: String, contractNo: String): GroupContractReceiptsDto {
         // SQL を読み込み
         val sql = sqlLoader.load("group/group_contract_receipts.sql")
 
@@ -37,7 +37,7 @@ class JdbcGroupContractReceiptQueryService(
         // 複数行取得（0件→emptyList()）
         val receipts = jdbc.query(sql, params, rowMapper)
 
-        return GroupContractReceiptDto(
+        return GroupContractReceiptsDto(
             cmpCd = cmpCd,
             contractNo = contractNo,
             receipts = receipts

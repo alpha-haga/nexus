@@ -47,32 +47,30 @@ FROM
         AND sect.tekiyo_start_ymd <= ope_date_management.online_ymd 
         AND sect.tekiyo_end_ymd > ope_date_management.online_ymd 
         AND sect.delete_flg = '0' 
-
-LEFT JOIN zgom_general_cd_all cd0008 
-    ON service.cmp_cd = cd0008.cmp_cd 
-    AND service.service_kbn = cd0008.general_cd_level1 
-    AND cd0008.general_cd_id = '0008' 
-    AND cd0008.delete_flg = '0'
-LEFT JOIN zgom_general_cd_all cd0009 
-    ON service.cmp_cd = cd0009.cmp_cd 
-    AND service.service_method = cd0009.general_cd_level1 
-    AND cd0009.general_cd_id = '0009' 
-    AND cd0009.delete_flg = '0'
-LEFT JOIN zgom_general_cd_all cd0037 
-    ON service.cmp_cd = cd0037.cmp_cd 
-    AND service.visit_reason_kbn = cd0037.general_cd_level1 
-    AND cd0037.general_cd_id = '0037' 
-    AND cd0037.delete_flg = '0'
-LEFT JOIN zgom_general_cd_all cd0072 
-    ON service.cmp_cd = cd0072.cmp_cd 
-    AND service.call_status_kbn = cd0072.general_cd_level1 
-    AND cd0072.general_cd_id = '0072' 
-    AND cd0072.delete_flg = '0'
-
+    LEFT JOIN zgom_general_cd_all cd0008 
+        ON service.cmp_cd = cd0008.cmp_cd 
+        AND service.service_kbn = cd0008.general_cd_level1 
+        AND cd0008.general_cd_id = '0008' 
+        AND cd0008.delete_flg = '0' 
+    LEFT JOIN zgom_general_cd_all cd0009 
+        ON service.cmp_cd = cd0009.cmp_cd 
+        AND service.service_method = cd0009.general_cd_level1 
+        AND cd0009.general_cd_id = '0009' 
+        AND cd0009.delete_flg = '0' 
+    LEFT JOIN zgom_general_cd_all cd0037 
+        ON service.cmp_cd = cd0037.cmp_cd 
+        AND service.visit_reason_kbn = cd0037.general_cd_level1 
+        AND cd0037.general_cd_id = '0037' 
+        AND cd0037.delete_flg = '0' 
+    LEFT JOIN zgom_general_cd_all cd0072 
+        ON service.cmp_cd = cd0072.cmp_cd 
+        AND service.call_status_kbn = cd0072.general_cd_level1 
+        AND cd0072.general_cd_id = '0072' 
+        AND cd0072.delete_flg = '0' 
 WHERE
     contract_info.cmp_cd = :cmpCd 
     AND contract_info.contract_no = :contractNo 
     AND contract_info.last_flg = '1' 
     AND contract_info.delete_flg = '0' 
 ORDER BY
-    service.service_ymd DESC;
+    service.service_ymd DESC
