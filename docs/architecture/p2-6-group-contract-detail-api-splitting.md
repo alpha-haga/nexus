@@ -117,6 +117,6 @@
 - **P2-7（完了）**: 契約内容（contractContents）、担当者情報（staff）が実装済み
 - **P2-8（完了）**: 口座情報（bankAccount）が実装済み
 - **P2-9（完了）**: 入金情報（receipts）が実装済み
-- **P2-10（未着手）**: 対応履歴（activityHistory）は未実装
+- **P2-10（完了）**: 対応履歴（activitys）が実装済み
 
 ---

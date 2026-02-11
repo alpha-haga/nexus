@@ -432,8 +432,9 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 | P2-7 | 詳細API 実装(1) 契約内容/担当者情報 | **完了** |
 | P2-8 | 詳細API 実装(2) 口座情報 | **完了** |
 | P2-9 | 詳細API 実装(3) 入金情報/対応履歴 | 未着手 |
-| P2-10 | RegionSelector 廃止→法人（Tenant）選択へ統合 | 未着手 |
-| P2-11 | 本番運用前最終調整 | 未着手 |
+| P2-10 | 詳細API 実装(4) 対応履歴（activitys） | **完了** |
+| P2-11 | RegionSelector 廃止→法人（Tenant）選択へ統合 | 未着手 |
+| P2-12 | 本番運用前最終調整 | 未着手 |
 
 ---
 
@@ -778,7 +779,29 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 ---
 
-### P2-10（未着手）— RegionSelector 廃止→法人（Tenant）選択へ統合
+### P2-10（完了）— 詳細API 実装(4) 対応履歴（activitys）
+
+**目的**: 契約詳細画面の「対応履歴」TODO カードに対応する API を実装し、Frontend で表示できるようにする。
+
+**スコープ**:
+- `GET /api/v1/group/contracts/{cmpCd}/{contractNo}/activitys` の実装
+- SQL 実装（`group_contract_activitys.sql`）
+- QueryService 実装（JDBC）
+- Frontend での API 接続と表示差し替え
+
+**Done 条件**:
+- ✅ 対応履歴 API が実装され、Frontend で表示できる
+- ✅ SQL / DTO / RowMapper / Controller が実装されている
+- ✅ Frontend で TODO カードが実データ表示に差し替えられている
+
+**状態**: 完了
+
+**参照**:
+- [p2-6-group-contract-detail-api-splitting.md](./p2-6-group-contract-detail-api-splitting.md)（API 分離設計）
+
+---
+
+### P2-11（未着手）— RegionSelector 廃止→法人（Tenant）選択へ統合
 
 **目的**: RegionSelector を廃止し、法人（Tenant）選択へ統合する。claim 例（`integration__ALL__GROUP` 等）を前提に画面スコープを決定する。
 
@@ -799,7 +822,7 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 ---
 
-### P2-11（未着手）— 本番運用前最終調整
+### P2-12（未着手）— 本番運用前最終調整
 
 **目的**: 本番運用に向けた最終調整を実施する。
 
@@ -820,4 +843,4 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 * 本ドキュメントは**更新される前提**の資料
 * 設計原則の変更は nexus-design-constitution.md のみで行う
-* Cursor / Agent 実行時は、常に「現在地（P1 完了、P2-1 完了、P2-2 一旦完了、P2-3 完了、P2-4 完了、P2-5 完了、P2-6 完了、P2-7 完了、P2-8 完了、P2-9 未着手）」を明示して開始する
+* Cursor / Agent 実行時は、常に「現在地（P1 完了、P2-1 完了、P2-2 一旦完了、P2-3 完了、P2-4 完了、P2-5 完了、P2-6 完了、P2-7 完了、P2-8 完了、P2-9 未着手、P2-10 完了）」を明示して開始する
