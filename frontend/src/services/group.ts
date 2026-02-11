@@ -8,7 +8,7 @@ import type {
   GroupContractBankAccountResponse,
   GroupContractReceiptResponse,
   GroupContractPaymentsResponse,
-  GroupContractActivityHistoryResponse,
+  GroupContractActivitysResponse,
   PaginatedGroupContractResponse,
   Region,
 } from '@/types';
@@ -176,14 +176,14 @@ export const groupService = {
 
   /**
    * 対応履歴（TODO カード: 対応履歴）
-   * Backend: GET /api/v1/group/contracts/{cmpCd}/{contractNo}/activityHistory
+   * Backend: GET /api/v1/group/contracts/{cmpCd}/{contractNo}/activitys
    */
-  async getContractActivityHistory(
+  async getContractActivitys(
     cmpCd: string,
     contractNo: string
-  ): Promise<GroupContractActivityHistoryResponse> {
-    return apiClient.get<GroupContractActivityHistoryResponse>(
-      `/group/contracts/${encodeURIComponent(cmpCd)}/${encodeURIComponent(contractNo)}/activityHistory`,
+  ): Promise<GroupContractActivitysResponse> {
+    return apiClient.get<GroupContractActivitysResponse>(
+      `/group/contracts/${encodeURIComponent(cmpCd)}/${encodeURIComponent(contractNo)}/activitys`,
       'INTEGRATION'
     );
   },

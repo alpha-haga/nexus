@@ -9,7 +9,7 @@ import { useScreenPermission } from '@/modules/core/auth/useScreenPermission';
 import { Forbidden } from '@/modules/core/components/errors/Forbidden';
 import { groupService } from '@/services/group';
 import type { ApiError, GroupContractDetailResponse } from '@/types';
-import type { GroupContractContractContentsResponse, GroupContractStaffResponse, GroupContractBankAccountResponse, GroupContractReceiptResponse } from '@/types';
+import type { GroupContractContractContentsResponse, GroupContractStaffResponse, GroupContractBankAccountResponse, GroupContractReceiptResponse, GroupContractActivitysResponse } from '@/types';
 
 // TODO 表示用ヘルパーコンポーネント
 const TodoCard = ({ title }: { title: string }) => (
@@ -24,11 +24,11 @@ const TodoCard = ({ title }: { title: string }) => (
 
 // 表示用ヘルパー関数（設計憲法: 補完禁止、状態を隠さない）
 const renderNullableText = (v: string | null): React.ReactNode => {
-  return v === null ? '(null)' : v;
+  return v === null ? '-' : v;
 };
 
 const renderNullableNumber = (v: number | null): React.ReactNode => {
-  return v === null ? '(null)' : v.toLocaleString();
+  return v === null ? '-' : v.toLocaleString();
 };
 
 export default function GroupContractDetailPage() {
@@ -59,6 +59,11 @@ export default function GroupContractDetailPage() {
   const [receiptError, setReceiptError] = useState<ApiError | null>(null);
   const [receiptPage, setReceiptPage] = useState(1);
   const receiptPageSize = 20;
+  const [activitys, setActivitys] = useState<GroupContractActivitysResponse | null>(null);
+  const [activitysLoading, setActivitysLoading] = useState(false);
+  const [activitysError, setActivitysError] = useState<ApiError | null>(null);
+  const [activitysPage, setActivitysPage] = useState(1);
+  const activitysPageSize = 20;
 
   // API呼び出し
   useEffect(() => {
@@ -212,9 +217,41 @@ export default function GroupContractDetailPage() {
     };
   }, [cmpCd, contractNo, data]);
 
+  // 対応履歴 API 呼び出し
+  useEffect(() => {
+    if (!cmpCd || !contractNo || !data) {
+      return;
+    }
+
+    let cancelled = false;
+    setActivitysLoading(true);
+    setActivitysError(null);
+
+    groupService
+      .getContractActivitys(cmpCd, contractNo)
+      .then((result) => {
+        if (!cancelled) {
+          setActivitys(result);
+          setActivitysPage(1); // データ更新時にページをリセット
+          setActivitysLoading(false);
+        }
+      })
+      .catch((err: ApiError) => {
+        if (!cancelled) {
+          setActivitysError(err);
+          setActivitysLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cmpCd, contractNo, data]);
+
   // 契約切替時にページをリセット
   useEffect(() => {
     setReceiptPage(1);
+    setActivitysPage(1);
   }, [cmpCd, contractNo]);
 
   // 入金情報のページング計算
@@ -224,6 +261,13 @@ export default function GroupContractDetailPage() {
   const receiptEndIndex = receiptStartIndex + receiptPageSize;
   const receiptPageReceipts = receipt?.receipts?.slice(receiptStartIndex, receiptEndIndex) ?? [];
 
+  // 対応履歴のページング計算
+  const activitysTotalCount = activitys?.activities?.length ?? 0;
+  const activitysTotalPages = Math.max(1, Math.ceil(activitysTotalCount / activitysPageSize));
+  const activitysStartIndex = (activitysPage - 1) * activitysPageSize;
+  const activitysEndIndex = activitysStartIndex + activitysPageSize;
+  const activitysPageActivities = activitys?.activities?.slice(activitysStartIndex, activitysEndIndex) ?? [];
+
   // receiptPage の範囲外補正
   useEffect(() => {
     setReceiptPage((p) => {
@@ -232,6 +276,15 @@ export default function GroupContractDetailPage() {
       return p;
     });
   }, [receiptTotalPages]);
+
+  // activitysPage の範囲外補正
+  useEffect(() => {
+    setActivitysPage((p) => {
+      if (p < 1) return 1;
+      if (p > activitysTotalPages) return activitysTotalPages;
+      return p;
+    });
+  }, [activitysTotalPages]);
 
   // 認証中は一旦表示（ローディング状態）
   if (status === 'loading') {
@@ -555,7 +608,7 @@ export default function GroupContractDetailPage() {
                       {Object.entries(contractContents.attributes).map(([key, value]) => (
                         <div key={key}>
                           <dt className="text-sm font-medium text-gray-500">{key}</dt>
-                          <dd className="mt-1 text-sm text-gray-900">{value === null ? '(null)' : value}</dd>
+                          <dd className="mt-1 text-sm text-gray-900">{value === null ? '-' : value}</dd>
                         </div>
                       ))}
                     </dl>
@@ -756,8 +809,94 @@ export default function GroupContractDetailPage() {
               ) : null}
             </div>
 
-            {/* 10. 対応履歴（未実装） */}
-            <TodoCard title="対応履歴" />
+            {/* 10. 対応履歴 */}
+            <div className="card p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">対応履歴</h2>
+              {activitysLoading ? (
+                <p className="text-sm text-gray-500">読み込み中...</p>
+              ) : activitysError ? (
+                <div className="text-sm text-red-600">
+                  <p className="font-medium">エラー: {activitysError.status} {activitysError.message}</p>
+                </div>
+              ) : activitys ? (
+                <div>
+                  {activitys.activities.length === 0 ? (
+                    <p className="text-sm text-gray-500">対応履歴なし</p>
+                  ) : (
+                    <>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full divide-y divide-gray-200">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">サービス日</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">サービス種別名</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">方法名</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">訪問理由</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">コール状況</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">受付者</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">担当者</th>
+                              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">コメント</th>
+                            </tr>
+                          </thead>
+                          <tbody className="bg-white divide-y divide-gray-200">
+                            {activitysPageActivities.map((a, index) => (
+                              <tr key={a.recNo ?? `activity-${index}`}>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableText(a.serviceYmd)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableText(a.serviceName)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableText(a.serviceMethodName)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableText(a.visitReasonName)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableText(a.callStatusName)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableText(a.receptionPsnNm)}</td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                                  {(() => {
+                                    const responsibleName =
+                                      a.responsibleFamilyName && a.responsibleFirstName
+                                        ? `${a.responsibleFamilyName} ${a.responsibleFirstName}`
+                                        : a.responsibleFamilyName || a.responsibleFirstName || null;
+                                    
+                                    const responsibleWithSect =
+                                      responsibleName
+                                        ? `${responsibleName}${a.responsibleSectName ? ` (${a.responsibleSectName})` : ''}`
+                                        : null;
+                                    
+                                    return renderNullableText(responsibleWithSect);
+                                  })()}
+                                </td>
+                                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">{renderNullableText(a.freeComment)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="mt-4 flex items-center justify-between">
+                        <div className="text-sm text-gray-500">
+                          1ページあたり {activitysPageSize} 件
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <button
+                            onClick={() => setActivitysPage(p => Math.max(1, p - 1))}
+                            disabled={activitysPage === 1}
+                            className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            前へ
+                          </button>
+                          <span className="text-sm text-gray-700">
+                            {activitysPage} / {activitysTotalPages} ページ
+                          </span>
+                          <button
+                            onClick={() => setActivitysPage(p => Math.min(activitysTotalPages, p + 1))}
+                            disabled={activitysPage === activitysTotalPages}
+                            className="px-3 py-1 text-sm border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            次へ
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       </AppLayout>

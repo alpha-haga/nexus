@@ -33,6 +33,6 @@ interface GroupContractPaymentQueryService {
 }
 
 /** 対応履歴 */
-interface GroupContractActivityHistoryQueryService {
-    fun getActivityHistory(cmpCd: String, contractNo: String): GroupContractActivityHistoryDto?
+interface GroupContractActivitysQueryService {
+    fun getActivitys(cmpCd: String, contractNo: String): GroupContractActivitysDto
 }

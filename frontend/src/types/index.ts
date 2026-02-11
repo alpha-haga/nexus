@@ -466,11 +466,25 @@ export interface GroupContractPaymentsResponse {
   }>;
 }
 
-export interface GroupContractActivityHistoryResponse {
+export interface GroupContractActivitysResponse {
   cmpCd: string;
   contractNo: string;
   activities: Array<{
-    id: string;
+    recNo: string | null;
+    serviceYmd: string | null;
+    serviceKbn: string | null;
+    serviceName: string | null;
+    serviceMethod: string | null;
+    serviceMethodName: string | null;
+    visitReasonKbn: string | null;
+    visitReasonName: string | null;
+    callStatusKbn: string | null;
+    callStatusName: string | null;
+    receptionPsnNm: string | null;
+    freeComment: string | null;
+    responsibleFamilyName: string | null;
+    responsibleFirstName: string | null;
+    responsibleSectName: string | null;
   }>;
 }
 
