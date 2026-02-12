@@ -13,7 +13,6 @@ import type {
 } from '@/types';
 
 export interface SearchGroupContractsParams extends GroupContractSearchCondition {
-  region: NonNullable<Region>;
   page: number;
   size: number;
 }
@@ -34,6 +33,7 @@ export const groupService = {
   /**
    * 法人横断契約検索
    * Backend: GET /api/v1/group/contracts/search
+   * group ドメインは常に INTEGRATION を使用
    */
   async searchContracts(
     params: SearchGroupContractsParams
@@ -83,9 +83,10 @@ export const groupService = {
     queryParams.append('size', params.size.toString());
 
     const queryString = queryParams.toString();
+    // group ドメインは常に INTEGRATION を使用（RegionSelector 削除により固定）
     return apiClient.get<PaginatedGroupContractResponse>(
       `/group/contracts/search${queryString ? `?${queryString}` : ''}`,
-      params.region
+      'INTEGRATION'
     );
   },
 

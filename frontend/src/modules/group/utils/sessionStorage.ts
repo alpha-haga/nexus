@@ -1,5 +1,4 @@
 import type {
-  Region,
   GroupContractSearchCondition,
   PaginatedGroupContractResponse,
 } from '@/types';
@@ -12,7 +11,6 @@ const STORAGE_KEYS = {
   lastQueryKey: 'groupContracts:lastQueryKey',
   lastCondition: 'groupContracts:lastCondition',
   lastResult: 'groupContracts:lastResult',
-  lastRegion: 'groupContracts:lastRegion',
   lastTenant: 'groupContracts:lastTenant',
   lastPage: 'groupContracts:lastPage',
   lastSize: 'groupContracts:lastSize',
@@ -92,7 +90,6 @@ export function clearTenant(): void {
  */
 export function saveListState(
   tenant: string | null,
-  region: Region,
   condition: GroupContractSearchCondition,
   page: number,
   size: number,
@@ -111,9 +108,6 @@ export function saveListState(
     sessionStorage.setItem(STORAGE_KEYS.lastCondition, JSON.stringify(condition));
     sessionStorage.setItem(STORAGE_KEYS.lastQueryKey, queryKey);
     sessionStorage.setItem(STORAGE_KEYS.lastResult, JSON.stringify(result));
-    if (region) {
-      sessionStorage.setItem(STORAGE_KEYS.lastRegion, region);
-    }
     saveTenant(tenant);
     sessionStorage.setItem(STORAGE_KEYS.lastPage, page.toString());
     sessionStorage.setItem(STORAGE_KEYS.lastSize, size.toString());
@@ -136,7 +130,6 @@ export function saveListState(
  * 初回マウント時の復元に使用
  */
 export function getSavedState(): {
-  region?: Region;
   condition?: GroupContractSearchCondition;
   page?: number;
   size?: number;
@@ -153,7 +146,6 @@ export function getSavedState(): {
     const lastQueryKey = sessionStorage.getItem(STORAGE_KEYS.lastQueryKey);
     const lastResult = sessionStorage.getItem(STORAGE_KEYS.lastResult);
     const lastCondition = sessionStorage.getItem(STORAGE_KEYS.lastCondition);
-    const lastRegion = sessionStorage.getItem(STORAGE_KEYS.lastRegion);
     const lastSelectedKey = sessionStorage.getItem(STORAGE_KEYS.lastSelectedKey);
     const lastScrollY = sessionStorage.getItem(STORAGE_KEYS.lastScrollY);
     const lastPage = sessionStorage.getItem(STORAGE_KEYS.lastPage);
@@ -161,7 +153,7 @@ export function getSavedState(): {
     const lastColumnPreset = sessionStorage.getItem(STORAGE_KEYS.lastColumnPreset);
     const lastTenant = getSavedTenant();
 
-    if (!lastQueryKey || !lastResult || !lastRegion) {
+    if (!lastQueryKey || !lastResult) {
       return null;
     }
 
@@ -179,7 +171,6 @@ export function getSavedState(): {
     const result = JSON.parse(lastResult) as PaginatedGroupContractResponse;
 
     return {
-      region: lastRegion as Region,
       condition,
       result,
       selectedKey: lastSelectedKey ?? undefined,
@@ -202,7 +193,6 @@ export function getSavedState(): {
  */
 export function restoreListState(
   currentTenant: string | null,
-  currentRegion: Region | null,
   currentCondition: GroupContractSearchCondition,
   currentPage: number,
   currentSize: number,
@@ -217,17 +207,12 @@ export function restoreListState(
   queryKey?: string;
 } | null {
   const saved = getSavedState();
-  if (!saved || !saved.region || !saved.queryKey) {
+  if (!saved || !saved.queryKey) {
     return null;
   }
 
   // Tenant が一致しない場合は復元しない
   if (saved.tenant !== currentTenant) {
-    return null;
-  }
-
-  // Region が一致しない場合は復元しない
-  if (saved.region !== currentRegion) {
     return null;
   }
 
@@ -265,6 +250,8 @@ export function clearListState(): void {
     Object.values(STORAGE_KEYS).forEach((key) => {
       sessionStorage.removeItem(key);
     });
+    // RegionSelector 削除に伴う旧キーの掃除（互換クリーンアップ）
+    sessionStorage.removeItem('groupContracts:lastRegion');
   } catch (e) {
     console.warn('Failed to clear list state from sessionStorage:', e);
   }

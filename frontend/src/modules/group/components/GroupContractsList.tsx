@@ -11,7 +11,6 @@ import type {
   ApiError,
 } from '@/types';
 import { GroupContractSearchForm } from './GroupContractSearchForm';
-import { RegionSelector } from './RegionSelector';
 import { TenantSelector } from '@/modules/core/components/TenantSelector';
 import {
   saveListState,
@@ -171,7 +170,8 @@ const STICKY_COLUMN_LEFTS = {
 
 export function GroupContractsList() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const [region, setRegion] = useState<Region | null>(null);
+  // group ドメインは常に INTEGRATION を使用（RegionSelector 削除により固定）
+  const region: Region = 'INTEGRATION';
   const [result, setResult] = useState<PaginatedGroupContractResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
@@ -184,50 +184,23 @@ export function GroupContractsList() {
   const [columnPreset, setColumnPreset] = useState<ColumnPreset>('standard');
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const hasRestoredRef = useRef(false);
-  const restoringRegionRef = useRef(false);
   const restoringTenantRef = useRef(false);
   const prevTenantRef = useRef<string | null>(null);
   const { selectedTenant, setTenant } = useTenantContext();
 
-  // 初回マウント時に region と tenant を自動復元
+  // 初回マウント時に tenant を自動復元
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (region !== null && selectedTenant !== null) return;
+    if (selectedTenant !== null) return;
   
     const saved = getSavedState();
     if (!saved) return;
   
-    if (saved.region && region === null) {
-      restoringRegionRef.current = true;
-      setRegion(saved.region);
-    }
     if (saved.tenant && selectedTenant === null) {
       restoringTenantRef.current = true;
       setTenant(saved.tenant);
     }
-  }, [region, selectedTenant, setTenant]);
-
-  // Region変更時に状態をリセット
-  useEffect(() => {
-    if (region === null) return;
-  
-    if (restoringRegionRef.current) {
-      restoringRegionRef.current = false;
-      return;
-    }
-  
-    clearListState();
-  
-    setResult(null);
-    setError(null);
-    setSearchState('not-started');
-    setPage(0);
-    setHasSearched(false);
-    setIsSearchFormOpen(false);
-    setSearchCondition({});
-    setSelectedKey(null);
-    hasRestoredRef.current = false;
-  }, [region]);
+  }, [selectedTenant, setTenant]);
 
   // Tenant変更時に状態をリセット（ユーザー操作由来の場合のみ）
   useEffect(() => {
@@ -278,10 +251,9 @@ export function GroupContractsList() {
   // 依存配列は selectedTenant のみ（hasSearched / searchState を入れないことで、検索ボタン押下時に effect が再実行されないようにする）
   }, [selectedTenant]);
 
-  // region 確定後に sessionStorage から状態を復元（1回のみ）
+  // sessionStorage から状態を復元（1回のみ）
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (!region) return; // region が確定するまで待つ
     if (hasRestoredRef.current) return; // 既に復元済みならスキップ
     
     const saved = getSavedState();
@@ -294,13 +266,6 @@ export function GroupContractsList() {
     // tenant整合チェック: saved.tenant と selectedTenant が一致しない場合は復元しない
     if (saved.tenant && saved.tenant !== selectedTenant) {
       // tenant不一致でも初期化フェーズは完了したとマーク
-      hasRestoredRef.current = true;
-      return;
-    }
-    
-    // saved.region と region が一致しないなら復元しない
-    if (saved.region !== region) {
-      // region不一致でも初期化フェーズは完了したとマーク
       hasRestoredRef.current = true;
       return;
     }
@@ -336,22 +301,16 @@ export function GroupContractsList() {
         }
       });
     }
-  }, [region, searchCondition, selectedTenant]); // region 確定後に1回だけ復元
+  }, [searchCondition, selectedTenant]);
 
   const loadContracts = async (params: {
-    region: Region | null;
     condition: GroupContractSearchCondition;
     page: number;
     size: number;
   }) => {
-    // Region未設定時はAPIを呼ばない
-    if (!params.region) {
-      return;
-    }
-    
     // キャッシュチェック: 同一条件なら sessionStorage から復元
     const queryKey = buildQueryKey(selectedTenant, params.condition, params.page, params.size, columnPreset);
-    const cached = restoreListState(selectedTenant, params.region, params.condition, params.page, params.size, columnPreset);
+    const cached = restoreListState(selectedTenant, params.condition, params.page, params.size, columnPreset);
     if (cached && cached.result && cached.queryKey === queryKey) {
       setResult(cached.result);
       setSearchState('success');
@@ -366,12 +325,11 @@ export function GroupContractsList() {
     try {
       const result = await groupService.searchContracts({
         ...params.condition,
-        region: params.region,
         page: params.page,
         size: params.size,
       });
       // 検索結果を sessionStorage に保存
-      saveListState(selectedTenant, params.region, params.condition, params.page, params.size, columnPreset, result);
+      saveListState(selectedTenant, params.condition, params.page, params.size, columnPreset, result);
       setResult(result);
       setSearchState('success');
     } catch (err) {
@@ -395,7 +353,7 @@ export function GroupContractsList() {
   };
 
   const handleSearch = (condition: GroupContractSearchCondition) => {
-    if (!region || !selectedTenant) {
+    if (!selectedTenant) {
       return;
     }
   
@@ -405,7 +363,6 @@ export function GroupContractsList() {
     setSelectedKey(null);
     setIsSearchFormOpen(false); // 検索後に折りたたむ
     loadContracts({
-      region,
       condition,
       page: 0,
       size,
@@ -414,11 +371,11 @@ export function GroupContractsList() {
   
   // 詳細への遷移時に状態を保存
   const handleDetailClick = (cmpCd: string, contractNo: string) => {
-    if (!region || !result) return;
+    if (!result) return;
     
     const scrollY = scrollContainerRef.current?.scrollTop ?? 0;
     
-    saveListState(selectedTenant, region, searchCondition, page, size, columnPreset, result, {
+    saveListState(selectedTenant, searchCondition, page, size, columnPreset, result, {
       selectedKey: `${cmpCd}:${contractNo}`,
       scrollY,
     });
@@ -430,10 +387,9 @@ export function GroupContractsList() {
 
   // ページネーション変更時も検索を実行（検索実行済みの場合のみ）
   const handlePageChange = (newPage: number) => {
-    if (hasSearched && region) {
+    if (hasSearched) {
       setPage(newPage);
       loadContracts({
-        region,
         condition: searchCondition,
         page: newPage,
         size,
@@ -443,11 +399,10 @@ export function GroupContractsList() {
 
   // ページサイズ変更時も検索を実行（検索実行済みの場合のみ）
   const handleSizeChange = (newSize: 20 | 50 | 100) => {
-    if (hasSearched && region) {
+    if (hasSearched) {
       setSize(newSize);
       setPage(0);
       loadContracts({
-        region,
         condition: searchCondition,
         page: 0,
         size: newSize,
@@ -502,24 +457,7 @@ export function GroupContractsList() {
         <TenantSelector />
         {!selectedTenant && (
           <p className="mt-2 text-sm text-blue-600">
-            法人（Tenant）を選択すると、地区（Region）を選択して検索できます。
-          </p>
-        )}
-      </div>
-      {/* Region選択 */}
-      <div className="card p-4">
-        <p className="mb-2 text-xs text-gray-500">
-          法人選択後に地区（Region）を選択してください（補助選択項目）
-        </p>
-        <RegionSelector value={region} onChange={setRegion} disabled={isLoading || !selectedTenant} />
-        {!region && (
-          <p className="mt-2 text-sm text-amber-600">
-            Region を選択してください。Region が選択されていない場合、検索は実行できません。
-          </p>
-        )}
-        {!selectedTenant && (
-          <p className="mt-2 text-sm text-amber-600">
-            法人を選択してください。法人が選択されていない場合、Region は選択できません。
+            法人（Tenant）を選択すると、検索できます。
           </p>
         )}
       </div>
@@ -557,7 +495,7 @@ export function GroupContractsList() {
                 onChange={handleConditionChange}
                 onSearch={handleSearch}
                 loading={isLoading}
-                disabled={!region || !selectedTenant}
+                disabled={!selectedTenant}
                 showActions={true}
               />
             </div>
@@ -582,9 +520,9 @@ export function GroupContractsList() {
       {/* 未検索時 */}
       {!hasSearched && !isLoading && searchState === 'not-started' && (
         <div className="card p-6 text-center text-gray-500">
-          {region
+          {selectedTenant
             ? '検索条件を入力して「検索」ボタンをクリックしてください'
-            : 'Region を選択してから検索条件を入力してください'}
+            : '法人を選択してから検索条件を入力してください'}
         </div>
       )}
 
