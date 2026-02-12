@@ -12,13 +12,16 @@ import type {
 } from '@/types';
 import { GroupContractSearchForm } from './GroupContractSearchForm';
 import { RegionSelector } from './RegionSelector';
+import { TenantSelector } from '@/modules/core/components/TenantSelector';
 import {
   saveListState,
   restoreListState,
   buildQueryKey,
+  saveTenant,
   clearListState,
   getSavedState,
 } from '../utils/sessionStorage';
+import { useTenantContext } from '@/contexts/TenantContext';
 
 type SearchState = 'not-started' | 'loading' | 'success' | 'error';
 type ColumnPreset = 'standard' | 'contact' | 'staff';
@@ -182,18 +185,27 @@ export function GroupContractsList() {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   const hasRestoredRef = useRef(false);
   const restoringRegionRef = useRef(false);
+  const restoringTenantRef = useRef(false);
+  const prevTenantRef = useRef<string | null>(null);
+  const { selectedTenant, setTenant } = useTenantContext();
 
-  // 初回マウント時に region を自動復元
+  // 初回マウント時に region と tenant を自動復元
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    if (region !== null) return;
+    if (region !== null && selectedTenant !== null) return;
   
     const saved = getSavedState();
-    if (!saved?.region) return;
+    if (!saved) return;
   
-    restoringRegionRef.current = true;
-    setRegion(saved.region);
-  }, [region]);
+    if (saved.region && region === null) {
+      restoringRegionRef.current = true;
+      setRegion(saved.region);
+    }
+    if (saved.tenant && selectedTenant === null) {
+      restoringTenantRef.current = true;
+      setTenant(saved.tenant);
+    }
+  }, [region, selectedTenant, setTenant]);
 
   // Region変更時に状態をリセット
   useEffect(() => {
@@ -217,6 +229,55 @@ export function GroupContractsList() {
     hasRestoredRef.current = false;
   }, [region]);
 
+  // Tenant変更時に状態をリセット（ユーザー操作由来の場合のみ）
+  useEffect(() => {
+    // selectedTenant の実変更を検知（同じ値なら何もしない）
+    if (prevTenantRef.current === selectedTenant) {
+      return;
+    }
+
+    // selectedTenant が null になっただけでは一覧をクリアしない（揺れによる誤発火を防止）
+    if (selectedTenant === null) {
+      prevTenantRef.current = selectedTenant;
+      return;
+    }
+
+    // 初回マウント直後は何もしない（復元処理が完了するまで待つ）
+    // hasRestoredRef で復元処理の完了を判定（hasSearched / searchState は依存配列に入れない）
+    if (!hasRestoredRef.current) {
+      prevTenantRef.current = selectedTenant;
+      return;
+    }
+  
+    if (restoringTenantRef.current) {
+      prevTenantRef.current = selectedTenant;
+      restoringTenantRef.current = false;
+      saveTenant(selectedTenant);
+      return;
+    }
+  
+    // 一覧状態をクリア
+    clearListState();
+  
+    setResult(null);
+    setError(null);
+    setSearchState('not-started');
+    setPage(0);
+    setHasSearched(false);
+    setIsSearchFormOpen(false);
+    setSearchCondition({});
+    setSelectedKey(null);
+    hasRestoredRef.current = false;
+    
+    // tenant の永続化（selectedTenant は非nullなので saveTenant のみ）
+    saveTenant(selectedTenant);
+
+    // クリア処理後に prevTenantRef を更新（次の比較のため）
+    prevTenantRef.current = selectedTenant;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // 依存配列は selectedTenant のみ（hasSearched / searchState を入れないことで、検索ボタン押下時に effect が再実行されないようにする）
+  }, [selectedTenant]);
+
   // region 確定後に sessionStorage から状態を復元（1回のみ）
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -224,10 +285,23 @@ export function GroupContractsList() {
     if (hasRestoredRef.current) return; // 既に復元済みならスキップ
     
     const saved = getSavedState();
-    if (!saved) return;
+    if (!saved) {
+      // saved が無い場合でも初期化フェーズは完了したとマーク（復元が無いケースでも Tenant変更effect が正常に動作するようにする）
+      hasRestoredRef.current = true;
+      return;
+    }
+    
+    // tenant整合チェック: saved.tenant と selectedTenant が一致しない場合は復元しない
+    if (saved.tenant && saved.tenant !== selectedTenant) {
+      // tenant不一致でも初期化フェーズは完了したとマーク
+      hasRestoredRef.current = true;
+      return;
+    }
     
     // saved.region と region が一致しないなら復元しない
     if (saved.region !== region) {
+      // region不一致でも初期化フェーズは完了したとマーク
+      hasRestoredRef.current = true;
       return;
     }
 
@@ -262,7 +336,7 @@ export function GroupContractsList() {
         }
       });
     }
-  }, [region]); // region 確定後に1回だけ復元
+  }, [region, searchCondition, selectedTenant]); // region 確定後に1回だけ復元
 
   const loadContracts = async (params: {
     region: Region | null;
@@ -276,8 +350,8 @@ export function GroupContractsList() {
     }
     
     // キャッシュチェック: 同一条件なら sessionStorage から復元
-    const queryKey = buildQueryKey(params.condition, params.page, params.size, columnPreset);
-    const cached = restoreListState(params.region, params.condition, params.page, params.size, columnPreset);
+    const queryKey = buildQueryKey(selectedTenant, params.condition, params.page, params.size, columnPreset);
+    const cached = restoreListState(selectedTenant, params.region, params.condition, params.page, params.size, columnPreset);
     if (cached && cached.result && cached.queryKey === queryKey) {
       setResult(cached.result);
       setSearchState('success');
@@ -297,7 +371,7 @@ export function GroupContractsList() {
         size: params.size,
       });
       // 検索結果を sessionStorage に保存
-      saveListState(params.region, params.condition, params.page, params.size, columnPreset, result);
+      saveListState(selectedTenant, params.region, params.condition, params.page, params.size, columnPreset, result);
       setResult(result);
       setSearchState('success');
     } catch (err) {
@@ -321,11 +395,10 @@ export function GroupContractsList() {
   };
 
   const handleSearch = (condition: GroupContractSearchCondition) => {
-    // Region未設定時は検索を実行しない
-    if (!region) {
+    if (!region || !selectedTenant) {
       return;
     }
-
+  
     setSearchCondition(condition);
     setPage(0); // 検索時はページをリセット
     setHasSearched(true);
@@ -345,7 +418,7 @@ export function GroupContractsList() {
     
     const scrollY = scrollContainerRef.current?.scrollTop ?? 0;
     
-    saveListState(region, searchCondition, page, size, columnPreset, result, {
+    saveListState(selectedTenant, region, searchCondition, page, size, columnPreset, result, {
       selectedKey: `${cmpCd}:${contractNo}`,
       scrollY,
     });
@@ -424,12 +497,21 @@ export function GroupContractsList() {
 
   return (
     <div className="space-y-4 min-h-0">
+      {/* Tenant選択 */}
+      <div className="card p-4">
+        <TenantSelector />
+      </div>
       {/* Region選択 */}
       <div className="card p-4">
-        <RegionSelector value={region} onChange={setRegion} disabled={isLoading} />
+        <RegionSelector value={region} onChange={setRegion} disabled={isLoading || !selectedTenant} />
         {!region && (
           <p className="mt-2 text-sm text-amber-600">
             Region を選択してください。Region が選択されていない場合、検索は実行できません。
+          </p>
+        )}
+        {!selectedTenant && (
+          <p className="mt-2 text-sm text-amber-600">
+            法人を選択してください。法人が選択されていない場合、Region は選択できません。
           </p>
         )}
       </div>
@@ -467,7 +549,7 @@ export function GroupContractsList() {
                 onChange={handleConditionChange}
                 onSearch={handleSearch}
                 loading={isLoading}
-                disabled={!region}
+                disabled={!region || !selectedTenant}
                 showActions={true}
               />
             </div>

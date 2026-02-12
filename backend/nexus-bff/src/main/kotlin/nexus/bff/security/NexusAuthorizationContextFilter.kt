@@ -5,6 +5,8 @@ import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import nexus.core.region.Region
 import nexus.core.region.RegionContext
+import nexus.core.context.TenantContext
+import org.slf4j.MDC
 import nexus.infrastructure.db.CorporationContext
 import nexus.infrastructure.db.DomainAccount
 import nexus.infrastructure.db.DomainAccountContext
@@ -61,8 +63,11 @@ class NexusAuthorizationContextFilter(
             filterChain.doFilter(request, response)
         } finally {
             RegionContext.clear()
+            TenantContext.clear()
             CorporationContext.clear()
             DomainAccountContext.clear()
+            MDC.remove("tenantId")
+            MDC.remove("regionId")
         }
     }
 
@@ -113,6 +118,7 @@ class NexusAuthorizationContextFilter(
         }
 
         RegionContext.set(Region.INTEGRATION)
+        MDC.put("regionId", Region.INTEGRATION.name.lowercase())
         if (logger.isDebugEnabled) logger.debug("Authorized integration access, RegionContext=INTEGRATION")
         return Unit
     }
@@ -150,10 +156,17 @@ class NexusAuthorizationContextFilter(
             RegionContext.set(region)
             CorporationContext.set(headerCorp.lowercase())
             DomainAccountContext.set(domainAccount)
+            // TenantContext を設定（corp を tenant の暫定定義として扱う）
+            val tenantId = headerCorp.lowercase()
+            TenantContext.set(tenantId)
+            
+            // MDC に tenantId と regionId を設定
+            MDC.put("tenantId", tenantId)
+            MDC.put("regionId", region.name.lowercase())
 
             if (logger.isDebugEnabled) {
                 logger.debug(
-                    "Authorized region access (header-based). RegionContext=$region, CorporationContext=$headerCorp, DomainAccountContext=$domainAccount"
+                    "Authorized region access (header-based). RegionContext=$region, TenantContext=$tenantId, CorporationContext=$headerCorp, DomainAccountContext=$domainAccount"
                 )
             }
 
@@ -176,6 +189,8 @@ class NexusAuthorizationContextFilter(
             return null
         }
 
+        val tenantId = sole.corporation.lowercase()
+
         val region = runCatching { Region.fromStringOrThrow(sole.region) }.getOrElse {
             response.sendError(HttpStatus.FORBIDDEN.value())
             return null
@@ -195,12 +210,17 @@ class NexusAuthorizationContextFilter(
         }
 
         RegionContext.set(region)
+        TenantContext.set(tenantId)
         CorporationContext.set(sole.corporation.lowercase())
         DomainAccountContext.set(domainAccount)
+        
+        // MDC に tenantId と regionId を設定
+        MDC.put("tenantId", tenantId)
+        MDC.put("regionId", region.name.lowercase())
 
         if (logger.isDebugEnabled) {
             logger.debug(
-                "Authorized region access (token-based). RegionContext=$region, CorporationContext=${sole.corporation}, DomainAccountContext=$domainAccount"
+                "Authorized region access (token-based). RegionContext=$region, TenantContext=$tenantId, CorporationContext=${sole.corporation}, DomainAccountContext=$domainAccount"
             )
         }
 
