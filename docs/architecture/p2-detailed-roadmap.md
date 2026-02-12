@@ -65,7 +65,7 @@ P2 は以下を目的として実施する：
 | P2-6 | 詳細画面 TODO カード群の API 分離設計確定 | API 分離設計の確定 | 完了 |
 | P2-7 | 詳細API 実装(1) 契約内容/担当者情報 | 契約内容・担当者情報 API 実装 | 完了 |
 | P2-8 | 詳細API 実装(2) 口座情報 | 口座情報 API 実装（権限制御確認重点） | 完了 |
-| P2-9 | 詳細API 実装(3) 入金情報/対応履歴 | 入金情報・対応履歴 API 実装 | 未着手 |
+| P2-9 | 詳細API 実装(3) 入金情報/対応履歴 | 入金情報・対応履歴 API 実装 | 完了 |
 | P2-10 | 詳細API 実装(4) 対応履歴（activitys） | 対応履歴 API 実装 | 完了 |
 | P2-11 | RegionSelector 廃止→法人（Tenant）選択へ統合 | RegionSelector 廃止と法人選択統合 | 未着手 |
 | P2-12 | 本番運用前最終調整 | ログ・監査・セキュリティ | 未着手 |
@@ -563,38 +563,146 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 ## 15. P2-11: RegionSelector 廃止→法人（Tenant）選択へ統合
 
-### 15.1 目的
+### 15.1 目的（不変事項）
 
-RegionSelector を廃止し、法人（Tenant）選択へ統合する。claim 例（`integration__ALL__GROUP` 等）を前提に画面スコープを決定する。
+RegionSelector を将来的に廃止し、法人（Tenant）選択へ統合する。
+**本作業はUI統合であり、DBルーティング構造は変更しない。**
 
-### 15.2 スコープ
+**不変事項（変更禁止）**:
+- DB構成: 地区DB（saitama / fukushima / tochigi）は別Oracleインスタンス。各インスタンス内に法人別スキーマ（XXXX_gojo / XXXX_master / XXXX_sousai）。groupドメインは integration DB を使用。
+- Routing方針: gojo / funeral は法人コンテキストから地区へルーティング。groupは常に integration DB。
+- BackendのRegionContextは存続（削除しない）。
+- Tenantは法人識別子として扱う（ただし Frontend は導出ロジックを持たない）。
+- Frontendの責務: Tenant選択はUI状態管理のみ。Region導出ロジックはFrontendで持たない。業務判断はBFF。
 
-- RegionSelector の廃止
-- 法人（Tenant）選択 UI の実装
-- claim 例（`integration__ALL__GROUP` 等）を前提にした画面スコープ決定ロジックの実装
-- 法人選択肢（名称含む）を認証情報 or BFF のどちらで提供するかの判断確定と実装
+**禁止事項**:
+- Tenant をヘッダー等で Backend に伝播して DB/ルーティング判断に影響させる実装（例: X-NEXUS-CORP 自動付与）
+- Frontend で Tenant→Region を導出する実装
+- 既存 gojo/funeral/group のDBルーティング構造の変更
+
+### 15.2 Phase 定義
+
+**Phase 1: 併存（Tenant と Region を両方 UI として保持できる。既存機能維持。状態可視化）**
+- TenantContext を正式導入（Backend: ThreadLocal, Frontend: React Context）
+- RegionSelector は維持（削除しない）
+- TenantSelector を導入（UI状態管理のみ）
+- 既存の Region ルーティング・認可・DB接続を壊さない
+- MDC に tenantId / regionId を出力
+
+**Phase 2: 切替（Tenant を主導線、Region は従。RegionSelector は維持だが補助。復元整合・キャッシュ整合は tenant 前提で破綻しない）**
+- TenantSelector を主導線として導入（既存APIから法人一覧を取得）
+- RegionSelector は維持（Tenant 未選択時は disabled）
+- sessionStorage 復元に tenant 整合チェックを追加
+- ユーザー操作で Tenant 変更時は一覧状態をクリア（復元由来ではクリアしない）
+
+**Phase 3: 削除準備（RegionSelector 廃止に向けた削除準備の影響範囲固定。※このフェーズでは削除しない）**
+- RegionSelector の使用箇所を特定・整理
+- 削除時の影響範囲を確定
+- 削除は別フェーズで安全に実施（本フェーズでは削除しない）
 
 ### 15.3 非スコープ
 
 - アーキテクチャの変更（設計憲法に反する変更は禁止）
 - 権限制御の再実装（P1-A1, P2-3 で完了済み）
+- DBルーティング構造の変更
+- RegionContext の削除
+- Frontend での業務判断（Tenant→Region 導出等）
 
 ### 15.4 実装成果物
 
-- 法人（Tenant）選択 UI コンポーネント
-- 画面スコープ決定ロジック
-- 法人選択肢提供方法の確定ドキュメント
+- Phase 1:
+  - Backend: `TenantContext.kt`（ThreadLocal）
+  - Frontend: `TenantContext.tsx`（React Context）
+  - MDC に tenantId / regionId 出力
+- Phase 2:
+  - `TenantSelector.tsx`（既存APIから法人一覧を取得）
+  - sessionStorage 復元に tenant 整合チェック
+- Phase 3:
+  - RegionSelector 削除準備ドキュメント（影響範囲確定）
 
-### 15.5 Done 条件
+### 15.5 Done 条件（Phase 別）
 
-- [ ] RegionSelector が廃止されている
-- [ ] 法人（Tenant）選択 UI が実装されている
-- [ ] claim を前提にした画面スコープ決定ロジックが実装されている
-- [ ] 法人選択肢（名称含む）の提供方法が確定・実装されている
+**Phase 1 Done 条件**:
+- [x] Backend: `TenantContext` が正式導入されている（ThreadLocal）
+- [x] Frontend: `TenantContext` が正式導入されている（React Context）
+- [x] `NexusAuthorizationContextFilter` で `TenantContext.set(corp)` が実装されている（corp を tenant の暫定定義として扱う）
+- [x] MDC に `tenantId` / `regionId` が出力されている
+- [x] `TenantContextProvider` がアプリケーションルートに組み込まれている
+- [x] 既存の Region ルーティング・認可・DB接続が壊れていない
+- [x] `npm run build` / `./gradlew build` が通る
+
+**Phase 2 Done 条件**:
+- [x] `TenantSelector` が実装されている（既存APIから法人一覧を取得）
+- [x] `TenantSelector` が loading/error/0件 状態を表示できる
+- [x] `RegionSelector` が Tenant 未選択時は disabled になる
+- [x] sessionStorage 復元に tenant 整合チェックが追加されている（tenant不一致時は復元しない）
+- [x] ユーザー操作で Tenant 変更時は一覧状態がクリアされる（復元由来ではクリアしない）
+- [x] 既存の Region ベース動作が壊れていない
+- [x] `npm run build` が通る
+
+**Phase 3 Done 条件**:
+- [x] RegionSelector の使用箇所が特定・整理されている
+- [x] 削除時の影響範囲が確定されている
+- [x] 削除準備ドキュメントが作成されている
+- [ ] **注意**: Phase 3 では RegionSelector を削除しない（削除は別フェーズで安全に実施）
+
+### 15.7 Phase 3 削除準備チェックリスト（影響範囲固定）
+
+**目的**: RegionSelector 削除に備えて影響範囲を固定し、削除時の作業を安全に実施できるようにする。
+**注意**: 本チェックリストは「削除する」ことを確定させるものではなく、「削除に備えて影響範囲を固定する」ためのものである。
+
+#### 15.7.1 RegionSelector コンポーネントの使用箇所
+
+- [x] `frontend/src/modules/group/components/GroupContractsList.tsx`
+  - 使用箇所: 一覧画面の検索条件エリア
+  - 依存関係: `selectedTenant` が `null` の場合は `disabled={true}`
+  - 復元ロジック: `sessionStorage` から `lastRegion` を復元（`getSavedState()`）
+
+#### 15.7.2 sessionStorage のキー依存箇所
+
+- [x] `frontend/src/modules/group/utils/sessionStorage.ts`
+  - `STORAGE_KEYS.lastRegion`: `'groupContracts:lastRegion'`
+  - 使用箇所:
+    - `saveListState()`: Region を保存（114-116行目）
+    - `getSavedState()`: Region を取得（156行目、182行目）
+    - `restoreListState()`: Region 整合チェック（230-232行目）
+    - `clearListState()`: Region をクリア（`Object.values(STORAGE_KEYS)` で一括削除）
+
+#### 15.7.3 URL/ルーティング上の前提
+
+- [x] Region は URL パラメータとして使用されていない（確認済み）
+  - 詳細画面: `/group/contracts/[cmpCd]/[contractNo]`（Region パラメータなし）
+  - 一覧画面: `/group/contracts`（Region パラメータなし）
+- [x] Region は `sessionStorage` のみで管理されている
+
+#### 15.7.4 Backend API への影響
+
+- [x] `X-NEXUS-REGION` ヘッダーは `api.ts` で必須付与（72行目）
+  - 削除時の影響: RegionSelector 削除後も `region` パラメータは必要（Tenant から導出しない）
+  - 対応方針: Region は Tenant から導出せず、別の方法で取得する必要がある（Phase 3以降で検討）
+
+#### 15.7.5 復元ロジックへの影響
+
+- [x] `GroupContractsList.tsx` の復元ロジック（193-208行目）
+  - `getSavedState()` から `saved.region` を取得して復元
+  - 削除時の影響: RegionSelector 削除後は Region の復元方法を変更する必要がある
+- [x] `restoreListState()` の Region 整合チェック（230-232行目）
+  - 削除時の影響: Region 整合チェックの方法を変更する必要がある
+
+#### 15.7.6 削除時の作業項目（Phase 3以降で実施）
+
+- [ ] RegionSelector コンポーネントの削除（`frontend/src/modules/group/components/RegionSelector.tsx`）
+- [ ] `GroupContractsList.tsx` からの RegionSelector 使用箇所の削除
+- [ ] `sessionStorage.ts` の `lastRegion` キーの削除（または移行）
+- [ ] Region 取得方法の再設計（Tenant から導出しない前提）
+- [ ] 復元ロジックの Region 復元方法の変更
+- [ ] `X-NEXUS-REGION` ヘッダー付与方法の再設計（Region 取得方法に依存）
 
 ### 15.6 参照
 
 - [p04-5-keycloak-claims-db-routing.md](./p04-5-keycloak-claims-db-routing.md)（claim 設計）
+- [nexus-design-constitution.md](./nexus-design-constitution.md)（設計憲法）
+- [nexus-project-roadmap.md](./nexus-project-roadmap.md)（プロジェクトロードマップ）
 
 ---
 

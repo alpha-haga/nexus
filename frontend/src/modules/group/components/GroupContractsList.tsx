@@ -500,9 +500,17 @@ export function GroupContractsList() {
       {/* Tenant選択 */}
       <div className="card p-4">
         <TenantSelector />
+        {!selectedTenant && (
+          <p className="mt-2 text-sm text-blue-600">
+            法人（Tenant）を選択すると、地区（Region）を選択して検索できます。
+          </p>
+        )}
       </div>
       {/* Region選択 */}
       <div className="card p-4">
+        <p className="mb-2 text-xs text-gray-500">
+          法人選択後に地区（Region）を選択してください（補助選択項目）
+        </p>
         <RegionSelector value={region} onChange={setRegion} disabled={isLoading || !selectedTenant} />
         {!region && (
           <p className="mt-2 text-sm text-amber-600">

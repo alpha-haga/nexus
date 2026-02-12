@@ -803,22 +803,42 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 ### P2-11（未着手）— RegionSelector 廃止→法人（Tenant）選択へ統合
 
-**目的**: RegionSelector を廃止し、法人（Tenant）選択へ統合する。claim 例（`integration__ALL__GROUP` 等）を前提に画面スコープを決定する。
+**目的**: RegionSelector を将来的に廃止し、法人（Tenant）選択へ統合する。
+**本作業はUI統合であり、DBルーティング構造は変更しない。**
+
+**不変事項（変更禁止）**:
+- DB構成: 地区DB（saitama / fukushima / tochigi）は別Oracleインスタンス。各インスタンス内に法人別スキーマ（XXXX_gojo / XXXX_master / XXXX_sousai）。groupドメインは integration DB を使用。
+- Routing方針: gojo / funeral は法人コンテキストから地区へルーティング。groupは常に integration DB。
+- BackendのRegionContextは存続（削除しない）。
+- Tenantは法人識別子として扱う（ただし Frontend は導出ロジックを持たない）。
+- Frontendの責務: Tenant選択はUI状態管理のみ。Region導出ロジックはFrontendで持たない。業務判断はBFF。
+
+**禁止事項**:
+- Tenant をヘッダー等で Backend に伝播して DB/ルーティング判断に影響させる実装（例: X-NEXUS-CORP 自動付与）
+- Frontend で Tenant→Region を導出する実装
+- 既存 gojo/funeral/group のDBルーティング構造の変更
+
+**Phase 定義**:
+- **Phase 1: 併存**（Tenant と Region を両方 UI として保持できる。既存機能維持。状態可視化）
+- **Phase 2: 切替**（Tenant を主導線、Region は従。RegionSelector は維持だが補助。復元整合・キャッシュ整合は tenant 前提で破綻しない）
+- **Phase 3: 削除準備**（RegionSelector 廃止に向けた削除準備の影響範囲固定。※このフェーズでは削除しない）
 
 **スコープ**:
-- RegionSelector の廃止
-- 法人（Tenant）選択 UI の実装
-- claim 例（`integration__ALL__GROUP` 等）を前提にした画面スコープ決定ロジックの実装
-- 法人選択肢（名称含む）を認証情報 or BFF のどちらで提供するかの判断確定と実装
+- Phase 1: TenantContext の正式導入（Backend/Frontend）
+- Phase 2: TenantSelector の導入と sessionStorage 復元整合の強化
+- Phase 3: RegionSelector 削除準備（影響範囲確定）
 
 **Done 条件**:
-- ✅ RegionSelector が廃止されている
-- ✅ 法人（Tenant）選択 UI が実装されている
-- ✅ claim を前提にした画面スコープ決定ロジックが実装されている
-- ✅ 法人選択肢（名称含む）の提供方法が確定・実装されている
+- **Phase 1**: TenantContext が正式導入され、既存機能が壊れていない
+- **Phase 2**: TenantSelector が実装され、復元整合が強化されている
+- **Phase 3**: RegionSelector 削除準備が完了している（削除は別フェーズ）
+
+**詳細**: [p2-detailed-roadmap.md](./p2-detailed-roadmap.md) の「15. P2-11」を参照
 
 **参照**:
 - [p04-5-keycloak-claims-db-routing.md](./p04-5-keycloak-claims-db-routing.md)（claim 設計）
+- [nexus-design-constitution.md](./nexus-design-constitution.md)（設計憲法）
+- [p2-detailed-roadmap.md](./p2-detailed-roadmap.md)（P2-11 詳細）
 
 ---
 
