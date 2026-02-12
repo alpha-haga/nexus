@@ -23,7 +23,7 @@
           "config": {
             "multivalued": "true",
             "userinfo.token.claim": "false",
-            "id.token.claim": "false",
+            "id.token.claim": "true",
             "access.token.claim": "true",
             "claim.name": "nexus_db_access",
             "jsonType.label": "String",
@@ -91,51 +91,11 @@
       "attributes": {
         "post.logout.redirect.uris": "http://localhost:3000/*"
       },
-      "protocolMappers": [
-        {
-          "name": "employeeId",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "config": {
-            "user.attribute": "employeeId",
-            "claim.name": "employeeId",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "userinfo.token.claim": "true"
-          }
-        },
-        {
-          "name": "corporationId",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "config": {
-            "user.attribute": "corporationId",
-            "claim.name": "corporationId",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "userinfo.token.claim": "true"
-          }
-        },
-        {
-          "name": "corporationName",
-          "protocol": "openid-connect",
-          "protocolMapper": "oidc-usermodel-attribute-mapper",
-          "config": {
-            "user.attribute": "corporationName",
-            "claim.name": "corporationName",
-            "id.token.claim": "true",
-            "access.token.claim": "true",
-            "userinfo.token.claim": "true"
-          }
-        }
-      ],
       "defaultClientScopes": [
         "profile",
         "email",
         "roles",
-        "web-origins"
-      ],
-      "optionalClientScopes": [
+        "web-origins",
         "nexus-db-access"
       ]
     },
@@ -149,7 +109,7 @@
       "redirectUris": [
         "http://localhost:8080/*",
         "http://localhost:3000/*"
-          ],
+      ],
       "webOrigins": [
         "http://localhost:8080",
         "http://localhost:3000"
@@ -175,15 +135,71 @@
         },
         {
           "name": "saitama__musashino__GOJO",
-          "description": "埼玉地区 武蔵野法人 GOJO ドメインへのアクセス権限"
+          "description": "埼玉地区 武蔵野法人 GOJO ドメイン"
         },
         {
           "name": "saitama__musashino__FUNERAL",
-          "description": "埼玉地区 武蔵野法人 FUNERAL ドメインへのアクセス権限"
+          "description": "埼玉地区 武蔵野法人 FUNERAL ドメイン"
+        },
+        {
+          "name": "saitama__saikan__GOJO",
+          "description": "埼玉地区 サイカン法人 GOJO ドメイン"
+        },
+        {
+          "name": "saitama__saikan__FUNERAL",
+          "description": "埼玉地区 サイカン法人 FUNERAL ドメイン"
+        },
+        {
+          "name": "saitama__fukushiso__FUNERAL",
+          "description": "埼玉地区 中央福祉法人 FUNERAL ドメインのみ"
         },
         {
           "name": "fukushima__fukushima__GOJO",
-          "description": "福島地区 福島法人 GOJO ドメインへのアクセス権限"
+          "description": "福島地区 福島法人 GOJO ドメイン"
+        },
+        {
+          "name": "fukushima__fukushima__FUNERAL",
+          "description": "福島地区 福島法人 FUNERAL ドメイン"
+        },
+        {
+          "name": "fukushima__touhoku__GOJO",
+          "description": "福島地区 東北法人 GOJO ドメイン"
+        },
+        {
+          "name": "fukushima__touhoku__FUNERAL",
+          "description": "福島地区 東北法人 FUNERAL ドメイン"
+        },
+        {
+          "name": "fukushima__gifu__GOJO",
+          "description": "福島地区 岐阜法人 GOJO ドメイン"
+        },
+        {
+          "name": "fukushima__gifu__FUNERAL",
+          "description": "福島地区 岐阜法人 FUNERAL ドメイン"
+        },
+        {
+          "name": "tochigi__tochigi__GOJO",
+          "description": "栃木地区 栃木法人 GOJO ドメイン"
+        },
+        {
+          "name": "tochigi__tochigi__FUNERAL",
+          "description": "栃木地区 栃木法人 FUNERAL ドメイン"
+        },
+        {
+          "name": "tochigi__shizuoka__GOJO",
+          "description": "栃木地区 静岡法人 GOJO ドメイン"
+        },
+        {
+          "name": "tochigi__shizuoka__FUNERAL",
+          "description": "栃木地区 静岡法人 FUNERAL ドメイン"
+        },
+        {
+          "name": "tochigi__tochigitksr__GOJO",
+          "description": "栃木地区 栃木タクセル法人 GOJO ドメイン"
+        },
+        {
+          "name": "tochigi__tochigitksr__FUNERAL",
+          "description": "栃木地区 栃木タクセル法人 FUNERAL ドメイン"
         }
       ]
     }
@@ -203,6 +219,31 @@
       }
     },
     {
+      "name": "corp-saikan",
+      "path": "/corp-saikan",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {
+        "nexus-bff": [
+          "integration__ALL__GROUP",
+          "saitama__saikan__GOJO",
+          "saitama__saikan__FUNERAL"
+        ]
+      }
+    },
+    {
+      "name": "corp-fukushiso",
+      "path": "/corp-fukushiso",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {
+        "nexus-bff": [
+          "integration__ALL__GROUP",
+          "saitama__fukushiso__FUNERAL"
+        ]
+      }
+    },
+    {
       "name": "corp-fukushima",
       "path": "/corp-fukushima",
       "attributes": {},
@@ -210,7 +251,151 @@
       "clientRoles": {
         "nexus-bff": [
           "integration__ALL__GROUP",
-          "fukushima__fukushima__GOJO"
+          "fukushima__fukushima__GOJO",
+          "fukushima__fukushima__FUNERAL"
+        ]
+      }
+    },
+    {
+      "name": "corp-touhoku",
+      "path": "/corp-touhoku",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {
+        "nexus-bff": [
+          "integration__ALL__GROUP",
+          "fukushima__touhoku__GOJO",
+          "fukushima__touhoku__FUNERAL"
+        ]
+      }
+    },
+    {
+      "name": "corp-gifu",
+      "path": "/corp-gifu",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {
+        "nexus-bff": [
+          "integration__ALL__GROUP",
+          "fukushima__gifu__GOJO",
+          "fukushima__gifu__FUNERAL"
+        ]
+      }
+    },
+    {
+      "name": "corp-tochigi",
+      "path": "/corp-tochigi",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {
+        "nexus-bff": [
+          "integration__ALL__GROUP",
+          "tochigi__tochigi__GOJO",
+          "tochigi__tochigi__FUNERAL"
+        ]
+      }
+    },
+    {
+      "name": "corp-shizuoka",
+      "path": "/corp-shizuoka",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {
+        "nexus-bff": [
+          "integration__ALL__GROUP",
+          "tochigi__shizuoka__GOJO",
+          "tochigi__shizuoka__FUNERAL"
+        ]
+      }
+    },
+    {
+      "name": "corp-tochigitksr",
+      "path": "/corp-tochigitksr",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {
+        "nexus-bff": [
+          "integration__ALL__GROUP",
+          "tochigi__tochigitksr__GOJO",
+          "tochigi__tochigitksr__FUNERAL"
+        ]
+      }
+    },
+    {
+      "name": "corp-saitama-all",
+      "path": "/corp-saitama-all",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {
+        "nexus-bff": [
+          "integration__ALL__GROUP",
+          "saitama__musashino__GOJO",
+          "saitama__musashino__FUNERAL",
+          "saitama__saikan__GOJO",
+          "saitama__saikan__FUNERAL",
+          "saitama__fukushiso__FUNERAL"
+        ]
+      }
+    },
+    {
+      "name": "corp-fukushima-all",
+      "path": "/corp-fukushima-all",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {
+        "nexus-bff": [
+          "integration__ALL__GROUP",
+          "fukushima__fukushima__GOJO",
+          "fukushima__fukushima__FUNERAL",
+          "fukushima__touhoku__GOJO",
+          "fukushima__touhoku__FUNERAL",
+          "fukushima__gifu__GOJO",
+          "fukushima__gifu__FUNERAL"
+        ]
+      }
+    },
+    {
+      "name": "corp-tochigi-all",
+      "path": "/corp-tochigi-all",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {
+        "nexus-bff": [
+          "integration__ALL__GROUP",
+          "tochigi__tochigi__GOJO",
+          "tochigi__tochigi__FUNERAL",
+          "tochigi__shizuoka__GOJO",
+          "tochigi__shizuoka__FUNERAL",
+          "tochigi__tochigitksr__GOJO",
+          "tochigi__tochigitksr__FUNERAL"
+        ]
+      }
+    },
+    {
+      "name": "corp-all-regions",
+      "path": "/corp-all-regions",
+      "attributes": {},
+      "realmRoles": [],
+      "clientRoles": {
+        "nexus-bff": [
+          "integration__ALL__GROUP",
+          "saitama__musashino__GOJO",
+          "saitama__musashino__FUNERAL",
+          "saitama__saikan__GOJO",
+          "saitama__saikan__FUNERAL",
+          "saitama__fukushiso__FUNERAL",
+          "fukushima__fukushima__GOJO",
+          "fukushima__fukushima__FUNERAL",
+          "fukushima__touhoku__GOJO",
+          "fukushima__touhoku__FUNERAL",
+          "fukushima__gifu__GOJO",
+          "fukushima__gifu__FUNERAL",
+          "tochigi__tochigi__GOJO",
+          "tochigi__tochigi__FUNERAL",
+          "tochigi__shizuoka__GOJO",
+          "tochigi__shizuoka__FUNERAL",
+          "tochigi__tochigitksr__GOJO",
+          "tochigi__tochigitksr__FUNERAL"
         ]
       }
     }
@@ -229,17 +414,6 @@
           "temporary": false
         }
       ],
-      "attributes": {
-        "employeeId": [
-          "E001"
-        ],
-        "corporationId": [
-          "corp-001"
-        ],
-        "corporationName": [
-          "サンプル法人"
-        ]
-      },
       "groups": [
         "/corp-musashino"
       ]
@@ -257,19 +431,42 @@
           "temporary": false
         }
       ],
-      "attributes": {
-        "employeeId": [
-          "E002"
-        ],
-        "corporationId": [
-          "corp-fukushima"
-        ],
-        "corporationName": [
-          "福島法人"
-        ]
-      },
       "groups": [
         "/corp-fukushima"
+      ]
+    },
+    {
+      "username": "saitama-admin",
+      "email": "saitama-admin@example.com",
+      "enabled": true,
+      "firstName": "埼玉地区",
+      "lastName": "管理者",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/corp-saitama-all"
+      ]
+    },
+    {
+      "username": "super-admin",
+      "email": "super-admin@example.com",
+      "enabled": true,
+      "firstName": "システム",
+      "lastName": "管理者",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/corp-all-regions"
       ]
     }
   ]
