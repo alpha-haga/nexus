@@ -144,6 +144,17 @@ nexus-infrastructure/src/main/resources/sql/
   - Context 未設定時は既存の fail fast 機構（DomainAccountContextNotSetException 等）で例外を投げる
 
 **責務境界**: 設計責務（P04-5 で確定）と実装責務（P1-1 で実施）は明確に分かれている。設計の再解釈・再設計は禁止。
+
+### 4.4 Region と Tenant の責務分離（確定）
+
+- Region は DB ルーティング内部責務
+- Tenant は UI 責務
+- フロントは Region を扱わない
+- RegionSelector は存在しない
+- TenantContext が唯一の選択コンテキスト
+- group ドメインは常に INTEGRATION 固定
+- DB routing は Backend 内部責務
+- フロントは X-NEXUS-REGION を送らない
   
 ---
 

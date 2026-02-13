@@ -433,7 +433,7 @@ P1-B は「業務要件と検索要件を成立させる」ためのフェーズ
 | P2-8 | 詳細API 実装(2) 口座情報 | **完了** |
 | P2-9 | 詳細API 実装(3) 入金情報/対応履歴 | 未着手 |
 | P2-10 | 詳細API 実装(4) 対応履歴（activitys） | **完了** |
-| P2-11 | RegionSelector 廃止→法人（Tenant）選択へ統合 | 未着手 |
+| P2-11 | RegionSelector 廃止→法人（Tenant）選択へ統合 | **完了** |
 | P2-12 | 本番運用前最終調整 | 未着手 |
 
 ---
@@ -801,10 +801,16 @@ P2-3 まで成立した認証/認可/権限制御/表示制御を壊さず、業
 
 ---
 
-### P2-11（未着手）— RegionSelector 廃止→法人（Tenant）選択へ統合
+### P2-11（完了）— RegionSelector 廃止→法人（Tenant）選択へ統合
 
-**目的**: RegionSelector を将来的に廃止し、法人（Tenant）選択へ統合する。
+**目的**: RegionSelector を完全廃止し、法人（Tenant）選択へ統合する。
 **本作業はUI統合であり、DBルーティング構造は変更しない。**
+
+**実装結果**:
+- RegionSelector 完全削除
+- group ドメインは常に INTEGRATION 固定
+- TenantContext を唯一の UI 選択単位とする
+- デフォルト Tenant 自動決定実装済み
 
 **不変事項（変更禁止）**:
 - DB構成: 地区DB（saitama / fukushima / tochigi）は別Oracleインスタンス。各インスタンス内に法人別スキーマ（XXXX_gojo / XXXX_master / XXXX_sousai）。groupドメインは integration DB を使用。

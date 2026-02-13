@@ -495,6 +495,42 @@ fun resolveAvailableCompanies(roles: List<String>): List<AvailableCompany> {
 
 ---
 
+## 4.4 Tenant 決定ロジック（確定）
+
+### 4.4.1 決定フロー
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ Tenant 決定ロジック（確定）                             │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│ 1. Keycloak ロールから利用可能法人を取得                │
+│    └─ bootstrap API で availableCompanies を返却       │
+│                         │                               │
+│                         ↓                               │
+│ 2. NXCM_COMPANY と交差                                 │
+│    └─ is_active = '1' の法人のみ                       │
+│                         │                               │
+│                         ↓                               │
+│ 3. availableCompanies を返却                            │
+│    └─ Frontend に渡す                                  │
+│                         │                               │
+│                         ↓                               │
+│ 4. Frontend で default tenant を決定                    │
+│    ├─ 保存済み tenant が有効 → それを使用              │
+│    └─ 無効 or 未保存 → availableCompanies の先頭を使用  │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 4.4.2 保存・復元
+
+- Tenant は `sessionStorage("nexus:tenant")` に保存される
+- 初回ログイン時は `availableCompanies[0]` を自動選択
+- リロード時は保存済み tenant を復元（無効な場合は先頭にフォールバック）
+
+---
+
 ## 5. Keycloak 設定
 
 ### 5.1 ロール命名規則

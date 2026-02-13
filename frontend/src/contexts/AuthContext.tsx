@@ -3,11 +3,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import type { AuthContext, BootstrapResponse } from '@/types/auth';
+import { useTenantContext } from '@/contexts/TenantContext';
+import { getSavedTenant } from '@/modules/core/utils/tenantStorage';
 
 const AuthContext = createContext<AuthContext | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { data: session, status } = useSession();
+  const { selectedTenant, setTenant } = useTenantContext();
   
   // 状態
   const [user, setUser] = useState<AuthContext['user']>(null);
@@ -50,8 +53,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setAvailableCompanies(data.availableCompanies);
       setHasIntegrationAccess(data.hasIntegrationAccess);
 
-      // Tenantの決定は tenantStorage の復元を唯一の正とする
-      // TenantContextProviderが初期化時に復元するため、ここでは何もしない
+      // Default tenant の決定と設定
+      const saved = getSavedTenant();
+      const savedExists = saved && data.availableCompanies.some(c => c.cmpCd === saved);
+
+      // tenantStorage を唯一の正とする（クロージャ問題回避）
+      const currentTenant = getSavedTenant();
+
+      // 既に保存済み tenant がある場合は上書きしない
+      if (!currentTenant) {
+        const toSelect =
+          (savedExists ? saved : null) ??
+          (data.availableCompanies[0]?.cmpCd ?? null);
+
+        if (toSelect) {
+          setTenant(toSelect); // setTenant 内で storage も更新される
+        }
+      }
 
       setIsInitialized(true);
     } catch (err) {

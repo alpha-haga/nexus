@@ -67,7 +67,7 @@ P2 は以下を目的として実施する：
 | P2-8 | 詳細API 実装(2) 口座情報 | 口座情報 API 実装（権限制御確認重点） | 完了 |
 | P2-9 | 詳細API 実装(3) 入金情報/対応履歴 | 入金情報・対応履歴 API 実装 | 完了 |
 | P2-10 | 詳細API 実装(4) 対応履歴（activitys） | 対応履歴 API 実装 | 完了 |
-| P2-11 | RegionSelector 廃止→法人（Tenant）選択へ統合 | RegionSelector 廃止と法人選択統合 | 未着手 |
+| P2-11 | RegionSelector 廃止→法人（Tenant）選択へ統合 | RegionSelector 廃止と法人選択統合 | 完了 |
 | P2-12 | 本番運用前最終調整 | ログ・監査・セキュリティ | 未着手 |
 
 **順序**: 前フェーズ完了後に次フェーズに着手（P2-1 → P2-2 → ... → P2-12）
@@ -697,6 +697,24 @@ RegionSelector を将来的に廃止し、法人（Tenant）選択へ統合す�
 - [ ] Region 取得方法の再設計（Tenant から導出しない前提）
 - [ ] 復元ロジックの Region 復元方法の変更
 - [ ] `X-NEXUS-REGION` ヘッダー付与方法の再設計（Region 取得方法に依存）
+
+### 15.6 実装結果
+
+#### UI 方針確定
+
+- Region は UI 選択させない
+- 法人（Tenant）が唯一のユーザー選択単位
+- 初回ログイン時は `availableCompanies[0]` を自動選択
+- 保存済み tenant があればそれを優先
+- 無効な tenant は自動フォールバック
+
+#### API 仕様確定
+
+- group ドメインは常に `X-NEXUS-REGION=INTEGRATION`
+- `X-Company-Code` のみをフロントから送信
+- Region 判定は Backend 内部責務
+
+**状態**: 完了
 
 ### 15.6 参照
 
