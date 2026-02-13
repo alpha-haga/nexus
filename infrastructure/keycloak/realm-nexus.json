@@ -7,6 +7,40 @@
   "sslRequired": "external",
   "clientScopes": [
     {
+      "name": "openid",
+      "description": "OpenID Connect scope - includes sub claim",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "false"
+      },
+      "protocolMappers": [
+        {
+          "name": "sub",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "consentRequired": false,
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "audience-nexus-bff",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "nexus-bff",
+            "id.token.claim": "false",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
       "name": "nexus-db-access",
       "description": "NEXUS DB Access Scope - client roles を nexus_db_access claim として出力",
       "protocol": "openid-connect",
@@ -126,6 +160,7 @@
         "post.logout.redirect.uris": "http://localhost:3000/*"
       },
       "defaultClientScopes": [
+        "openid",
         "profile",
         "email",
         "roles",
@@ -156,6 +191,7 @@
         "post.logout.redirect.uris": "http://localhost:8080/*"
       },
       "defaultClientScopes": [
+        "openid",
         "profile",
         "email",
         "nexus-db-access"

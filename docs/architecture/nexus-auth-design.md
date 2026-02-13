@@ -609,50 +609,50 @@ CREATE INDEX NXCM_COMPANY_I01 ON NXCM_COMPANY(region_cd, company_cd);
 -- 埼玉地区
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
     available_domains, display_order, is_active)
-VALUES ('01', 'saitama', 'musashino', '武蔵野互助会', '武蔵野', 
+VALUES ('01', 'saitama', 'musashino', 'アルファクラブ武蔵野株式会社', 'アルファクラブ武蔵野', 
     'GOJO,FUNERAL', 1, '1');
 
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
     available_domains, display_order, is_active)
-VALUES ('02', 'saitama', 'saikan', 'サイカン互助会', 'サイカン', 
+VALUES ('12', 'saitama', 'saikan', 'サイカンシステム株式会社', 'サイカンシステム', 
     'GOJO,FUNERAL', 2, '1');
 
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
     available_domains, display_order, is_active)
-VALUES ('03', 'saitama', 'fukushiso', '中央福祉葬祭', '中央福祉', 
-    'FUNERAL', 3, '1');
+VALUES ('38', 'saitama', 'fukushiso', '中央福祉葬祭', '中央福祉', 
+    'FUNERAL', 8, '1');
 
 -- 福島地区
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
     available_domains, display_order, is_active)
-VALUES ('05', 'fukushima', 'fukushima', '福島互助会', '福島', 
-    'GOJO,FUNERAL', 1, '1');
-
-INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
-    available_domains, display_order, is_active)
-VALUES ('06', 'fukushima', 'touhoku', '東北互助会', '東北', 
-    'GOJO,FUNERAL', 2, '1');
-
-INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
-    available_domains, display_order, is_active)
-VALUES ('07', 'fukushima', 'gifu', '岐阜互助会', '岐阜', 
+VALUES ('06', 'fukushima', 'fukushima', 'アルファクラブ株式会社', 'アルファクラブ（福島）', 
     'GOJO,FUNERAL', 3, '1');
+
+INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
+    available_domains, display_order, is_active)
+VALUES ('09', 'fukushima', 'touhoku', 'アルファクラブ東北株式会社', 'アルファクラブ東北', 
+    'GOJO,FUNERAL', 4, '1');
+
+INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
+    available_domains, display_order, is_active)
+VALUES ('28', 'fukushima', 'gifu', 'アルファクラブ株式会社', 'アルファクラブ（岐阜）', 
+    'GOJO,FUNERAL', 5, '1');
 
 -- 栃木地区
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
     available_domains, display_order, is_active)
-VALUES ('09', 'tochigi', 'tochigi', '栃木互助会', '栃木', 
-    'GOJO,FUNERAL', 1, '1');
+VALUES ('05', 'tochigi', 'tochigi', 'アルファクラブ株式会社', 'アルファクラブ（栃木）', 
+    'GOJO,FUNERAL', 6, '1');
 
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
     available_domains, display_order, is_active)
-VALUES ('10', 'tochigi', 'shizuoka', '静岡互助会', '静岡', 
-    'GOJO,FUNERAL', 2, '1');
+VALUES ('15', 'tochigi', 'shizuoka', 'アルファクラブ静岡株式会社', 'アルファクラブ静岡', 
+    'GOJO,FUNERAL', 7, '1');
 
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
     available_domains, display_order, is_active)
-VALUES ('11', 'tochigi', 'tochigitksr', '栃木タクセル互助会', '栃木タクセル', 
-    'GOJO,FUNERAL', 3, '1');
+VALUES ('55', 'tochigi', 'tochigitksr', '栃木タクセル', '栃木タクセル', 
+    'GOJO,FUNERAL', 9, '1');
 ```
 
 ### 6.2 ユーザーマッピング（NXCM_USER_MAPPING）
