@@ -1,6 +1,7 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { getSavedTenant, saveTenant } from '@/modules/core/utils/tenantStorage';
 
 export type TenantId = string | null;
 
@@ -18,8 +19,17 @@ interface TenantContextProviderProps {
 export function TenantContextProvider({ children }: TenantContextProviderProps) {
   const [selectedTenant, setSelectedTenant] = useState<TenantId>(null);
 
+  // 初期化時にsessionStorageから復元
+  useEffect(() => {
+    const saved = getSavedTenant();
+    if (saved) {
+      setSelectedTenant(saved);
+    }
+  }, []);
+
   const setTenant = (tenant: TenantId) => {
     setSelectedTenant(tenant);
+    saveTenant(tenant);
   };
 
   return (

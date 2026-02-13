@@ -7,6 +7,7 @@ import nexus.group.query.GroupContractDetailDto
 import nexus.group.query.GroupContractQueryService
 import nexus.infrastructure.jdbc.SqlLoader
 import nexus.infrastructure.jdbc.query.*
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
@@ -31,6 +32,7 @@ import java.time.format.DateTimeFormatter
 @Profile("jdbc")
 @Service
 class JdbcGroupContractQueryService(
+    @Qualifier("integrationJdbcTemplate")
     private val jdbc: NamedParameterJdbcTemplate,
     private val sqlLoader: SqlLoader,
 ) : GroupContractQueryService {

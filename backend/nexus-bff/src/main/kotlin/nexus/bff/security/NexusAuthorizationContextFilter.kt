@@ -49,6 +49,9 @@ class NexusAuthorizationContextFilter(
         response: HttpServletResponse,
         filterChain: FilterChain,
     ) {
+        if (logger.isDebugEnabled) {
+            logger.debug("NexusAuthorizationContextFilter: processing request path=${request.requestURI}")
+        }
         try {
             val path = request.requestURI ?: ""
 

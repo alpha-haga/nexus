@@ -6,6 +6,7 @@ import nexus.group.query.GroupContractDto
 import nexus.group.query.GroupSearchCriteria
 import nexus.group.query.GroupSearchResult
 import nexus.group.repository.GroupRepository
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Repository
 
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Repository
  *
  * - Read Only（統合DB）
  * - ReadModel/DTO を返す
+ * - Integration DB 専用（@Qualifier("integrationJdbcTemplate") で明示）
  *
  * NOTE:
  * local(H2) での起動をブロックしないため、現時点はスタブ実装。
@@ -21,6 +23,8 @@ import org.springframework.stereotype.Repository
  */
 @Repository
 class GroupRepositoryImpl(
+    // Integration DB 専用（group ドメインは常に INTEGRATION を使用）
+    @Qualifier("integrationJdbcTemplate")
     private val jdbc: NamedParameterJdbcTemplate
 ) : GroupRepository {
 

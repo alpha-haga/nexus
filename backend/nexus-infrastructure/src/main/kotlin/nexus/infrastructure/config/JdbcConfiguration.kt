@@ -1,7 +1,9 @@
 package nexus.infrastructure.config
 
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import javax.sql.DataSource
 
@@ -19,11 +21,25 @@ import javax.sql.DataSource
 class JdbcConfiguration {
 
     /**
-     * NamedParameterJdbcTemplate Bean
+     * Routing用 NamedParameterJdbcTemplate Bean
      *
      * routingDataSource（@Primary）が自動的に使用される
      */
-    @Bean
-    fun namedParameterJdbcTemplate(dataSource: DataSource): NamedParameterJdbcTemplate =
-        NamedParameterJdbcTemplate(dataSource)
+    @Bean("routingNamedParameterJdbcTemplate")
+    @Primary
+    fun routingNamedParameterJdbcTemplate(
+        routingDataSource: DataSource
+    ): NamedParameterJdbcTemplate =
+        NamedParameterJdbcTemplate(routingDataSource)
+
+    /**
+     * Integration DB 専用の NamedParameterJdbcTemplate
+     *
+     * NXCM_COMPANY 等の Integration DB 専用テーブルアクセス用
+     */
+    @Bean("integrationJdbcTemplate")
+    fun integrationJdbcTemplate(
+        @Qualifier("integrationDataSource") integrationDataSource: DataSource
+    ): NamedParameterJdbcTemplate =
+        NamedParameterJdbcTemplate(integrationDataSource)
 }

@@ -591,10 +591,6 @@ CREATE TABLE NXCM_COMPANY (
     company_cd          VARCHAR2(20)  NOT NULL,  -- 法人コード (musashino, saikan, ...)
     company_name        VARCHAR2(100) NOT NULL,  -- 法人名 (武蔵野互助会)
     company_name_short  VARCHAR2(50),            -- 法人名略称 (武蔵野)
-    db_host             VARCHAR2(100) NOT NULL,  -- 接続先DBホスト
-    db_port             NUMBER(5)     DEFAULT 1521,
-    db_service_name     VARCHAR2(50)  NOT NULL,  -- サービス名
-    schema_name         VARCHAR2(30)  NOT NULL,  -- スキーマ名 (ZEBRA_AREA1, ...)
     available_domains   VARCHAR2(200) NOT NULL,  -- 利用可能ドメイン (GOJO,FUNERAL,POINT)
     display_order       NUMBER(3)     NOT NULL,  -- 表示順
     is_active           CHAR(1)       DEFAULT '1',

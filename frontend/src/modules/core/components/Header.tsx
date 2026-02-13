@@ -1,19 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { signOut, useSession } from 'next-auth/react';
-import { useState } from 'react';
-
-interface Corporation {
-  id: string;
-  name: string;
-}
-
-const mockCorporations: Corporation[] = [
-  { id: 'corp-001', name: 'サンプル法人' },
-  { id: 'corp-002', name: '株式会社ABC互助会' },
-  { id: 'corp-003', name: '株式会社XYZ葬祭' },
-];
+import { signOut } from 'next-auth/react';
+import React from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useTenantContext } from '@/contexts/TenantContext';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -21,17 +12,26 @@ interface HeaderProps {
 }
 
 export function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) {
-  const { data: session } = useSession();
-  const [selectedCorp, setSelectedCorp] = useState(
-    session?.user?.corporationId || 'corp-001'
-  );
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { user, availableCompanies, isLoading, error, isInitialized } = useAuth();
+  const { selectedTenant, setTenant } = useTenantContext();
 
   const handleLogout = () => {
     signOut({ callbackUrl: '/login' });
   };
 
-  const currentCorp = mockCorporations.find((c) => c.id === selectedCorp);
+  const handleCompanyChange = (cmpCd: string) => {
+    setTenant(cmpCd);
+    // setTenant内でsaveTenantが呼ばれるため、ここでは不要
+  };
+
+  // 利用可能法人が1件で、selectedTenantがnullの場合に自動選択
+  React.useEffect(() => {
+    if (isInitialized && availableCompanies.length === 1 && !selectedTenant) {
+      setTenant(availableCompanies[0].cmpCd);
+    }
+  }, [isInitialized, availableCompanies, selectedTenant, setTenant]);
+
+  const selectedCompany = availableCompanies.find(c => c.cmpCd === selectedTenant);
 
   return (
     <header className="h-14 bg-white border-b border-gray-200 flex items-center px-4 shrink-0">
@@ -51,48 +51,39 @@ export function Header({ onToggleSidebar, isSidebarOpen }: HeaderProps) {
         </Link>
       </div>
       <div className="flex-1 flex items-center gap-4">
+        {/* 法人選択UI */}
         <div className="relative">
-          <button
-            type="button"
-            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 rounded-md border border-gray-200"
-          >
-            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-            <span>{currentCorp?.name || '法人を選択'}</span>
-            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-
-          {isDropdownOpen && (
-            <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-md shadow-lg border border-gray-200 py-1 z-50">
-              {mockCorporations.map((corp) => (
-                <button
-                  key={corp.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedCorp(corp.id);
-                    setIsDropdownOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-50 ${
-                    selectedCorp === corp.id ? 'text-primary-600 bg-primary-50' : 'text-gray-700'
-                  }`}
-                >
-                  {corp.name}
-                </button>
-              ))}
+          {isLoading ? (
+            <div className="animate-pulse h-10 w-40 bg-gray-200 rounded" />
+          ) : error ? (
+            <div className="text-red-500 text-sm">初期化エラー</div>
+          ) : availableCompanies.length === 0 ? (
+            <div className="text-gray-500 text-sm px-3 py-2">利用可能な法人がありません</div>
+          ) : availableCompanies.length === 1 ? (
+            <div className="px-3 py-2 text-sm font-medium text-gray-700">
+              {selectedCompany?.companyNameShort ?? selectedCompany?.companyName ?? '法人未選択'}
             </div>
+          ) : (
+            <select
+              value={selectedTenant ?? ''}
+              onChange={(e) => handleCompanyChange(e.target.value)}
+              className="block w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {availableCompanies.map((company) => (
+                <option key={company.cmpCd} value={company.cmpCd}>
+                  {company.companyNameShort ?? company.companyName}
+                </option>
+              ))}
+            </select>
           )}
         </div>
       </div>
 
-      {session && (
+      {user && (
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-sm font-medium text-gray-700">{session.user.name}</p>
-            <p className="text-xs text-gray-500">{session.user.email}</p>
+            <p className="text-sm font-medium text-gray-700">{user.username ?? user.email ?? 'ユーザー'}</p>
+            <p className="text-xs text-gray-500">{user.email}</p>
           </div>
           <button
             onClick={handleLogout}

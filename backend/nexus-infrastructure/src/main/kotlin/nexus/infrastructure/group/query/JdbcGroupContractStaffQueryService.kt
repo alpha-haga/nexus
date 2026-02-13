@@ -3,6 +3,7 @@ package nexus.infrastructure.group.query
 import nexus.group.query.GroupContractStaffDto
 import nexus.group.query.GroupContractStaffQueryService
 import nexus.infrastructure.jdbc.SqlLoader
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Profile
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate
 import org.springframework.stereotype.Service
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service
 @Profile("jdbc")
 @Service
 class JdbcGroupContractStaffQueryService(
+    @Qualifier("integrationJdbcTemplate")
     private val jdbc: NamedParameterJdbcTemplate,
     private val sqlLoader: SqlLoader,
 ) : GroupContractStaffQueryService {

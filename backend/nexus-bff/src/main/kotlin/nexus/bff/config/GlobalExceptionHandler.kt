@@ -1,5 +1,7 @@
 package nexus.bff.config
 
+import nexus.core.auth.AccessDeniedException
+import nexus.core.auth.CompanyNotAvailableException
 import nexus.core.exception.AuthorizationException
 import nexus.core.exception.NotImplementedException
 import nexus.core.exception.ResourceNotFoundException
@@ -106,6 +108,34 @@ class GlobalExceptionHandler {
                     error = "Not Found",
                     message = ex.message ?: "Resource not found",
                     code = "RESOURCE_NOT_FOUND"
+                )
+            )
+    }
+
+    @ExceptionHandler(AccessDeniedException::class)
+    fun handleAccessDenied(e: AccessDeniedException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(
+                ErrorResponse(
+                    status = HttpStatus.FORBIDDEN.value(),
+                    error = "Forbidden",
+                    message = "この法人へのアクセス権限がありません",
+                    code = "ACCESS_DENIED"
+                )
+            )
+    }
+
+    @ExceptionHandler(CompanyNotAvailableException::class)
+    fun handleCompanyNotAvailable(e: CompanyNotAvailableException): ResponseEntity<ErrorResponse> {
+        return ResponseEntity
+            .status(HttpStatus.SERVICE_UNAVAILABLE)
+            .body(
+                ErrorResponse(
+                    status = HttpStatus.SERVICE_UNAVAILABLE.value(),
+                    error = "Service Unavailable",
+                    message = "この法人は現在利用できません",
+                    code = "COMPANY_NOT_AVAILABLE"
                 )
             )
     }

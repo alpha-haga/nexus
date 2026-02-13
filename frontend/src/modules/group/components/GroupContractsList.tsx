@@ -11,12 +11,10 @@ import type {
   ApiError,
 } from '@/types';
 import { GroupContractSearchForm } from './GroupContractSearchForm';
-import { TenantSelector } from '@/modules/core/components/TenantSelector';
 import {
   saveListState,
   restoreListState,
   buildQueryKey,
-  saveTenant,
   clearListState,
   getSavedState,
 } from '../utils/sessionStorage';
@@ -225,7 +223,7 @@ export function GroupContractsList() {
     if (restoringTenantRef.current) {
       prevTenantRef.current = selectedTenant;
       restoringTenantRef.current = false;
-      saveTenant(selectedTenant);
+      // setTenant内でsaveTenantが呼ばれるため、ここでは不要
       return;
     }
   
@@ -242,8 +240,7 @@ export function GroupContractsList() {
     setSelectedKey(null);
     hasRestoredRef.current = false;
     
-    // tenant の永続化（selectedTenant は非nullなので saveTenant のみ）
-    saveTenant(selectedTenant);
+    // tenant の永続化は setTenant 内で行われるため、ここでは不要
 
     // クリア処理後に prevTenantRef を更新（次の比較のため）
     prevTenantRef.current = selectedTenant;
@@ -452,15 +449,14 @@ export function GroupContractsList() {
 
   return (
     <div className="space-y-4 min-h-0">
-      {/* Tenant選択 */}
-      <div className="card p-4">
-        <TenantSelector />
-        {!selectedTenant && (
-          <p className="mt-2 text-sm text-blue-600">
-            法人（Tenant）を選択すると、検索できます。
+      {/* Tenant未選択時の表示 */}
+      {!selectedTenant && (
+        <div className="card p-4">
+          <p className="text-sm text-blue-600">
+            ヘッダで法人を選択してください
           </p>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* 検索条件 */}
       <div className="card">
@@ -522,7 +518,7 @@ export function GroupContractsList() {
         <div className="card p-6 text-center text-gray-500">
           {selectedTenant
             ? '検索条件を入力して「検索」ボタンをクリックしてください'
-            : '法人を選択してから検索条件を入力してください'}
+            : 'ヘッダで法人を選択してください'}
         </div>
       )}
 

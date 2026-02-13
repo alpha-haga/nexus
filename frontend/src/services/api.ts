@@ -10,6 +10,7 @@
 
 import type { ApiError, Region } from '@/types';
 import { getSession, signOut } from 'next-auth/react';
+import { getSavedTenant } from '@/modules/core/utils/tenantStorage';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
 
@@ -71,6 +72,13 @@ class ApiClient {
     // X-NEXUS-REGION ヘッダーを付与
     headersObj['X-NEXUS-REGION'] = region;
 
+    // X-Company-Code ヘッダーを付与（全APIで送る）
+    // sessionStorageから読む（TenantContextが保存した値）
+    const cmpCd = getSavedTenant();
+    if (cmpCd) {
+      headersObj['X-Company-Code'] = cmpCd;
+    }
+
     try {
       const response = await fetch(url, {
         ...options,
@@ -88,6 +96,30 @@ class ApiClient {
             error: 'Unauthorized',
             message: '認証に失敗しました。再度ログインしてください。',
             code: 'UNAUTHORIZED',
+          };
+          throw error;
+        }
+
+        // 403 Forbidden の場合は権限エラー
+        if (response.status === 403) {
+          const error: ApiError = {
+            timestamp: new Date().toISOString(),
+            status: 403,
+            error: 'Forbidden',
+            message: 'この法人へのアクセス権限がありません',
+            code: 'ACCESS_DENIED',
+          };
+          throw error;
+        }
+
+        // 503 Service Unavailable の場合は法人利用不可
+        if (response.status === 503) {
+          const error: ApiError = {
+            timestamp: new Date().toISOString(),
+            status: 503,
+            error: 'Service Unavailable',
+            message: 'この法人は現在利用できません',
+            code: 'COMPANY_NOT_AVAILABLE',
           };
           throw error;
         }

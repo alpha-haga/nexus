@@ -2,6 +2,7 @@ import type {
   GroupContractSearchCondition,
   PaginatedGroupContractResponse,
 } from '@/types';
+import { getSavedTenant as getTenantFromStorage, saveTenant as saveTenantToStorage } from '@/modules/core/utils/tenantStorage';
 
 type ColumnPreset = 'standard' | 'contact' | 'staff';
 
@@ -43,46 +44,28 @@ export function buildQueryKey(
 
 /**
  * tenant を sessionStorage に保存
+ * 
+ * 注意: この関数は内部でのみ使用（外から参照されない）
+ * 外部からは tenantStorage を使用すること
+ * 
+ * @deprecated 外部からは tenantStorage を使用すること
  */
-export function saveTenant(tenant: string | null): void {
-  if (typeof window === 'undefined') return;
-
-  try {
-    if (tenant) {
-      sessionStorage.setItem(STORAGE_KEYS.lastTenant, tenant);
-    } else {
-      sessionStorage.removeItem(STORAGE_KEYS.lastTenant);
-    }
-  } catch (e) {
-    console.warn('Failed to save tenant to sessionStorage:', e);
-  }
+function saveTenant(tenant: string | null): void {
+  // tenantStorageに委譲（後方互換のため内部でのみ使用）
+  saveTenantToStorage(tenant);
 }
 
 /**
  * sessionStorage から tenant を取得
+ * 
+ * 注意: この関数は内部でのみ使用（外から参照されない）
+ * 外部からは tenantStorage を使用すること
+ * 
+ * @deprecated 外部からは tenantStorage を使用すること
  */
-export function getSavedTenant(): string | null {
-  if (typeof window === 'undefined') return null;
-
-  try {
-    return sessionStorage.getItem(STORAGE_KEYS.lastTenant) || null;
-  } catch (e) {
-    console.warn('Failed to get saved tenant from sessionStorage:', e);
-    return null;
-  }
-}
-
-/**
- * sessionStorage から tenant をクリア
- */
-export function clearTenant(): void {
-  if (typeof window === 'undefined') return;
-
-  try {
-    sessionStorage.removeItem(STORAGE_KEYS.lastTenant);
-  } catch (e) {
-    console.warn('Failed to clear tenant from sessionStorage:', e);
-  }
+function getSavedTenant(): string | null {
+  // tenantStorageに委譲（後方互換のため内部でのみ使用）
+  return getTenantFromStorage();
 }
 
 /**
@@ -108,7 +91,8 @@ export function saveListState(
     sessionStorage.setItem(STORAGE_KEYS.lastCondition, JSON.stringify(condition));
     sessionStorage.setItem(STORAGE_KEYS.lastQueryKey, queryKey);
     sessionStorage.setItem(STORAGE_KEYS.lastResult, JSON.stringify(result));
-    saveTenant(tenant);
+    // tenantはtenantStorageに保存（groupContractsの一覧状態とは分離）
+    saveTenantToStorage(tenant);
     sessionStorage.setItem(STORAGE_KEYS.lastPage, page.toString());
     sessionStorage.setItem(STORAGE_KEYS.lastSize, size.toString());
     sessionStorage.setItem(STORAGE_KEYS.lastColumnPreset, columnPreset);

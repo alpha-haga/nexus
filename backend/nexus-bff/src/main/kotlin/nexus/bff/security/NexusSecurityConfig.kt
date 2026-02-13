@@ -16,11 +16,20 @@ import org.springframework.security.web.SecurityFilterChain
 @EnableConfigurationProperties(NexusOAuth2Properties::class)
 class NexusSecurityConfig(
     private val properties: NexusOAuth2Properties,
+    private val companyResolverService: CompanyResolverService, // CompanyAuthorizationFilter用
     private val authorizationContextFilter: NexusAuthorizationContextFilter, // ★ DI 注入
 ) {
 
     @Bean
-    fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
+    fun companyAuthorizationFilter(): CompanyAuthorizationFilter {
+        return CompanyAuthorizationFilter(companyResolverService)
+    }
+
+    @Bean
+    fun securityFilterChain(
+        http: HttpSecurity,
+        companyAuthorizationFilter: CompanyAuthorizationFilter,
+    ): SecurityFilterChain {
         http
             .csrf { it.disable() }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
@@ -33,8 +42,12 @@ class NexusSecurityConfig(
             }
             .oauth2ResourceServer { it.jwt(Customizer.withDefaults()) }
 
-        // ★ new せず、Bean を差し込む
-        http.addFilterAfter(authorizationContextFilter, BearerTokenAuthenticationFilter::class.java)
+        // Filter chain 順序を確定:
+        // 1. BearerTokenAuthenticationFilter (JWT認証)
+        // 2. CompanyAuthorizationFilter (cmpCd検証)
+        // 3. NexusAuthorizationContextFilter (Region/Corp/Domain set)
+        http.addFilterAfter(companyAuthorizationFilter, BearerTokenAuthenticationFilter::class.java)
+        http.addFilterAfter(authorizationContextFilter, CompanyAuthorizationFilter::class.java)
 
         return http.build()
     }
