@@ -66,6 +66,7 @@ export function getAuthOptions(): AuthOptions {
                   refresh_token: token.refreshToken,
                   client_id: process.env.KEYCLOAK_CLIENT_ID!,
                   client_secret: process.env.KEYCLOAK_CLIENT_SECRET!,
+                  scope: 'openid profile email nexus-db-access',
                 }),
               });
 

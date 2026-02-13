@@ -13,6 +13,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import jakarta.validation.ConstraintViolationException
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.time.LocalDateTime
 
 /**
@@ -26,6 +28,8 @@ import java.time.LocalDateTime
  */
 @RestControllerAdvice
 class GlobalExceptionHandler {
+
+    private val logger: Logger = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
     @ExceptionHandler(NotImplementedException::class)
     fun handleNotImplemented(ex: NotImplementedException): ResponseEntity<ErrorResponse> {
@@ -142,6 +146,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception::class)
     fun handleGeneric(ex: Exception): ResponseEntity<ErrorResponse> {
+        logger.error("Unexpected error occurred", ex)
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(

@@ -8,7 +8,7 @@ data class BootstrapResponse(
 )
 
 data class UserInfoDto(
-    val sub: String,
+    val sub: String?,  // 暫定回避: null 許容（OIDC 的には異常だが業務継続のため）
     val username: String?,
     val email: String?,
 )

@@ -1,5 +1,5 @@
 export interface UserInfo {
-  sub: string;
+  sub: string | null;  // 暫定回避: null 許容（OIDC 的には異常だが業務継続のため）
   username: string | null;
   email: string | null;
 }
