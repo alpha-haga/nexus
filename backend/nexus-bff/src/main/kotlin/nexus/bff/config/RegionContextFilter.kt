@@ -36,6 +36,28 @@ class RegionContextFilter : OncePerRequestFilter() {
 
     companion object {
         private const val REGION_HEADER = "X-NEXUS-REGION"
+        private const val API_PREFIX = "/api/v1/"
+    }
+
+    override fun shouldNotFilter(request: HttpServletRequest): Boolean {
+        val path = request.requestURI ?: return true
+        
+        // /api/v1/ 以外は除外
+        if (!path.startsWith(API_PREFIX)) {
+            return true
+        }
+        
+        // 認証系APIは除外（X-NEXUS-REGION ヘッダー不要）
+        if (path.startsWith("/api/v1/auth/")) {
+            return true
+        }
+        
+        // Actuator は除外
+        if (path.startsWith("/actuator")) {
+            return true
+        }
+        
+        return false
     }
 
     override fun doFilterInternal(

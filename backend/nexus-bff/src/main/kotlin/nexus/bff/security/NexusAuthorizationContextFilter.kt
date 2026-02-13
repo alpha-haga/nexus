@@ -41,7 +41,28 @@ class NexusAuthorizationContextFilter(
 
     override fun shouldNotFilter(request: HttpServletRequest): Boolean {
         val path = request.requestURI ?: return true
-        return !path.startsWith(API_PREFIX)
+        
+        // /api/v1/ 以外は除外
+        if (!path.startsWith(API_PREFIX)) {
+            return true
+        }
+        
+        // 認証系APIは除外（Region/Corp/Domain の Context 設定不要）
+        if (path.startsWith("/api/v1/auth/")) {
+            return true
+        }
+        
+        // Actuator は除外
+        if (path.startsWith("/actuator")) {
+            return true
+        }
+        
+        // OpenAPI/Swagger は除外
+        if (path.startsWith("/v3/api-docs") || path.startsWith("/swagger-ui")) {
+            return true
+        }
+        
+        return false
     }
 
     override fun doFilterInternal(
