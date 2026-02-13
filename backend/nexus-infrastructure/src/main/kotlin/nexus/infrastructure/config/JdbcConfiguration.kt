@@ -28,7 +28,7 @@ class JdbcConfiguration {
     @Bean("routingNamedParameterJdbcTemplate")
     @Primary
     fun routingNamedParameterJdbcTemplate(
-        routingDataSource: DataSource
+        @Qualifier("routingDataSource") routingDataSource: DataSource
     ): NamedParameterJdbcTemplate =
         NamedParameterJdbcTemplate(routingDataSource)
 
@@ -37,7 +37,8 @@ class JdbcConfiguration {
      *
      * NXCM_COMPANY 等の Integration DB 専用テーブルアクセス用
      */
-    @Bean("integrationJdbcTemplate")
+    @Bean
+    @Qualifier("integrationJdbcTemplate")
     fun integrationJdbcTemplate(
         @Qualifier("integrationDataSource") integrationDataSource: DataSource
     ): NamedParameterJdbcTemplate =
