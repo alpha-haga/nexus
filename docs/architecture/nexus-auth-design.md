@@ -608,51 +608,51 @@ CREATE INDEX NXCM_COMPANY_I01 ON NXCM_COMPANY(region_cd, company_cd);
 ```sql
 -- 埼玉地区
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
-    db_host, db_port, db_service_name, schema_name, available_domains, display_order, is_active)
+    available_domains, display_order, is_active)
 VALUES ('01', 'saitama', 'musashino', '武蔵野互助会', '武蔵野', 
-    'saitama-db.internal', 1521, 'ORCL', 'ZEBRA_AREA1', 'GOJO,FUNERAL', 1, '1');
+    'GOJO,FUNERAL', 1, '1');
 
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
-    db_host, db_port, db_service_name, schema_name, available_domains, display_order, is_active)
+    available_domains, display_order, is_active)
 VALUES ('02', 'saitama', 'saikan', 'サイカン互助会', 'サイカン', 
-    'saitama-db.internal', 1521, 'ORCL', 'ZEBRA_AREA2', 'GOJO,FUNERAL', 2, '1');
+    'GOJO,FUNERAL', 2, '1');
 
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
-    db_host, db_port, db_service_name, schema_name, available_domains, display_order, is_active)
+    available_domains, display_order, is_active)
 VALUES ('03', 'saitama', 'fukushiso', '中央福祉葬祭', '中央福祉', 
-    'saitama-db.internal', 1521, 'ORCL', 'ZEBRA_SOUSAI3', 'FUNERAL', 3, '1');
+    'FUNERAL', 3, '1');
 
 -- 福島地区
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
-    db_host, db_port, db_service_name, schema_name, available_domains, display_order, is_active)
+    available_domains, display_order, is_active)
 VALUES ('05', 'fukushima', 'fukushima', '福島互助会', '福島', 
-    'fukushima-db.internal', 1521, 'ORCL', 'ZEBRA_AREA1', 'GOJO,FUNERAL', 1, '1');
+    'GOJO,FUNERAL', 1, '1');
 
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
-    db_host, db_port, db_service_name, schema_name, available_domains, display_order, is_active)
+    available_domains, display_order, is_active)
 VALUES ('06', 'fukushima', 'touhoku', '東北互助会', '東北', 
-    'fukushima-db.internal', 1521, 'ORCL', 'ZEBRA_AREA2', 'GOJO,FUNERAL', 2, '1');
+    'GOJO,FUNERAL', 2, '1');
 
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
-    db_host, db_port, db_service_name, schema_name, available_domains, display_order, is_active)
+    available_domains, display_order, is_active)
 VALUES ('07', 'fukushima', 'gifu', '岐阜互助会', '岐阜', 
-    'fukushima-db.internal', 1521, 'ORCL', 'ZEBRA_AREA3', 'GOJO,FUNERAL', 3, '1');
+    'GOJO,FUNERAL', 3, '1');
 
 -- 栃木地区
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
-    db_host, db_port, db_service_name, schema_name, available_domains, display_order, is_active)
+    available_domains, display_order, is_active)
 VALUES ('09', 'tochigi', 'tochigi', '栃木互助会', '栃木', 
-    'tochigi-db.internal', 1521, 'ORCL', 'ZEBRA_AREA1', 'GOJO,FUNERAL', 1, '1');
+    'GOJO,FUNERAL', 1, '1');
 
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
-    db_host, db_port, db_service_name, schema_name, available_domains, display_order, is_active)
+    available_domains, display_order, is_active)
 VALUES ('10', 'tochigi', 'shizuoka', '静岡互助会', '静岡', 
-    'tochigi-db.internal', 1521, 'ORCL', 'ZEBRA_AREA2', 'GOJO,FUNERAL', 2, '1');
+    'GOJO,FUNERAL', 2, '1');
 
 INSERT INTO NXCM_COMPANY (cmp_cd, region_cd, company_cd, company_name, company_name_short, 
-    db_host, db_port, db_service_name, schema_name, available_domains, display_order, is_active)
+    available_domains, display_order, is_active)
 VALUES ('11', 'tochigi', 'tochigitksr', '栃木タクセル互助会', '栃木タクセル', 
-    'tochigi-db.internal', 1521, 'ORCL', 'ZEBRA_AREA3', 'GOJO,FUNERAL', 3, '1');
+    'GOJO,FUNERAL', 3, '1');
 ```
 
 ### 6.2 ユーザーマッピング（NXCM_USER_MAPPING）
