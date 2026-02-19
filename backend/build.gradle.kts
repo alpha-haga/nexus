@@ -65,6 +65,10 @@ val springModules = listOf(
     "nexus-funeral",
     "nexus-bridal",
     "nexus-point",
+    "nexus-agent",
+    "nexus-payment",
+    "nexus-accounting",
+    "nexus-reporting",
     "nexus-api",
     "nexus-batch"
 )
